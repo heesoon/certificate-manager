@@ -7,6 +7,7 @@ project(certificate-manager) 	# PROJECT_NAME is certificate-manager
 SET(CMAKE_VERBOSE_MAKEFILE ON)
 
 add_subdirectory(src)
+add_subdirectory(tests)
 
 # add library (default static library)
 #add_library(
