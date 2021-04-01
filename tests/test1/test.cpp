@@ -11,7 +11,9 @@ bool create_RSA_privateKey(const char* filename, int kBits)
 	BIGNUM *bn = NULL;
 	BIO *pem = NULL;
 	RSA *rsa = NULL;
+#if 0	
 	EVP_PKEY *pkey = NULL;
+#endif
 
 	pem = BIO_new_file(filename, "w");
 	if(pem == NULL)
@@ -70,6 +72,7 @@ bool create_RSA_privateKey(const char* filename, int kBits)
 	OPENSSL_free(decn);
 #endif
 
+#if 0
 	pkey = EVP_PKEY_new();
 	if(pkey == NULL)
 	{
@@ -83,9 +86,19 @@ bool create_RSA_privateKey(const char* filename, int kBits)
 		std::cout << "error in " << __FUNCTION__ << " : " << __LINE__ << std::endl;
 		goto err;			
 	}
-	
+
  	// Write private key in PKCS PEM.
     rc = PEM_write_bio_PrivateKey(pem, pkey, NULL, NULL, 0, NULL, NULL);
+	if(rc == 0)
+	{
+		std::cout << "error in " << __FUNCTION__ << " : " << __LINE__ << std::endl;
+		goto err;			
+	}
+
+#endif
+
+ 	// Write private key in PKCS PEM.
+    rc = PEM_write_bio_RSAPrivateKey(pem, rsa, NULL, NULL, 0, NULL, NULL);
 	if(rc == 0)
 	{
 		std::cout << "error in " << __FUNCTION__ << " : " << __LINE__ << std::endl;
@@ -109,10 +122,12 @@ err:
 		RSA_free(rsa);
 	}
 
+#if 0
 	if(pkey)
 	{
 		EVP_PKEY_free(pkey);
 	}
+#endif
 
 	if(rc == 0)
 	{
