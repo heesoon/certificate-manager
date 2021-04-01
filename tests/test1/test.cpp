@@ -48,6 +48,28 @@ bool create_RSA_privateKey(const char* filename, int kBits)
 		goto err;			
 	}
 
+#if __DEBUG__
+	const BIGNUM *e;
+	const BIGNUM *d;
+	const BIGNUM *n;
+	char *dece;
+	char *decd;
+	char *decn;
+
+	RSA_get0_key(rsa, &n, &e, &d);
+	dece = BN_bn2dec(e);
+	decd = BN_bn2dec(d);
+	decn = BN_bn2dec(n);
+
+	std::cout << "e : " << dece <<  std::endl;
+	std::cout << "d : " << decd <<  std::endl;
+	std::cout << "n : " << decn <<  std::endl;
+
+	OPENSSL_free(dece);
+	OPENSSL_free(decd);
+	OPENSSL_free(decn);
+#endif
+
 	pkey = EVP_PKEY_new();
 	if(pkey == NULL)
 	{
@@ -70,7 +92,6 @@ bool create_RSA_privateKey(const char* filename, int kBits)
 		goto err;			
 	}
 
-	return true;
 err:
 
 	if(pem)
@@ -93,7 +114,14 @@ err:
 		EVP_PKEY_free(pkey);
 	}
 
-	return false;
+	if(rc == 0)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 void test_RSA_privateKey()
