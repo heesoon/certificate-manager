@@ -7,7 +7,8 @@ set(SRCS
 )
 
 #add_compile_definitions(__DEBUG__)
-target_compile_definitions(test1 PRIVATE __DEBUG__)
+#target_compile_definitions(${PROJECT_NAME} PRIVATE __DEBUG__)
+#set( CMAKE_CXX_FLAGS "-D__DEBUG__" )
 
 add_executable(${PROJECT_NAME}
 	${SRCS}

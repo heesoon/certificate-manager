@@ -11,11 +11,24 @@ This codes are tested under Ubuntu 18.04 64bit LTS.
 
 Building
 ========
-To build
+Basic Build
 
     $ cd build
     $ cmake ..
     $ make
+
+Debug Build
+
+    $ cd build
+    $ cmake -DCMAKE_BUILD_TYPE=Debug ..
+    $ make
+
+Release Build
+
+    $ cd build
+    $ cmake -DCMAKE_BUILD_TYPE=Release ..
+    $ make
+
 
 Cleaning
 ========

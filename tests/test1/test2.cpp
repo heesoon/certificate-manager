@@ -6,29 +6,33 @@
 #include <openssl/rsa.h>
 #include <openssl/pem.h>
 
+#if defined(LOG_PRINT)
+#define LOGE(x) std::cout << "ERROR : " << "[" << __FILE__ << ", " << __FUNCTION__ << ", " << __LINE__ << "] " << x << std::endl;
+#define LOGI(x) std::cout << "INFO : " << "[" << __FILE__ << ", " << __FUNCTION__ << ", " << __LINE__ << "] " << x << std::endl;
+#define LOGD(x) std::cout << "DEBUG : " << "[" << __FILE__ << ", " << __FUNCTION__ << ", " << __LINE__ << "] " << x << std::endl;
+#else
+#define LOGE(x)
+#define LOGI(x)
+#define LOGD(x)
+#endif
+
 auto delPtrBIO = [](BIO *bio)
 {
-#ifdef __DEBUG__
-	std::cout << delPtrBIO << " called .." << std::endl;
-#endif	
 	BIO_free(bio);
 	// BIO_free_all(bio);
+	LOGD("called ..")
 };
 
 auto delPtrRSA = [](RSA *rsa)
 {
-#ifdef __DEBUG__
-	std::cout << delPtrRSA << " called .." << std::endl;
-#endif	
 	RSA_free(rsa);
+	LOGD("called ..")
 };
 
 auto delPtrBN = [](BIGNUM *bn)
 {
-#ifdef __DEBUG__
-	std::cout << delPtrBN << " called .." << std::endl;
-#endif
 	BN_free(bn);
+	LOGD("called ..")
 };
 
 // type define unique_ptr for openssl pointers
@@ -48,28 +52,44 @@ bool create_RSA_privateKey(const char* filename, int kBits)
 	rc = BN_set_word(up_bn.get(), RSA_F4);
 	if(rc == 0)
 	{
-#ifdef __DEBUG__
-		std::cout << "error in " << __FUNCTION__ << " : " << __LINE__ << std::endl;
-#endif
+		LOGE("called ..")
 		return false;
 	}
 
 	rc = RSA_generate_key_ex(up_rsa.get(), kBits, up_bn.get(), NULL);
 	if(rc == 0)
 	{
-#ifdef __DEBUG__
-		std::cout << "error in " << __FUNCTION__ << " : " << __LINE__ << std::endl;
-#endif
+		LOGE("called ..")
 		return false;
 	}
+
+#if 0
+	const BIGNUM *e;
+	const BIGNUM *d;
+	const BIGNUM *n;
+	char *dece;
+	char *decd;
+	char *decn;
+
+	RSA_get0_key(rsa, &n, &e, &d);
+	dece = BN_bn2dec(e);
+	decd = BN_bn2dec(d);
+	decn = BN_bn2dec(n);
+
+	std::cout << "e : " << dece <<  std::endl;
+	std::cout << "d : " << decd <<  std::endl;
+	std::cout << "n : " << decn <<  std::endl;
+
+	OPENSSL_free(dece);
+	OPENSSL_free(decd);
+	OPENSSL_free(decn);
+#endif
 
  	// Write private key in PKCS PEM.
     rc = PEM_write_bio_RSAPrivateKey(up_bio.get(), up_rsa.get(), NULL, NULL, 0, NULL, NULL);
 	if(rc == 0)
 	{
-#ifdef __DEBUG__
-		std::cout << "error in " << __FUNCTION__ << " : " << __LINE__ << std::endl;
-#endif
+		LOGE("called ..")
 		return false;
 	}
 
@@ -87,8 +107,6 @@ void test_RSA_privateKey()
 		sint << a;
 		str = str + sint.str() + ".pem";
 
-		//std::cout << str << std::endl;
-
 		create_RSA_privateKey(str.c_str(), a);
 	}
 }
@@ -96,6 +114,5 @@ void test_RSA_privateKey()
 int main()
 {
 	test_RSA_privateKey();
-
 	return 0;
 }
