@@ -35,19 +35,49 @@ auto delPtrBN = [](BIGNUM *bn)
 	LOGD("called ..")
 };
 
+auto delPtrEVP = [](EVP_PKEY *evp)
+{
+	EVP_PKEY_free(evp);
+	LOGD("called ..")
+};
+
 // type define unique_ptr for openssl pointers
 // using UP_BIO = std::unique_ptr<BIO, decltype(&::BIO_free)>;
 using UP_BIO = std::unique_ptr<BIO, decltype(delPtrBIO)>;
 using UP_RSA = std::unique_ptr<RSA, decltype(delPtrRSA)>;
 using UP_BN = std::unique_ptr<BIGNUM, decltype(delPtrBN)>;
+using UP_EVP = std::unique_ptr<EVP_PKEY, decltype(delPtrEVP)>;
 
-bool create_RSA_privateKey(const char* filename, int kBits)
+enum class CRSAType
+{
+	TRADTIONAL_PEM,
+	PKCS_PEM,
+	PKCS8_PEM,
+	ANS_DER
+};
+
+bool generate_RSA_keys(const char* privateFileName, const char* publicFileName, int kBits, CRSAType type)
 {
 	int rc = 1;
 	// UP_BIO up_bio(BIO_new_file(filename, "w"), ::BIO_free);
-	UP_BIO up_bio(BIO_new_file(filename, "w"), delPtrBIO);
+
+	if(privateFileName == NULL)
+	{
+		LOGD("private filename empty")
+		return false;
+	}
+
+	if(publicFileName == NULL)
+	{
+		LOGD("public filename empty")
+		return false;
+	}	
+
+	UP_BIO up_bio_private(BIO_new_file(privateFileName, "w"), delPtrBIO);
+	UP_BIO up_bio_public(BIO_new_file(publicFileName, "w"), delPtrBIO);
 	UP_RSA up_rsa(RSA_new(), delPtrRSA);
 	UP_BN up_bn(BN_new(), delPtrBN);
+	UP_EVP up_evp(EVP_PKEY_new(), delPtrEVP);
 
 	rc = BN_set_word(up_bn.get(), RSA_F4);
 	if(rc == 0)
@@ -85,8 +115,53 @@ bool create_RSA_privateKey(const char* filename, int kBits)
 	OPENSSL_free(decn);
 #endif
 
- 	// Write private key in PKCS PEM.
-    rc = PEM_write_bio_RSAPrivateKey(up_bio.get(), up_rsa.get(), NULL, NULL, 0, NULL, NULL);
+	rc = EVP_PKEY_set1_RSA(up_evp.get(), up_rsa.get());
+	if(rc == 0)
+	{
+		LOGE("called ..")
+		return false;
+	}
+
+	// Generate Private Key
+	switch(type)
+	{
+		case CRSAType::TRADTIONAL_PEM :
+			rc = PEM_write_bio_RSAPrivateKey(up_bio_private.get(), up_rsa.get(), NULL, NULL, 0, NULL, NULL);
+		break;
+		case CRSAType::PKCS_PEM :
+			rc = PEM_write_bio_PrivateKey(up_bio_private.get(), up_evp.get(), NULL, NULL, 0, NULL, NULL);
+		break;
+		case CRSAType::PKCS8_PEM :
+			rc = PEM_write_bio_PKCS8PrivateKey(up_bio_private.get(), up_evp.get(), NULL, NULL, 0, NULL, NULL);
+		break;
+		case CRSAType::ANS_DER :
+			rc = i2d_RSAPrivateKey_bio(up_bio_private.get(), up_rsa.get());
+		break;						
+	}
+ 	
+	if(rc == 0)
+	{
+		LOGE("called ..")
+		return false;
+	}
+
+	// Generate Public Key
+	switch(type)
+	{
+		case CRSAType::TRADTIONAL_PEM :
+			rc = PEM_write_bio_PUBKEY(up_bio_public.get(), up_evp.get());
+		break;
+		case CRSAType::PKCS_PEM :
+			rc = PEM_write_bio_RSAPublicKey(up_bio_public.get(), up_rsa.get());
+		break;
+		case CRSAType::PKCS8_PEM :
+			rc = PEM_write_bio_RSAPublicKey(up_bio_public.get(), up_rsa.get());
+		break;
+		case CRSAType::ANS_DER :
+			rc = i2d_RSAPublicKey_bio(up_bio_public.get(), up_rsa.get());
+		break;
+	}
+ 	
 	if(rc == 0)
 	{
 		LOGE("called ..")
@@ -102,12 +177,15 @@ void test_RSA_privateKey()
 
 	for( auto a : kBits)
 	{
-		std::string str = "privateKey-";
+		std::string privateFileName = "privateKey-";
+		std::string publicFileName = "public-";
 		std::stringstream sint;
 		sint << a;
-		str = str + sint.str() + ".pem";
 
-		create_RSA_privateKey(str.c_str(), a);
+		privateFileName = privateFileName + sint.str() + ".pem";
+		publicFileName = publicFileName + sint.str() + ".pem";
+
+		generate_RSA_keys(privateFileName.c_str(), publicFileName.c_str(), a, CRSAType::PKCS_PEM);
 	}
 }
 
