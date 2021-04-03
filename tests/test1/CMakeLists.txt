@@ -2,8 +2,12 @@ project(test1)
 cmake_minimum_required(VERSION 3.10)
 
 set(SRCS
-	"test.cpp"
+#	"test.cpp"
+	"test2.cpp"
 )
+
+#add_compile_definitions(__DEBUG__)
+target_compile_definitions(test1 PRIVATE __DEBUG__)
 
 add_executable(${PROJECT_NAME}
 	${SRCS}
