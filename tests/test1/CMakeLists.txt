@@ -25,26 +25,19 @@ add_executable(${PROJECT_NAME}
 #	REQUIRED
 #)
 
-add_library(imported-libs
+add_library(crypto
 	SHARED
 	IMPORTED
 )
-set_target_properties(imported-libs
+
+set_target_properties(crypto
 	PROPERTIES IMPORTED_LOCATION
 	${CMAKE_SOURCE_DIR}/openssl/libs/libcrypto.so
 )
 
-message(imported-libs)
-
-#if(${LIB_OPENSSL_CRYPTO} EQUAL "LIB_OPENSSL_CRYPTO-NOTFOUND")
-#	message("Err : Couldn't find openssl crypto library")
-#else()
-#	message("SUC : find openssl crypto library")
-	
 include_directories(${CMAKE_SOURCE_DIR}/openssl/include)
+#link_directories(${CMAKE_SOURCE_DIR}/openssl/libs)
 target_link_libraries(
 	${PROJECT_NAME} PRIVATE
-#		${LIB_OPENSSL_CRYPTO}
-		imported-libs
-	)	
-#endif()
+	crypto	
+)
