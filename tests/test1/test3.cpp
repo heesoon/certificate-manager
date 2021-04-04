@@ -3,6 +3,7 @@
 #include <sstream>
 #include <vector>
 #include <memory>
+#include <fstream>
 #include <openssl/rsa.h>
 #include <openssl/pem.h>
 #include <openssl/evp.h>
@@ -129,7 +130,7 @@ bool generate_RSA_keys(const char* filename, int kBits, CRSAType type)
 	UP_BIO up_bio(BIO_new_file(filename, "w"), delPtrBIO);
 	if(type == CRSAType::TRADTIONAL_PEM)
 	{
-		//ret = PEM_write_bio_PrivateKey_traditional(up_bio.get(), up_evp.get(), NULL, NULL, 0, NULL, NULL);
+		ret = PEM_write_bio_PrivateKey_traditional(up_bio.get(), up_evp.get(), NULL, NULL, 0, NULL, NULL);
 	}
 	else
 	{
@@ -143,6 +144,81 @@ bool generate_RSA_keys(const char* filename, int kBits, CRSAType type)
 	}
 
 	return true;
+}
+
+//https://groups.google.com/g/mailing.openssl.users/c/3QBaMeUdRBg
+bool encrypt_RSA_by_privatekey(const char* filename, const char* infile, const char* outfile) 
+{
+	std::ifstream readFile;
+	std::ofstream writeFile;
+
+	if(filename == NULL)
+	{
+		LOGD("private filename empty")
+		return false;
+	}
+
+	if(infile == NULL)
+	{
+		LOGD("filename empty")
+		return false;
+	}
+
+	if(outfile == NULL)
+	{
+		LOGD("filename empty")
+		return false;
+	}
+
+	UP_BIO up_bio(BIO_new_file(filename, "rb"), delPtrBIO);
+	EVP_PKEY *pkey = PEM_read_bio_Parameters(up_bio.get(), NULL);
+	if(pkey == NULL)
+	{
+		LOGE("called..")
+		return false;
+	}
+
+	UP_EVP up_evp(std::move(pkey), delPtrEVP);
+	//up_evp.reset(PEM_read_bio_Parameters(up_bio.get(), NULL));
+	UP_EVP_CTX up_ctx(EVP_PKEY_CTX_new(up_evp.get(), NULL), delPtrEVPCTX);
+
+	if(EVP_PKEY_encrypt_init(up_ctx.get()) <= 0)
+	{
+		LOGE("called..")
+		return false;
+	}
+
+	if(EVP_PKEY_CTX_set_rsa_padding(up_ctx.get(), RSA_PKCS1_PADDING) <= 0)
+	{
+		LOGE("called..")
+		return false;
+	}
+
+	readFile.open(infile);
+	writeFile.open(outfile);
+	if(readFile.is_open())
+	{
+		while(!readFile.eof())
+		{
+			char inbuff[256];
+			char outbuff[256];
+			size_t outlen = 0;
+			
+			readFile.getline(inbuff, 256);
+
+			if(EVP_PKEY_encrypt(up_ctx.get(), (unsigned char*)outbuff, &outlen, (unsigned char*)inbuff, 256) <= 0)
+			{
+				LOGE("called..")
+				readFile.close();
+				writeFile.close();
+				return false;
+			}
+
+			writeFile.write(outbuff, outlen); 
+		}
+		readFile.close();
+		writeFile.close();
+	}
 }
 
 void test_RSA_privateKey()
@@ -163,8 +239,14 @@ void test_RSA_privateKey()
 	}
 }
 
+void test_RSA_encrypt()
+{
+	encrypt_RSA_by_privatekey("privateKey-2048.pem", "Makefile", "encrypted.txt");
+}
+
 int main()
 {
 	test_RSA_privateKey();
+	test_RSA_encrypt();
 	return 0;
 }
