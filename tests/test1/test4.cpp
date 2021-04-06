@@ -168,7 +168,7 @@ bool generate_rsa_key_files(const char *private_keyfile, const char *public_keyf
 		return false;
 	}	
 
-	unique_ptr_bio_type_t up_bio_private(BIO_new_file(private_keyfile, "w"), delPtrBIO);
+	unique_ptr_bio_type_t up_bio_private(BIO_new_file(private_keyfile, modestr('w', FORMAT_PEM)), delPtrBIO);
 	// Generate Private Key
 	switch(type)
 	{
@@ -222,6 +222,7 @@ bool generate_rsa_key_files(const char *private_keyfile, const char *public_keyf
 	return true;	
 }
 
+#if 0
 bool rsa_encrypt(unsigned char *plain_text, size_t plain_len, unsigned char *cipher_text, size_t *cipher_len, const char *public_keyfile)
 {
 	int ret = 1;
@@ -279,6 +280,62 @@ bool rsa_encrypt(unsigned char *plain_text, size_t plain_len, unsigned char *cip
 
 	return true;
 }
+#else
+bool rsa_encrypt(unsigned char *plain_text, size_t plain_len, unsigned char *cipher_text, size_t *cipher_len, const char *public_keyfile)
+{
+	int ret = 1;
+
+	if(plain_text == NULL || cipher_text == NULL || cipher_len == NULL || public_keyfile == NULL)
+	{
+		LOGE("wrong input parameter")
+		return false;
+	}
+
+	unique_ptr_bio_type_t up_bio_key(BIO_new_file(public_keyfile, modestr('r', FORMAT_PEM)), delPtrBIO);
+	if(up_bio_key.get() == NULL)
+	{
+		LOGE("can't open bio")
+		return false;
+	}
+
+	unique_ptr_evp_pkey_type_t up_evp_pkey(PEM_read_bio_PUBKEY(up_bio_key.get(), NULL, NULL, NULL), delPtrEVP_PKEY);
+	if(up_evp_pkey.get() == NULL)
+	{
+		LOGE("can't load rsa public key")
+		return false;
+	}
+
+	unique_ptr_evp_pkey_ctx_type_t up_evp_pkey_ctx(EVP_PKEY_CTX_new(up_evp_pkey.get(), NULL), delPtrEVP_PKEY_CTX);
+	if(up_evp_pkey_ctx.get() == NULL)
+	{
+		LOGE("can't open ctx new")
+		return false;
+	}
+
+	ret = EVP_PKEY_encrypt_init(up_evp_pkey_ctx.get());
+    if(ret <= 0)
+	{
+		LOGE("can't encrypt init")
+		return false;
+    }
+
+	ret = EVP_PKEY_CTX_set_rsa_padding(up_evp_pkey_ctx.get(), EVP_PADDING_PKCS7);
+   	if(ret <= 0)
+	{
+		LOGE("can't set padding")
+		return false;
+    }
+
+	ret = EVP_PKEY_encrypt(up_evp_pkey_ctx.get(), cipher_text, cipher_len, plain_text, plain_len);
+   	if(ret <= 0)
+	{
+		LOGE("can't encrypt")
+		return false;
+    }
+
+	return true;
+}
+#endif
 
 void test_generate_rsa_key_files()
 {
