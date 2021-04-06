@@ -337,6 +337,73 @@ bool rsa_encrypt(unsigned char *plain_text, size_t plain_len, unsigned char *cip
 }
 #endif
 
+//bool rsa_decrypt(unsigned char *cipher_text, size_t cipher_len, unsigned char *plain_text, size_t *plain_len, const char *private_keyfile, const char *passwd)
+bool rsa_decrypt(unsigned char *cipher_text, size_t cipher_len, unsigned char *plain_text, size_t *plain_len, const char *private_keyfile)
+{
+	int ret = 1;
+	size_t out_len = 0;
+
+	if(cipher_text == NULL || plain_text == NULL || plain_len == NULL || private_keyfile == NULL)
+	{
+		LOGE("wrong input parameter")
+		return false;
+	}
+
+	unique_ptr_bio_type_t up_bio_key(BIO_new_file(private_keyfile, modestr('r', FORMAT_PEM)), delPtrBIO);
+	if(up_bio_key.get() == NULL)
+	{
+		LOGE("can't open bio")
+		return false;
+	}
+
+	unique_ptr_evp_pkey_type_t up_evp_pkey(PEM_read_bio_PrivateKey(up_bio_key.get(), NULL, NULL, NULL), delPtrEVP_PKEY);
+	if(up_evp_pkey.get() == NULL)
+	{
+		LOGE("can't load rsa private key")
+		return false;
+	}
+
+	unique_ptr_evp_pkey_ctx_type_t up_evp_pkey_ctx(EVP_PKEY_CTX_new(up_evp_pkey.get(), NULL), delPtrEVP_PKEY_CTX);
+	if(up_evp_pkey_ctx.get() == NULL)
+	{
+		LOGE("can't open ctx new")
+		return false;
+	}
+
+	ret = EVP_PKEY_decrypt_init(up_evp_pkey_ctx.get());
+    if(ret <= 0)
+	{
+		LOGE("can't decrypt init")
+		return false;
+    }
+
+	ret = EVP_PKEY_CTX_set_rsa_padding(up_evp_pkey_ctx.get(), EVP_PADDING_PKCS7);
+   	if(ret <= 0)
+	{
+		LOGE("can't set padding")
+		return false;
+    }
+
+	ret = EVP_PKEY_decrypt(up_evp_pkey_ctx.get(), NULL, &out_len, cipher_text, cipher_len);
+   	if(ret <= 0)
+	{
+		LOGE("can't get decrypt buffer length")
+		return false;
+    }
+
+	std::cout << "outlen : " << out_len << std::endl;
+	*plain_len = out_len;
+
+	ret = EVP_PKEY_decrypt(up_evp_pkey_ctx.get(), plain_text, plain_len, cipher_text, cipher_len);
+   	if(ret <= 0)
+	{
+		LOGE("can't get decrypt buffer length")
+		return false;
+    }
+
+	return true;	
+}
+
 void test_generate_rsa_key_files()
 {
 	std::vector<int> kBits {1024, 2048, 4096};
@@ -355,22 +422,63 @@ void test_generate_rsa_key_files()
 	}
 }
 
-void test_rsa_encrypt()
+void test_rsa_encrypt_decrypt()
 {
+#if 0	
 	bool ret = false;
 	size_t cipher_len = 0;
+	size_t derypted_len = 0;
 
-	std::string plain_text("heesoon.kim test about test_rsa_encrypt");
-	std::string cipher_text(plain_text.size()+100, 'X');
+	//std::string plain_text("heesoon.kim test about test_rsa_encrypt");
+	std::string plain_text("11111");
+	std::string cipher_text(plain_text.size(), 'X');
+	std::string decrypted_text(plain_text.size()+100, 'X');
 
 	ret = rsa_encrypt((unsigned char*)plain_text.c_str(), plain_text.size(), (unsigned char*)cipher_text.c_str(), &cipher_len, "publickey-2048.pem");
 
-	if(ret == true) std::cout << cipher_text << std::endl;
+	if(ret == true)
+	{
+		ret = rsa_decrypt((unsigned char*)cipher_text.c_str(), cipher_text.size(), (unsigned char*)decrypted_text.c_str(), &derypted_len, "privateKey-2048.pem");
+		if(ret == true)
+		{
+			std::cout << decrypted_text << std::endl;
+		}
+	}
+#else
+	bool ret = false;
+	unsigned char cipher_text[1024];
+	unsigned char plain_text[] = "heesoon.kim rsa test";
+	size_t plain_len = std::strlen((char*)plain_text);
+	size_t cipher_len = 1024;
+
+	ret = rsa_encrypt(plain_text, plain_len, cipher_text, &cipher_len, "publickey-2048.pem");
+	if(ret == true)
+	{
+		std::cout << "cipher length : " << cipher_len << std::endl;
+	}
+
+	for(int i = 0; i < cipher_len; i++)
+	{
+		std::printf("%02X", cipher_text[i]);
+	}
+	std::cout << std::endl;
+
+	std::memset(plain_text, '\0', plain_len);
+	plain_len = 1;
+
+	ret = rsa_decrypt(cipher_text, cipher_len, plain_text, &plain_len, "privateKey-2048.pem");
+	if(ret == true)
+	{
+		std::cout << "decrypted length : " << plain_len << std::endl;
+	}
+
+	std::cout << plain_text << std::endl;
+#endif	
 }
 
 int main()
 {
 	test_generate_rsa_key_files();
-	test_rsa_encrypt();
+	test_rsa_encrypt_decrypt();
 	return 0;
 }
