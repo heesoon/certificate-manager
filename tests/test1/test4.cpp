@@ -4,12 +4,30 @@
 #include <vector>
 #include <memory>
 #include <fstream>
+#include <cstring>
 #include <openssl/rsa.h>
 #include <openssl/pem.h>
 #include <openssl/evp.h>
 
 #define DEFBITS 2048
 #define DEFPRIMES 2
+
+# define B_FORMAT_TEXT   0x8000
+# define FORMAT_UNDEF    0
+# define FORMAT_TEXT    (1 | B_FORMAT_TEXT)     /* Generic text */
+# define FORMAT_BINARY   2                      /* Generic binary */
+# define FORMAT_BASE64  (3 | B_FORMAT_TEXT)     /* Base64 */
+# define FORMAT_ASN1     4                      /* ASN.1/DER */
+# define FORMAT_PEM     (5 | B_FORMAT_TEXT)
+# define FORMAT_PKCS12   6
+# define FORMAT_SMIME   (7 | B_FORMAT_TEXT)
+# define FORMAT_ENGINE   8                      /* Not really a file format */
+# define FORMAT_PEMRSA  (9 | B_FORMAT_TEXT)     /* PEM RSAPubicKey format */
+# define FORMAT_ASN1RSA  10                     /* DER RSAPubicKey format */
+# define FORMAT_MSBLOB   11                     /* MS Key blob format */
+# define FORMAT_PVK      12                     /* MS PVK file format */
+# define FORMAT_HTTP     13                     /* Download using HTTP */
+# define FORMAT_NSS      14                     /* NSS keylog format */
 
 #if defined(LOG_PRINT)
 #define LOGE(x) std::cout << "ERROR : " << "[" << __FILE__ << ", " << __FUNCTION__ << ", " << __LINE__ << "] " << x << std::endl;
@@ -20,6 +38,27 @@
 #define LOGI(x)
 #define LOGD(x)
 #endif
+
+static int istext(int format)
+{
+    return (format & B_FORMAT_TEXT) == B_FORMAT_TEXT;
+}
+
+static const char *modestr(char mode, int format)
+{
+    OPENSSL_assert(mode == 'a' || mode == 'r' || mode == 'w');
+
+    switch (mode) {
+    case 'a':
+        return istext(format) ? "a" : "ab";
+    case 'r':
+        return istext(format) ? "r" : "rb";
+    case 'w':
+        return istext(format) ? "w" : "wb";
+    }
+    /* The assert above should make sure we never reach this point */
+    return NULL;
+}
 
 auto delPtrBIO = [](BIO *bio)
 {
@@ -183,6 +222,64 @@ bool generate_rsa_key_files(const char *private_keyfile, const char *public_keyf
 	return true;	
 }
 
+bool rsa_encrypt(unsigned char *plain_text, size_t plain_len, unsigned char *cipher_text, size_t *cipher_len, const char *public_keyfile)
+{
+	int ret = 1;
+
+	if(plain_text == NULL || cipher_text == NULL || cipher_len == NULL || public_keyfile == NULL)
+	{
+		LOGE("wrong input parameter")
+		return false;
+	}
+
+	BIO *bio_key = BIO_new_file(public_keyfile, modestr('r', FORMAT_PEM));
+	if(bio_key == NULL)
+	{
+		LOGE("can't open bio")
+		return false;
+	}
+
+	EVP_PKEY *pkey = NULL;
+	// format == FORMAT_PEM
+	pkey = PEM_read_bio_PUBKEY(bio_key, NULL, NULL, NULL);
+	if(pkey == NULL)
+	{
+		LOGE("can't load rsa public key")
+		return false;
+	}
+
+	EVP_PKEY_CTX *ctx = NULL;
+	ctx = EVP_PKEY_CTX_new(pkey, NULL);
+	if(ctx == NULL)
+	{
+		LOGE("can't open ctx new")
+		return false;
+	}
+
+	ret = EVP_PKEY_encrypt_init(ctx);
+    if(ret <= 0)
+	{
+		LOGE("can't encrypt init")
+		return false;
+    }
+
+	ret = EVP_PKEY_CTX_set_rsa_padding(ctx, EVP_PADDING_PKCS7);
+   	if(ret <= 0)
+	{
+		LOGE("can't set padding")
+		return false;
+    }
+
+	ret = EVP_PKEY_encrypt(ctx, cipher_text, cipher_len, plain_text, plain_len);
+   	if(ret <= 0)
+	{
+		LOGE("can't encrypt")
+		return false;
+    }
+
+	return true;
+}
+
 void test_generate_rsa_key_files()
 {
 	std::vector<int> kBits {1024, 2048, 4096};
@@ -190,7 +287,7 @@ void test_generate_rsa_key_files()
 	for( auto kbits : kBits)
 	{
 		std::string privateFileName = "privateKey-";
-		std::string publicFileName = "public-";
+		std::string publicFileName = "publickey-";
 		std::stringstream sint;
 		sint << kbits;
 
@@ -201,8 +298,22 @@ void test_generate_rsa_key_files()
 	}
 }
 
+void test_rsa_encrypt()
+{
+	bool ret = false;
+	size_t cipher_len = 0;
+
+	std::string plain_text("heesoon.kim test about test_rsa_encrypt");
+	std::string cipher_text(plain_text.size()+100, 'X');
+
+	ret = rsa_encrypt((unsigned char*)plain_text.c_str(), plain_text.size(), (unsigned char*)cipher_text.c_str(), &cipher_len, "publickey-2048.pem");
+
+	if(ret == true) std::cout << cipher_text << std::endl;
+}
+
 int main()
 {
 	test_generate_rsa_key_files();
+	test_rsa_encrypt();
 	return 0;
 }
