@@ -39,5 +39,5 @@ include_directories(${CMAKE_SOURCE_DIR}/openssl/include)
 #link_directories(${CMAKE_SOURCE_DIR}/openssl/libs)
 target_link_libraries(
 	${PROJECT_NAME} PRIVATE
-	crypto	
+	crypto
 )

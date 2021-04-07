@@ -39,6 +39,13 @@
 #define LOGD(x)
 #endif
 
+typedef struct csr_st
+{
+	const unsigned char *country;
+	const unsigned char *company;
+	const unsigned char *common_name;
+} csr_t;
+
 static int istext(int format)
 {
     return (format & B_FORMAT_TEXT) == B_FORMAT_TEXT;
@@ -62,7 +69,8 @@ static const char *modestr(char mode, int format)
 
 auto delPtrBIO = [](BIO *bio)
 {
-	BIO_free(bio);
+	if(bio != NULL)
+		BIO_free(bio);
 	// BIO_free_all(bio);
 	LOGD("called ..")
 };
@@ -99,13 +107,15 @@ auto delPtrEVP_MD_CTX = [](EVP_MD_CTX *ctx)
 
 auto delPtrX509 = [](X509 *x509)
 {
-	X509_free(x509);
+	if(x509 != NULL)
+		X509_free(x509);
 	LOGD("called ..")
 };
 
 auto delPtrX509_Name = [](X509_NAME *x509_name)
 {
-	X509_NAME_free(x509_name);
+	if(x509_name != NULL)
+		X509_NAME_free(x509_name);
 	LOGD("called ..")
 };
 
@@ -551,11 +561,30 @@ bool rsa_verify(unsigned char *signed_text, size_t signed_len, unsigned char *re
 	return true;
 }
 
-bool generate_x509_certificate(const char *certificate_filename, const char *ca_privatekey_name, long days)
+int set_cert_timesset_cert_times(X509 *x, const char *startdate, const char *enddate, int days)
+{
+    if (startdate == NULL || strcmp(startdate, "today") == 0) {
+        if (X509_gmtime_adj(X509_getm_notBefore(x), 0) == NULL)
+            return 0;
+    } else {
+        if (!ASN1_TIME_set_string_X509(X509_getm_notBefore(x), startdate))
+            return 0;
+    }
+    if (enddate == NULL) {
+        if (X509_time_adj_ex(X509_getm_notAfter(x), days, 0, NULL)
+            == NULL)
+            return 0;
+    } else if (!ASN1_TIME_set_string_X509(X509_getm_notAfter(x), enddate)) {
+        return 0;
+    }
+    return 1;
+}
+
+bool generate_x509_certificate(const char *certificate_filename, const char *ca_privatekey_name, csr_t *csr, long days)
 {
 	int ret = 1;
 
-	if(certificate_filename == NULL || ca_privatekey_name == NULL)
+	if(certificate_filename == NULL || ca_privatekey_name == NULL || csr == NULL)
 	{
 		LOGE("wrong input parameter")
 		return false;
@@ -596,47 +625,58 @@ bool generate_x509_certificate(const char *certificate_filename, const char *ca_
 		return false;
 	}
 
-	unique_ptr_x509_name_type_t up_x509_name(X509_get_subject_name(up_x509.get()), delPtrX509_Name);
-	if(up_x509_name.get() == NULL)
+	//unique_ptr_x509_name_type_t up_x509_name(X509_get_subject_name(up_x509.get()), delPtrX509_Name);
+	X509_NAME *x509_name = X509_get_subject_name(up_x509.get());
+	//if(up_x509_name.get() == NULL)
+	if(x509_name == NULL)
 	{
 		LOGE("can't load up_x509_name")
 		return false;
 	}
 
-	// 여기는 더 봐야 할 부분
-	ASN1_INTEGER_set(X509_get_serialNumber(x509), 1);
-	X509_gmtime_adj(X509_get_notBefore(x509), 0);
-	X509_gmtime_adj(X509_get_notAfter(x509), 31536000L);
+	ret = ASN1_INTEGER_set(X509_get_serialNumber(up_x509.get()), 1);
+	if(ret != 1)
+	{
+		LOGE("ASN1_INTEGER_set")
+		return false;
+	}
 
-	const uchar country[] = "KR";
-	const uchar company[] = "LGE Inc";
-	const uchar common_name[] = "localhost";
-
-	ret = X509_NAME_add_entry_by_txt(up_x509_name.get(), "C", MBSTRING_ASC, country, -1, -1, 0);
+	//ret = X509_NAME_add_entry_by_txt(up_x509_name.get(), "C", MBSTRING_ASC, csr->country, -1, -1, 0);
+	ret = X509_NAME_add_entry_by_txt(x509_name, "C", MBSTRING_ASC, csr->country, -1, -1, 0);
 	if(ret == 0)
 	{
 		LOGE("X509_NAME_add_entry_by_txt")
 		return false;
 	}
 
-	ret = X509_NAME_add_entry_by_txt(up_x509_name.get(), "O", MBSTRING_ASC, company, -1, -1, 0);
+	//ret = X509_NAME_add_entry_by_txt(up_x509_name.get(), "O", MBSTRING_ASC, csr->company, -1, -1, 0);
+	ret = X509_NAME_add_entry_by_txt(x509_name, "O", MBSTRING_ASC, csr->company, -1, -1, 0);
 	if(ret == 0)
 	{
 		LOGE("X509_NAME_add_entry_by_txt")
 		return false;
 	}
 
-	ret = X509_NAME_add_entry_by_txt(up_x509_name.get(), "C", MBSTRING_ASC, common_name, -1, -1, 0);
+	//ret = X509_NAME_add_entry_by_txt(up_x509_name.get(), "CN", MBSTRING_ASC, csr->common_name, -1, -1, 0);
+	ret = X509_NAME_add_entry_by_txt(x509_name, "CN", MBSTRING_ASC, csr->common_name, -1, -1, 0);
 	if(ret == 0)
 	{
 		LOGE("X509_NAME_add_entry_by_txt")
 		return false;
 	}		
 
-	ret = X509_set_issuer_name(up_x509.get(), up_x509_name.get());
+	//ret = X509_set_issuer_name(up_x509.get(), up_x509_name.get());
+	ret = X509_set_issuer_name(up_x509.get(), x509_name);
 	if(ret == 0)
 	{
 		LOGE("X509_set_issuer_name")
+		return false;
+	}
+
+	ret = set_cert_timesset_cert_times(up_x509.get(), NULL, NULL, 360);
+	if(ret != 1)
+	{
+		LOGE("set_cert_timesset_cert_times")
 		return false;
 	}
 
@@ -761,10 +801,30 @@ void test_sign_verify()
 	LOGI("Succee in test_sign_verify")
 }
 
+void test_generate_x509_certificate()
+{
+	bool ret = false;
+	std::unique_ptr<csr_t> up_csr(new csr_t);
+	csr_t *ptr = up_csr.get();
+	ptr->country = (unsigned char*)"KR";
+	ptr->company = (unsigned char*)"LGE";
+	ptr->common_name = (unsigned char*)"www.lge.com";
+
+	ret = generate_x509_certificate("self-signed-certificate.crt", "privateKey-2048.pem", up_csr.get(), 360);
+	if(ret == false)
+	{
+		LOGE("test_generate_x509_certificate");
+		return;
+	}
+
+	LOGI("Succee in test_generate_x509_certificate")
+}
+
 int main()
 {
 	test_generate_rsa_key_files();
 	test_rsa_encrypt_decrypt();
 	test_sign_verify();
+	test_generate_x509_certificate();
 	return 0;
 }
