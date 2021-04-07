@@ -97,12 +97,26 @@ auto delPtrEVP_MD_CTX = [](EVP_MD_CTX *ctx)
 	LOGD("called ..")
 };
 
+auto delPtrX509 = [](X509 *x509)
+{
+	X509_free(x509);
+	LOGD("called ..")
+};
+
+auto delPtrX509_Name = [](X509_NAME *x509_name)
+{
+	X509_NAME_free(x509_name);
+	LOGD("called ..")
+};
+
 using unique_ptr_bio_type_t				= std::unique_ptr<BIO, decltype(delPtrBIO)>;
 using unique_ptr_bn_type_t 				= std::unique_ptr<BIGNUM, decltype(delPtrBN)>;
 using unique_ptr_rsa_type_t 			= std::unique_ptr<RSA, decltype(delPtrRSA)>;
 using unique_ptr_evp_pkey_type_t 		= std::unique_ptr<EVP_PKEY, decltype(delPtrEVP_PKEY)>;
 using unique_ptr_evp_pkey_ctx_type_t 	= std::unique_ptr<EVP_PKEY_CTX, decltype(delPtrEVP_PKEY_CTX)>;
 using unique_ptr_evp_md_ctx_type_t		= std::unique_ptr<EVP_MD_CTX, decltype(delPtrEVP_MD_CTX)>;
+using unique_ptr_x509_type_t			= std::unique_ptr<X509, decltype(delPtrX509)>;
+using unique_ptr_x509_name_type_t		= std::unique_ptr<X509_NAME, decltype(delPtrX509_Name)>;
 
 enum class CRSAType
 {
@@ -533,6 +547,113 @@ bool rsa_verify(unsigned char *signed_text, size_t signed_len, unsigned char *re
 		LOGE("EVP_VerifyFinal")
 		return false;
     }
+
+	return true;
+}
+
+bool generate_x509_certificate(const char *certificate_filename, const char *ca_privatekey_name, long days)
+{
+	int ret = 1;
+
+	if(certificate_filename == NULL || ca_privatekey_name == NULL)
+	{
+		LOGE("wrong input parameter")
+		return false;
+	}
+
+	unique_ptr_bio_type_t up_bio_cert(BIO_new_file(certificate_filename, modestr('w', FORMAT_PEM)), delPtrBIO);
+	if(up_bio_cert.get() == NULL)
+	{
+		LOGE("can't open bio")
+		return false;
+	}
+
+	unique_ptr_bio_type_t up_bio_key(BIO_new_file(ca_privatekey_name, modestr('r', FORMAT_PEM)), delPtrBIO);
+	if(up_bio_key.get() == NULL)
+	{
+		LOGE("can't open bio")
+		return false;
+	}
+
+	unique_ptr_evp_pkey_type_t up_evp_pkey(PEM_read_bio_PrivateKey(up_bio_key.get(), NULL, NULL, NULL), delPtrEVP_PKEY);
+	if(up_evp_pkey.get() == NULL)
+	{
+		LOGE("can't load rsa private key")
+		return false;
+	}
+
+	unique_ptr_x509_type_t up_x509(X509_new(), delPtrX509);
+	if(up_x509.get() == NULL)
+	{
+		LOGE("can't load x509")
+		return false;
+	}
+
+	ret = X509_set_pubkey(up_x509.get(), up_evp_pkey.get());
+	if(ret == 0)
+	{
+		LOGE("X509_set_pubkey")
+		return false;
+	}
+
+	unique_ptr_x509_name_type_t up_x509_name(X509_get_subject_name(up_x509.get()), delPtrX509_Name);
+	if(up_x509_name.get() == NULL)
+	{
+		LOGE("can't load up_x509_name")
+		return false;
+	}
+
+	// 여기는 더 봐야 할 부분
+	ASN1_INTEGER_set(X509_get_serialNumber(x509), 1);
+	X509_gmtime_adj(X509_get_notBefore(x509), 0);
+	X509_gmtime_adj(X509_get_notAfter(x509), 31536000L);
+
+	const uchar country[] = "KR";
+	const uchar company[] = "LGE Inc";
+	const uchar common_name[] = "localhost";
+
+	ret = X509_NAME_add_entry_by_txt(up_x509_name.get(), "C", MBSTRING_ASC, country, -1, -1, 0);
+	if(ret == 0)
+	{
+		LOGE("X509_NAME_add_entry_by_txt")
+		return false;
+	}
+
+	ret = X509_NAME_add_entry_by_txt(up_x509_name.get(), "O", MBSTRING_ASC, company, -1, -1, 0);
+	if(ret == 0)
+	{
+		LOGE("X509_NAME_add_entry_by_txt")
+		return false;
+	}
+
+	ret = X509_NAME_add_entry_by_txt(up_x509_name.get(), "C", MBSTRING_ASC, common_name, -1, -1, 0);
+	if(ret == 0)
+	{
+		LOGE("X509_NAME_add_entry_by_txt")
+		return false;
+	}		
+
+	ret = X509_set_issuer_name(up_x509.get(), up_x509_name.get());
+	if(ret == 0)
+	{
+		LOGE("X509_set_issuer_name")
+		return false;
+	}
+
+    // https://stackoverflow.com/questions/256405/programmatically-create-x509-certificate-using-openssl
+	ret = X509_sign(up_x509.get(), up_evp_pkey.get(), EVP_sha256());
+	if(ret == 0)
+	{
+		LOGE("X509_sign")
+		return false;
+	}
+
+	ret = PEM_write_bio_X509(up_bio_cert.get(), up_x509.get());
+	if(ret == 0)
+	{
+		LOGE("PEM_write_bio_X509")
+		return false;
+	}
 
 	return true;
 }
