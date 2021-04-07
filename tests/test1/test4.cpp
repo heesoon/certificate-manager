@@ -91,11 +91,18 @@ auto delPtrEVP_PKEY_CTX = [](EVP_PKEY_CTX *ctx)
 	LOGD("called ..")
 };
 
+auto delPtrEVP_MD_CTX = [](EVP_MD_CTX *ctx)
+{
+	EVP_MD_CTX_free(ctx);
+	LOGD("called ..")
+};
+
 using unique_ptr_bio_type_t				= std::unique_ptr<BIO, decltype(delPtrBIO)>;
 using unique_ptr_bn_type_t 				= std::unique_ptr<BIGNUM, decltype(delPtrBN)>;
 using unique_ptr_rsa_type_t 			= std::unique_ptr<RSA, decltype(delPtrRSA)>;
 using unique_ptr_evp_pkey_type_t 		= std::unique_ptr<EVP_PKEY, decltype(delPtrEVP_PKEY)>;
 using unique_ptr_evp_pkey_ctx_type_t 	= std::unique_ptr<EVP_PKEY_CTX, decltype(delPtrEVP_PKEY_CTX)>;
+using unique_ptr_evp_md_ctx_type_t		= std::unique_ptr<EVP_MD_CTX, decltype(delPtrEVP_MD_CTX)>;
 
 enum class CRSAType
 {
@@ -404,6 +411,132 @@ bool rsa_decrypt(unsigned char *cipher_text, size_t cipher_len, unsigned char *p
 	return true;	
 }
 
+//int rsa_sign(unsigned char *sign_text, size_t sign_len, unsigned char *result, size_t *result_len, const unsigned char *privatekey_file, const unsigned char *passwd)
+bool rsa_sign(unsigned char *input_text, size_t input_text_len, unsigned char *signed_text, size_t *signed_len, const char *privatekey_file)
+{
+	int ret = 1;
+
+	if(input_text == NULL || signed_text == NULL || signed_len == NULL || privatekey_file == NULL)
+	{
+		LOGE("wrong input parameter")
+		return false;
+	}
+
+	unique_ptr_bio_type_t up_bio_key(BIO_new_file(privatekey_file, modestr('r', FORMAT_PEM)), delPtrBIO);
+	if(up_bio_key.get() == NULL)
+	{
+		LOGE("can't open bio")
+		return false;
+	}
+
+	unique_ptr_evp_pkey_type_t up_evp_pkey(PEM_read_bio_PrivateKey(up_bio_key.get(), NULL, NULL, NULL), delPtrEVP_PKEY);
+	if(up_evp_pkey.get() == NULL)
+	{
+		LOGE("can't load rsa private key")
+		return false;
+	}
+
+	unique_ptr_evp_md_ctx_type_t up_evp_md_ctx(EVP_MD_CTX_new(), delPtrEVP_MD_CTX);
+	if(up_evp_md_ctx.get() == NULL)
+	{
+		LOGE("can't allocate evp md ctx")
+		return false;
+	}
+
+	ret = EVP_MD_CTX_init(up_evp_md_ctx.get());
+	if(ret != 1)
+	{
+		LOGE("EVP_MD_CTX_init")
+		return false;
+	}
+
+	// need to change optionally hash function
+	ret = EVP_SignInit_ex(up_evp_md_ctx.get(), EVP_sha256(), NULL);
+	if(ret != 1)
+	{
+		LOGE("EVP_SignInit_ex")
+		return false;
+	}
+
+    ret = EVP_SignUpdate(up_evp_md_ctx.get(), input_text, input_text_len);
+    if (ret != 1) 
+	{
+		LOGE("EVP_SignUpdate")
+		return false;
+    }
+
+    ret = EVP_SignFinal(up_evp_md_ctx.get(), signed_text, (unsigned int*)signed_len, up_evp_pkey.get());
+    if (ret != 1) 
+	{
+		LOGE("EVP_SignUpdate")
+		return false;
+    }
+
+	return true;
+}
+
+bool rsa_verify(unsigned char *signed_text, size_t signed_len, unsigned char *result, size_t result_len, const char *publickey_file)
+{
+	int ret = 1;
+
+	if(signed_text == NULL || result == NULL || publickey_file == NULL)
+	{
+		LOGE("wrong input parameter")
+		return false;
+	}
+
+	unique_ptr_bio_type_t up_bio_key(BIO_new_file(publickey_file, modestr('r', FORMAT_PEM)), delPtrBIO);
+	if(up_bio_key.get() == NULL)
+	{
+		LOGE("can't open bio")
+		return false;
+	}
+
+	unique_ptr_evp_pkey_type_t up_evp_pkey(PEM_read_bio_PUBKEY(up_bio_key.get(), NULL, NULL, NULL), delPtrEVP_PKEY);
+	if(up_evp_pkey.get() == NULL)
+	{
+		LOGE("can't load rsa public key")
+		return false;
+	}
+
+	unique_ptr_evp_md_ctx_type_t up_evp_md_ctx(EVP_MD_CTX_new(), delPtrEVP_MD_CTX);
+	if(up_evp_md_ctx.get() == NULL)
+	{
+		LOGE("can't allocate evp md ctx")
+		return false;
+	}
+
+	ret = EVP_MD_CTX_init(up_evp_md_ctx.get());
+	if(ret != 1)
+	{
+		LOGE("EVP_MD_CTX_init")
+		return false;
+	}
+
+    ret = EVP_VerifyInit_ex(up_evp_md_ctx.get(), EVP_sha256(), NULL);
+    if (ret != 1) 
+	{
+		LOGE("EVP_VerifyInit_ex")
+		return false;
+    }
+
+    ret = EVP_VerifyUpdate(up_evp_md_ctx.get(), result, result_len);
+    if (ret != 1) 
+	{
+		LOGE("EVP_VerifyUpdate")
+		return false;
+    }
+
+    ret = EVP_VerifyFinal(up_evp_md_ctx.get(), signed_text, (unsigned int)signed_len, up_evp_pkey.get());
+    if (ret != 1)
+	{
+		LOGE("EVP_VerifyFinal")
+		return false;
+    }
+
+	return true;
+}
+
 void test_generate_rsa_key_files()
 {
 	std::vector<int> kBits {1024, 2048, 4096};
@@ -476,9 +609,41 @@ void test_rsa_encrypt_decrypt()
 #endif	
 }
 
+void test_sign_verify()
+{
+	bool ret = false;
+	unsigned char result[1024];
+	unsigned char input_text[] = "heesoon.kim sign test";
+	size_t result_len = 256;
+	size_t input_text_len = std::strlen((char*)input_text);
+
+	ret = rsa_sign(input_text, input_text_len, result, &result_len, "privateKey-2048.pem");
+	if(ret == false)
+	{
+		LOGE("rsa_sign")
+		return;
+	}
+
+	for(int i = 0; i < result_len; i++)
+	{
+		std::printf("%02X", result[i]);
+	}
+	std::cout << std::endl;
+
+	ret = rsa_verify(result, result_len, input_text, input_text_len, "publickey-2048.pem");
+	if(ret == false)
+	{
+		LOGE("rsa_verify")
+		return;
+	}
+
+	LOGI("Succee in test_sign_verify")
+}
+
 int main()
 {
 	test_generate_rsa_key_files();
 	test_rsa_encrypt_decrypt();
+	test_sign_verify();
 	return 0;
 }
