@@ -6,8 +6,8 @@ rm -rf ./certs
 mkdir ./certs
 
 # generate private/public key pair by genrsa without password
-#echo "generate key pairs without password"
-#openssl genrsa -out ./certs/rootca_key.pem 4096
+echo "generate key pairs without password"
+openssl genrsa -out ./certs/rootca_key.pem 4096
 
 # generate key pairs with password and encryt
 #openssl genrsa -aes256 -passout:hskim -out encrypted_rootca_key.pem 2048
@@ -16,15 +16,8 @@ mkdir ./certs
 
 # generate csr
 
-#openssl req -new -key ./certs/rootca_key.pem -config rootca_openssl.cnf -out ./certs/csr.pem
-
-openssl req \
-		-x509 -newkey rsa:4096 -keyout ./certs/rootca_key.pem -out ./certs/rootca.cert \
-		-config rootca_openssl.cnf -nodes	\
-		-days 3600
+openssl req -new -key ./certs/rootca_key.pem -config openssl.conf -out ./certs/csr.pem
 
 # verify pem
 
-openssl x509 -text -noout -in ./certs/rootca.cert
-
-
+openssl req -in ./certs/csr.pem -text -verify -noout
