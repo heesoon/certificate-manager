@@ -1,12 +1,16 @@
 # https://jamielinux.com/docs/openssl-certificate-authority/create-the-root-pair.html
 
+HOME			  = /home/hskim
+CERT_HOME		  = $HOME/certificates
+ROOTCA_HOME		  = $CERT_HOME/rootca
+dir               = $ROOTCA_HOME
+
 [ ca ]
 # `man ca`
 default_ca = CA_default
 
 [ CA_default ]
 # Directory and file locations.
-dir               = root/ca
 certs             = $dir/certs
 crl_dir           = $dir/crl
 new_certs_dir     = $dir/newcerts
@@ -29,7 +33,7 @@ default_md        = sha256
 
 name_opt          = ca_default
 cert_opt          = ca_default
-default_days      = 375
+default_days      = 3750
 preserve          = no
 policy            = policy_strict
 
@@ -56,7 +60,7 @@ emailAddress            = optional
 
 [ req ]
 # Options for the `req` tool (`man req`).
-default_bits        = 2048
+default_bits        = 4096
 distinguished_name  = req_distinguished_name
 string_mask         = utf8only
 

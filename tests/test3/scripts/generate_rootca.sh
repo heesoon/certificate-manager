@@ -1,7 +1,26 @@
 #!/bin/bash
 
-cd ../
-cd root/ca
+HOME="/home/hskim"
+CERT_HOME=$HOME/certificates
+ROOTCA_HOME=$CERT_HOME/rootca
+
+# make /home/hskim/certificate directory
+if [! -d "$CERT_HOME"]; then
+	mkdir $CERT_HOME
+fi
+
+# make /home/hskim/certificate/rootca directory
+if [ -d "$ROOTCA_HOME"]; then
+	rm -rf $ROOTCA_HOME
+fi
+
+mkdir -p $ROOTCA_HOME
+
+cp -af root_openssl.cnf $ROOTCA_HOME/openssl.cnf
+cd $ROOTCA_HOME
+mkdir certs crl newcerts private
+touch index.txt
+echo 1000 > serial
 
 # openssl genrsa -ase256 -out private/ca.key.pen 4096
 # chmod 400 private/ca.key.pem
