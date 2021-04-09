@@ -55,4 +55,8 @@ openssl x509 -noout -text -in certs/intermediate.cert.pem
 # verify the intermediate certificate against the root certificate
 openssl verify -CAfile $ROOTCA_HOME/certs/ca.cert.pem \
 				certs/intermediate.cert.pem
+				
+# generate certificate chain
+cat $INTERMEDIATE_HOME/certs/intermediate.cert.pem \
+	$ROOTCA_HOME/certs/ca.cert.pem > $INTERMEDIATE_HOME/certs/ca-chain.cert.pem
 
