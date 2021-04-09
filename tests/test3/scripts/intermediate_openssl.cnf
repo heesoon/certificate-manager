@@ -1,5 +1,6 @@
 HOME			  = /home/hskim
 CERT_HOME		  = $HOME/certificates
+ROOTCA_HOME		  = $CERT_HOME/rootca
 INTERMEDIATE_HOME = $CERT_HOME/intermediate
 dir               = $INTERMEDIATE_HOME
 
@@ -17,8 +18,10 @@ serial            = $dir/serial
 RANDFILE          = $dir/private/.rand
 
 # The root key and root certificate.
-private_key       = $dir/private/intermediate.key.pem
-certificate       = $dir/certs/intermediate.cert.pem
+#private_key       = $dir/private/intermediate.key.pem
+private_key		   = $ROOTCA_HOME/private/ca.key.pem
+#certificate       = $dir/certs/intermediate.cert.pem
+certificate        = $ROOTCA_HOME/certs/ca.cert.pem
 
 # For certificate revocation lists.
 crlnumber         = $dir/crlnumber

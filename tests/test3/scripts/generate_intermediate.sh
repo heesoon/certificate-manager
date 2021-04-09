@@ -2,15 +2,16 @@
 
 HOME="/home/hskim"
 CERT_HOME=$HOME/certificates
+ROOTCA_HOME=$CERT_HOME/rootca
 INTERMEDIATE_HOME=$CERT_HOME/intermediate
 
 # make /home/hskim/certificate directory
-if [! -d "$CERT_HOME"]; then
+if [! -d "$CERT_HOME" ]; then
 	mkdir $CERT_HOME
 fi
 
 # make /home/hskim/certificate/rootca directory
-if [ -d "$INTERMEDIATE_HOME"]; then
+if [ -d "$INTERMEDIATE_HOME" ]; then
 	rm -rf $INTERMEDIATE_HOME
 fi
 
@@ -21,6 +22,7 @@ cd $INTERMEDIATE_HOME
 mkdir certs crl csr newcerts private
 chmod 700 private
 touch index.txt
+touch index.txt.attr
 echo 1000 > serial
 touch crlnumber
 echo 1000 > crlnumber
@@ -48,9 +50,9 @@ openssl ca -config openssl.cnf \
 
 
 # identify intermdiate certificate
-openssl x509 -noout -text -in intermediate.cert.pem
+openssl x509 -noout -text -in certs/intermediate.cert.pem
 
 # verify the intermediate certificate against the root certificate
-openssl verify -CASfile certs/ca.cert.pem \
+openssl verify -CAfile $ROOTCA_HOME/certs/ca.cert.pem \
 				certs/intermediate.cert.pem
 
