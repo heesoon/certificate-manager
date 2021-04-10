@@ -4,161 +4,147 @@
 #include <vector>
 #include <openssl/rsa.h>
 #include <openssl/pem.h>
+#include <openssl/conf.h>
 
-bool create_RSA_privateKey(const char* filename, int kBits)
+# define B_FORMAT_TEXT   0x8000
+# define FORMAT_UNDEF    0
+# define FORMAT_TEXT    (1 | B_FORMAT_TEXT)     /* Generic text */
+# define FORMAT_BINARY   2                      /* Generic binary */
+# define FORMAT_BASE64  (3 | B_FORMAT_TEXT)     /* Base64 */
+# define FORMAT_ASN1     4                      /* ASN.1/DER */
+# define FORMAT_PEM     (5 | B_FORMAT_TEXT)
+# define FORMAT_PKCS12   6
+# define FORMAT_SMIME   (7 | B_FORMAT_TEXT)
+# define FORMAT_ENGINE   8                      /* Not really a file format */
+# define FORMAT_PEMRSA  (9 | B_FORMAT_TEXT)     /* PEM RSAPublicKey format */
+# define FORMAT_ASN1RSA  10                     /* DER RSAPublicKey format */
+# define FORMAT_MSBLOB   11                     /* MS Key blob format */
+# define FORMAT_PVK      12                     /* MS PVK file format */
+# define FORMAT_HTTP     13                     /* Download using HTTP */
+# define FORMAT_NSS      14                     /* NSS keylog format */
+
+#define BITS               "default_bits"
+#define KEYFILE            "default_keyfile"
+#define PROMPT             "prompt"
+#define DISTINGUISHED_NAME "distinguished_name"
+#define ATTRIBUTES         "attributes"
+#define V3_EXTENSIONS      "x509_extensions"
+#define REQ_EXTENSIONS     "req_extensions"
+#define STRING_MASK        "string_mask"
+#define UTF8_IN            "utf8"
+#define BITS               "default_bits"
+#define KEYFILE            "default_keyfile"
+#define PROMPT             "prompt"
+#define DISTINGUISHED_NAME "distinguished_name"
+#define ATTRIBUTES         "attributes"
+#define V3_EXTENSIONS      "x509_extensions"
+#define REQ_EXTENSIONS     "req_extensions"
+#define STRING_MASK        "string_mask"
+#define UTF8_IN            "utf8"
+
+int FMT_istext(int format)
 {
-	int rc = 1;
-	BIGNUM *bn = NULL;
-	BIO *pem = NULL;
-	RSA *rsa = NULL;
-#if 0	
-	EVP_PKEY *pkey = NULL;
-#endif
-
-	pem = BIO_new_file(filename, "w");
-	if(pem == NULL)
-	{
-		std::cout << "error in " << __FUNCTION__ << " : " << __LINE__ << std::endl;
-		goto err;		
-	}
-
-	bn = BN_new();
-	if(bn == NULL)
-	{
-		std::cout << "error in " << __FUNCTION__ << " : " << __LINE__ << std::endl;
-		goto err;		
-	}
-
-	rc = BN_set_word(bn, RSA_F4);
-	if(rc == 0)
-	{
-		std::cout << "error in " << __FUNCTION__ << " : " << __LINE__ << std::endl;
-		goto err;			
-	}
-
-	rsa = RSA_new();
-	if(rsa == NULL)
-	{
-		std::cout << "error in " << __FUNCTION__ << " : " << __LINE__ << std::endl;
-		goto err;
-	}
-
-	rc = RSA_generate_key_ex(rsa, kBits, bn, NULL);
-	if(rc == 0)
-	{
-		std::cout << "error in " << __FUNCTION__ << " : " << __LINE__ << std::endl;
-		goto err;			
-	}
-
-#if __DEBUG__
-	const BIGNUM *e;
-	const BIGNUM *d;
-	const BIGNUM *n;
-	char *dece;
-	char *decd;
-	char *decn;
-
-	RSA_get0_key(rsa, &n, &e, &d);
-	dece = BN_bn2dec(e);
-	decd = BN_bn2dec(d);
-	decn = BN_bn2dec(n);
-
-	std::cout << "e : " << dece <<  std::endl;
-	std::cout << "d : " << decd <<  std::endl;
-	std::cout << "n : " << decn <<  std::endl;
-
-	OPENSSL_free(dece);
-	OPENSSL_free(decd);
-	OPENSSL_free(decn);
-#endif
-
-#if 0
-	pkey = EVP_PKEY_new();
-	if(pkey == NULL)
-	{
-		std::cout << "error in " << __FUNCTION__ << " : " << __LINE__ << std::endl;
-		goto err;		
-	}
-
-	rc = EVP_PKEY_set1_RSA(pkey, rsa);
-	if(rc == 0)
-	{
-		std::cout << "error in " << __FUNCTION__ << " : " << __LINE__ << std::endl;
-		goto err;			
-	}
-
- 	// Write private key in PKCS PEM.
-    rc = PEM_write_bio_PrivateKey(pem, pkey, NULL, NULL, 0, NULL, NULL);
-	if(rc == 0)
-	{
-		std::cout << "error in " << __FUNCTION__ << " : " << __LINE__ << std::endl;
-		goto err;			
-	}
-
-#endif
-
- 	// Write private key in PKCS PEM.
-    rc = PEM_write_bio_RSAPrivateKey(pem, rsa, NULL, NULL, 0, NULL, NULL);
-	if(rc == 0)
-	{
-		std::cout << "error in " << __FUNCTION__ << " : " << __LINE__ << std::endl;
-		goto err;			
-	}
-
-err:
-
-	if(pem)
-	{
-		BIO_free_all(pem);
-	}
-
-	if(bn)
-	{
-		BN_free(bn);
-	}
-
-	if(rsa)
-	{
-		RSA_free(rsa);
-	}
-
-#if 0
-	if(pkey)
-	{
-		EVP_PKEY_free(pkey);
-	}
-#endif
-
-	if(rc == 0)
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+    return (format & B_FORMAT_TEXT) == B_FORMAT_TEXT;
 }
 
-void test_RSA_privateKey()
+static const char *modestr(char mode, int format)
 {
-	std::vector<int> kBits {1024, 2048, 4096};
+    OPENSSL_assert(mode == 'a' || mode == 'r' || mode == 'w');
 
-	for( auto a : kBits)
+    switch (mode) {
+    case 'a':
+        return FMT_istext(format) ? "a" : "ab";
+    case 'r':
+        return FMT_istext(format) ? "r" : "rb";
+    case 'w':
+        return FMT_istext(format) ? "w" : "wb";
+    }
+    /* The assert above should make sure we never reach this point */
+    return NULL;
+}
+
+CONF* load_config(const char *filename)
+{
+	long errorline = -1;
+	int i;
+	BIO *in = NULL;
+	CONF *conf;
+
+	in = BIO_new_file(filename, modestr('r', FORMAT_TEXT));
+	if(in == NULL)
 	{
-		std::string str = "privateKey-";
-		std::stringstream sint;
-		sint << a;
-		str = str + sint.str() + ".pem";
-
-		//std::cout << str << std::endl;
-
-		create_RSA_privateKey(str.c_str(), a);
+		std::cout << "error in BIO_new_file" << std::endl;
+		return NULL;
 	}
+
+	conf = NCONF_new(NULL);
+	i = NCONF_load_bio(conf, in, &errorline);
+	if(i > 0)
+	{
+		std::cout << "success in NCONF_load_bio" << std::endl;
+		BIO_free(in);
+		return conf;
+	}
+	
+	std::cout << "error in NCONF_load_bio" << std::endl;
+
+	BIO_free(in);
+	NCONF_free(conf);
 }
 
 int main()
 {
-	test_RSA_privateKey();
+	int ret = 0;
+	CONF *conf = NULL;
+	const char *section = "req";
+	long newkey_len = -1;
 
+	conf = load_config("/home/hskim/share/certificate-manager/tests/test3/scripts/customer_openssl.cnf");
+	if(conf == NULL)
+	{
+		std::cout << "error in load_config" << std::endl;
+		NCONF_free(conf);
+		return 1;
+	}
+
+	ret = CONF_modules_load(conf, NULL, 0);
+	if(ret <= 0)
+	{
+		std::cout << "error in CONF_modules_load" << std::endl;
+		NCONF_free(conf);
+		return 1;
+	}
+
+	ret = NCONF_get_number(conf, section, BITS, &newkey_len);
+	if(ret == 0)
+	{
+		std::cout << "error in NCONF_get_number" << std::endl;
+		//newkey_len = DEFAULT_KEY_LENGTH;
+		newkey_len = 2048;
+		return 1;
+	}
+
+	std::cout << "newkey_len : " << newkey_len << std::endl;
+
+	char *p = NCONF_get_string(conf, section, "default_md");
+	if(p == NULL)
+	{
+		std::cout << "error in default_md" << std::endl;
+		return 1;
+	}
+
+	std::cout << "default_md : " << p << std::endl;
+
+	char *extensions = NCONF_get_string(conf, section, V3_EXTENSIONS);
+	if(extensions == NULL)
+	{
+		std::cout << "error in V3_EXTENSIONS" << std::endl;
+		return 1;
+	}
+	std::cout << "V3_EXTENSIONS : " << extensions << std::endl;
+
+	NCONF_free(conf);
+
+	//629부터
 	return 0;
 }
