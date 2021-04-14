@@ -2,7 +2,7 @@ project(test2)
 cmake_minimum_required(VERSION 3.10)
 
 set(SRCS
-	"test.cpp"
+	"test2.cpp"
 )
 
 

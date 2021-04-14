@@ -145,6 +145,46 @@ int main()
 
 	NCONF_free(conf);
 
-	//629부터
+	//load private key
+	EVP_PKEY *pkey = NULL;
+	BIO *bio = BIO_new_file("privatekey.pem", modestr('r', FORMAT_PEM));
+	if(bio == NULL)
+	{
+		std::cout << "error in BIO_new_file" << std::endl;
+		return 1;
+	}
+
+	pkey = PEM_read_bio_PrivateKey(bio, NULL, NULL, NULL);
+	if(pkey == NULL)
+	{
+		std::cout << "error in PEM_read_bio_PrivateKey" << std::endl;
+		return 1;
+	}
+
+	// make request
+	X509_REQ *req = NULL;
+	req = X509_REQ_new();
+	if(req == NULL)
+	{
+		std::cout << "error in X509_REQ_new" << std::endl;
+		return 1;
+	}
+
+	ret = X509_REQ_set_version(req, 0L); /*version 1 */
+	if(ret == 0)
+	{
+		std::cout << "error in X509_REQ_set_version" << std::endl;
+		return 1;		
+	}
+
+	X509_NAME *n;
+	ret = X509_REQ_set_subject_name(req, n); /*version 1 */
+	if(ret == 0)
+	{
+		std::cout << "error in X509_REQ_set_subject_name" << std::endl;
+		X509_NAME_free(n);
+		return 1;		
+	}	
+
 	return 0;
 }
