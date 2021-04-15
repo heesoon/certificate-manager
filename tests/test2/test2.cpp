@@ -66,7 +66,7 @@ bool generate_csr(const char *config_filename, const char *req_filename, const c
 	CONF *conf = NULL;
 	X509_REQ *req = NULL;
 	X509_NAME *subject = NULL;
-	const EVP_MD *message_digest;
+	const EVP_MD *evp_md;
 
 	conf = load_config(config_filename);
 	if(conf == NULL)
@@ -97,6 +97,13 @@ bool generate_csr(const char *config_filename, const char *req_filename, const c
 	EVP_PKEY *pkey = NULL;
 	BIO *bio = BIO_new_file(privatekey_file, modestr('r', FORMAT_PEM));
 	if(bio == NULL)
+	{
+		std::cout << "error in BIO_new_file" << std::endl;
+		return 1;
+	}
+
+	BIO *bio_out = BIO_new_file(req_filename, modestr('w', FORMAT_PEM));
+	if(bio_out == NULL)
 	{
 		std::cout << "error in BIO_new_file" << std::endl;
 		return 1;
@@ -136,10 +143,37 @@ bool generate_csr(const char *config_filename, const char *req_filename, const c
 	X509_REQ_set_pubkey(req, keyring);
 
 	// create a message digest
-	message_digest = EVP_sha1();
+	evp_md = EVP_get_digestbyname(md);
+	if(evp_md == NULL)
+	{
+		return false;
+	}
 
 	// sign certificate request
-	X509_REQ_sign(req, keyring, message_digest);
+	X509_REQ_sign(req, pkey, evp_md);
+
+	// verify
+	EVP_PKEY *tpubkey = pkey;
+	if(pkey == NULL)
+	{
+		tpubkey = X509_REQ_get0_pubkey(req);
+		if(tpubkey == NULL)
+		{
+			return false;
+		}
+	}
+
+	ret = X509_REQ_verify(req, tpubkey);
+	if(i <= 0)
+	{
+		return false;
+	}
+
+	ret = PEM_write_bio_X509_REQ(bio_out, req);
+	if(ret == 0)
+	{
+		return false;
+	}
 
 	return true;
 }
