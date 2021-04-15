@@ -1,8 +1,10 @@
 #include <iostream>
 #include <string>
+#include <cstring>
 #include <memory>
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
+#include <openssl/x509v3.h>
 #include <openssl/pem.h>
 #include <openssl/conf.h>
 
@@ -23,6 +25,38 @@
 # define FORMAT_HTTP     13                     /* Download using HTTP */
 # define FORMAT_NSS      14                     /* NSS keylog format */
 
+#define BASE_SECTION            "ca"
+
+#define ENV_DEFAULT_CA          "default_ca"
+
+#define STRING_MASK             "string_mask"
+#define UTF8_IN                 "utf8"
+
+#define ENV_NEW_CERTS_DIR       "new_certs_dir"
+#define ENV_CERTIFICATE         "certificate"
+#define ENV_SERIAL              "serial"
+#define ENV_RAND_SERIAL         "rand_serial"
+#define ENV_CRLNUMBER           "crlnumber"
+#define ENV_PRIVATE_KEY         "private_key"
+#define ENV_DEFAULT_DAYS        "default_days"
+#define ENV_DEFAULT_STARTDATE   "default_startdate"
+#define ENV_DEFAULT_ENDDATE     "default_enddate"
+#define ENV_DEFAULT_CRL_DAYS    "default_crl_days"
+#define ENV_DEFAULT_CRL_HOURS   "default_crl_hours"
+#define ENV_DEFAULT_MD          "default_md"
+#define ENV_DEFAULT_EMAIL_DN    "email_in_dn"
+#define ENV_PRESERVE            "preserve"
+#define ENV_POLICY              "policy"
+#define ENV_EXTENSIONS          "x509_extensions"
+#define ENV_CRLEXT              "crl_extensions"
+#define ENV_MSIE_HACK           "msie_hack"
+#define ENV_NAMEOPT             "name_opt"
+#define ENV_CERTOPT             "cert_opt"
+#define ENV_EXTCOPY             "copy_extensions"
+#define ENV_UNIQUE_SUBJECT      "unique_subject"
+
+#define ENV_DATABASE            "database"
+
 #if defined(LOG_PRINT)
 #define LOGE(x) std::cout << "ERROR : " << "[" << __FILE__ << ", " << __FUNCTION__ << ", " << __LINE__ << "] " << x << std::endl;
 #define LOGI(x) std::cout << "INFO : " << "[" << __FILE__ << ", " << __FUNCTION__ << ", " << __LINE__ << "] " << x << std::endl;
@@ -32,16 +66,6 @@
 #define LOGI(x)
 #define LOGD(x)
 #endif
-
-typedef struct st_subject
-{
-	char *commonName;
-	char *countryName;
-	char *stateOrProvinceName;
-	char *localityName;
-	char *organizationName;
-	char *emailAddress;
-} subject_t;
 
 auto delPtrBIO = [](BIO *bio)
 {
@@ -79,11 +103,19 @@ auto delPtrEVP_PKEY = [](EVP_PKEY *evp)
 	LOGD("called ..")
 };
 
+auto delPtrX509 = [](X509 *x509)
+{
+	if(x509 != NULL)
+		X509_free(x509);
+	LOGD("called ..")
+};
+
 using unique_ptr_bio_type_t				= std::unique_ptr<BIO, decltype(delPtrBIO)>;
 using unique_ptr_conf_type_t			= std::unique_ptr<CONF, decltype(delPtrCONF)>;
 using unique_ptr_x509_req_type_t		= std::unique_ptr<X509_REQ, decltype(delPtrX509_REQ)>;
 using unique_ptr_x509_name_type_t		= std::unique_ptr<X509_NAME, decltype(delPtrX509_NAME)>;
 using unique_ptr_evp_pkey_type_t 		= std::unique_ptr<EVP_PKEY, decltype(delPtrEVP_PKEY)>;
+using unique_ptr_x509_type_t			= std::unique_ptr<X509, decltype(delPtrX509)>;
 
 static int istext(int format)
 {
@@ -106,17 +138,25 @@ static const char *modestr(char mode, int format)
     return NULL;
 }
 
-bool generate_csr(const char *input_config_filename, const char *input_key_filename, subject_t *subject, const char *output_csr_filename)
+bool ca(const char *input_config_filename, const char *input_csr_filename, const char *output_certificate_filename)
 {
 	int ret = 0;
 	long errorline = -1;
+	char *pChar = NULL;
+	char *ca_privatekey_file = NULL;
+	char *ca_certificate_file = NULL;
 	char *md_name = NULL;
-	const char *section = "req";
+	char *policy = NULL;
+	char *extensions = NULL;
 	const EVP_MD *evp_md;
+	unsigned long chtype = MBSTRING_ASC;
+	long days = 0;
+	int email_dn = 0;
+	STACK_OF(CONF_VALUE) *attribs = NULL;
 
-	if(input_config_filename == NULL || input_key_filename == NULL || subject == NULL || output_csr_filename == NULL)
+	if(input_config_filename == NULL || input_csr_filename == NULL || output_certificate_filename == NULL)
 	{
-		//LOGE("wrong input parameter")
+		LOGE("wrong input parameter")
 		return false;
 	}
 
@@ -150,109 +190,88 @@ bool generate_csr(const char *input_config_filename, const char *input_key_filen
 	}
 
 	// load signing algorithm from configuration file
-	md_name = NCONF_get_string(up_config.get(), section, "default_md");
-	if(md_name == NULL)
+	pChar = NCONF_get_string(up_config.get(), ENV_DEFAULT_CA, STRING_MASK);
+	if(pChar == NULL)
 	{
 		LOGE("NCONF_get_string");
 		return false;
 	}
 
-	// TO DO. if need to add more value from configuration file, add code here by using NCONF_get_string
-
-	// 2. setting subjects
-	unique_ptr_x509_name_type_t up_x509_name(X509_NAME_new(), delPtrX509_NAME);
-	if(up_x509_name.get() == NULL)
-	{
-		LOGE("X509_NAME_new");
-		return false;
-	}
-
-	//ret = X509_NAME_add_entry_by_txt(up_x509_name.get(), "commonName", MBSTRING_ASC, (unsigned char*)subject->commonName, -1, -1, 0);
-	ret = X509_NAME_add_entry_by_txt(up_x509_name.get(), "commonName", MBSTRING_ASC, reinterpret_cast<unsigned char*>(subject->commonName), -1, -1, 0);
+	ret = ASN1_STRING_set_default_mask_asc(pChar);
 	if(ret == 0)
 	{
-		LOGE("X509_NAME_add_entry_by_txt");
+		LOGE("ASN1_STRING_set_default_mask_asc");
 		return false;
 	}
 
-	ret = X509_NAME_add_entry_by_txt(up_x509_name.get(), "countryName", MBSTRING_ASC, reinterpret_cast<unsigned char*>(subject->countryName), -1, -1, 0);
-	if(ret == 0)
+	if(chtype != MBSTRING_UTF8)
 	{
-		LOGE("X509_NAME_add_entry_by_txt");
+		pChar = NCONF_get_string(up_config.get(), ENV_DEFAULT_CA, UTF8_IN);
+		if(pChar == NULL)
+		{
+			LOGE("NCONF_get_string");
+			return false;
+		}
+		else if(std::strcmp(pChar, "yes") == 0)
+		{
+			chtype = MBSTRING_UTF8;
+		}
+	}
+
+    // Getting CA Privatek key filename from configuration //
+	ca_privatekey_file = NCONF_get_string(up_config.get(), ENV_DEFAULT_CA, ENV_PRIVATE_KEY);
+	if(ca_privatekey_file == NULL)
+	{
+		LOGE("ca_privatekey_file");
 		return false;
 	}
 
-	ret = X509_NAME_add_entry_by_txt(up_x509_name.get(), "stateOrProvinceName", MBSTRING_ASC, reinterpret_cast<unsigned char*>(subject->stateOrProvinceName), -1, -1, 0);
-	if(ret == 0)
-	{
-		LOGE("X509_NAME_add_entry_by_txt");
-		return false;
-	}
-
-	ret = X509_NAME_add_entry_by_txt(up_x509_name.get(), "localityName", MBSTRING_ASC, reinterpret_cast<unsigned char*>(subject->localityName), -1, -1, 0);
-	if(ret == 0)
-	{
-		LOGE("X509_NAME_add_entry_by_txt");
-		return false;
-	}
-
-	ret = X509_NAME_add_entry_by_txt(up_x509_name.get(), "organizationName", MBSTRING_ASC, reinterpret_cast<unsigned char*>(subject->organizationName), -1, -1, 0);
-	if(ret == 0)
-	{
-		LOGE("X509_NAME_add_entry_by_txt");
-		return false;
-	}
-
-	ret = X509_NAME_add_entry_by_txt(up_x509_name.get(), "emailAddress", MBSTRING_ASC, reinterpret_cast<unsigned char*>(subject->emailAddress), -1, -1, 0);
-	if(ret == 0)
-	{
-		LOGE("X509_NAME_add_entry_by_txt");
-		return false;
-	}
-	
-	// 3. setting req
-	unique_ptr_x509_req_type_t up_x509_req(X509_REQ_new(), delPtrX509_REQ);
-	if(up_x509_req.get() == NULL)
-	{
-		LOGE("X509_REQ_new");
-		return false;
-	}
-
-	// setting req revsion. currently there is only version 1
-	ret = X509_REQ_set_version(up_x509_req.get(), 0L);
-	if(ret == 0)
-	{
-		LOGE("X509_REQ_set_version");
-		return false;
-	}
-
-	// setting subject to req
-	ret = X509_REQ_set_subject_name(up_x509_req.get(), up_x509_name.get());
-	if(ret == 0)
-	{
-		LOGE("X509_REQ_set_subject_name");
-		return false;
-	}
-
-	// setting public key information to req
-	unique_ptr_bio_type_t up_bio_input_key(BIO_new_file(input_key_filename, modestr('r', FORMAT_PEM)), delPtrBIO);
-	if(up_bio_input_key.get() == NULL)
+	// read ca private key
+	unique_ptr_bio_type_t up_bio_input_ca_private_key(BIO_new_file(ca_privatekey_file, modestr('r', FORMAT_PEM)), delPtrBIO);
+	if(up_bio_input_ca_private_key.get() == NULL)
 	{
 		LOGE("BIO_new_file");
 		return false;
 	}
 
-	unique_ptr_evp_pkey_type_t up_evp_pkey(PEM_read_bio_PrivateKey(up_bio_input_key.get(), NULL, NULL, NULL), delPtrEVP_PKEY);
+	unique_ptr_evp_pkey_type_t up_evp_pkey(PEM_read_bio_PrivateKey(up_bio_input_ca_private_key.get(), NULL, NULL, NULL), delPtrEVP_PKEY);
 	if(up_evp_pkey.get() == NULL)
 	{
 		LOGE("PEM_read_bio_PrivateKey");
 		return false;
 	}
 
-	ret = X509_REQ_set_pubkey(up_x509_req.get(), up_evp_pkey.get());
-	if(ret == 0)
+	// Getting CA certificate filename from configuration //
+	ca_certificate_file = NCONF_get_string(up_config.get(), ENV_DEFAULT_CA, ENV_CERTIFICATE);
+	if(ca_certificate_file == NULL)
 	{
-		LOGE("X509_REQ_set_pubkey");
+		LOGE("ca_certificate_file");
+		return false;
+	}
+
+	// read ca private key
+	unique_ptr_bio_type_t up_bio_input_ca_certificate(BIO_new_file(ca_certificate_file, modestr('r', FORMAT_PEM)), delPtrBIO);
+	if(up_bio_input_ca_certificate.get() == NULL)
+	{
+		LOGE("BIO_new_file");
+		return false;
+	}
+
+	unique_ptr_x509_type_t up_x509(PEM_read_bio_X509_AUX(up_bio_input_ca_private_key.get(), NULL, NULL, NULL), delPtrX509);
+	if(up_x509.get() == NULL)
+	{
+		LOGE("PEM_read_bio_X509_AUX");
+		return false;
+	}
+
+	// just skip ENV_PRESERVE, ENV_MSIE_HACK, ENV_NAMEOPT, ENV_CERTOPT
+	// TO DO
+
+	// load signing algorithm from configuration file
+	md_name = NCONF_get_string(up_config.get(), ENV_DEFAULT_CA, ENV_DEFAULT_MD);
+	if(md_name == NULL)
+	{
+		LOGE("NCONF_get_string");
 		return false;
 	}
 
@@ -264,44 +283,43 @@ bool generate_csr(const char *input_config_filename, const char *input_key_filen
 		return false;		
 	}
 
-	ret = X509_REQ_sign(up_x509_req.get(), up_evp_pkey.get(), evp_md);
+	// load signing algorithm from configuration file
+	policy = NCONF_get_string(up_config.get(), ENV_DEFAULT_CA, ENV_POLICY);
+	if(policy == NULL)
+	{
+		LOGE("NCONF_get_string");
+		return false;
+	}
+
+	extensions = NCONF_get_string(up_config.get(), ENV_DEFAULT_CA, ENV_EXTENSIONS);
+	if(extensions == NULL)
+	{
+		LOGE("NCONF_get_string");
+		return false;
+	}
+
+	X509V3_CTX ctx;
+	X509V3_set_ctx_test(&ctx);
+	X509V3_set_nconf(&ctx, up_config.get());
+
+	ret = X509V3_EXT_add_nconf(up_config.get(), &ctx, extensions, NULL);
 	if(ret == 0)
 	{
-		LOGE("X509_REQ_sign");
-		return false;
+		LOGE("X509V3_EXT_add_nconf");
+		return false;		
 	}
 
-	// 5. req verify
-	EVP_PKEY *tpubkey = up_evp_pkey.get();
-	if(tpubkey == NULL)
-	{
-		tpubkey = X509_REQ_get0_pubkey(up_x509_req.get());
-		if(tpubkey == NULL)
-		{
-			LOGE("X509_REQ_get0_pubkey");
-			return false;
-		}
-	}
-
-	ret = X509_REQ_verify(up_x509_req.get(), tpubkey);
-	if(ret <= 0)
-	{
-		LOGE("X509_REQ_verify");
-		return false;
-	}
-
-	// 5. generate csr output file
-	unique_ptr_bio_type_t up_bio_out_csr(BIO_new_file(output_csr_filename, modestr('w', FORMAT_PEM)), delPtrBIO);
-	if(up_bio_out_csr.get() == NULL)
-	{
-		LOGE("BIO_new_file");
-		return false;
-	}
-
-	ret = PEM_write_bio_X509_REQ(up_bio_out_csr.get(), up_x509_req.get());
+	ret = NCONF_get_number(up_config.get(), ENV_DEFAULT_CA, ENV_DEFAULT_DAYS, &days);
 	if(ret == 0)
 	{
-		LOGE("PEM_write_bio_X509_REQ");
+		LOGE("NCONF_get_number");
+		return false;		
+	}
+
+	attribs = NCONF_get_section(up_config.get(), policy);
+	if(attribs == NULL)
+	{
+		LOGE("NCONF_get_section");
 		return false;
 	}
 
@@ -309,35 +327,25 @@ bool generate_csr(const char *input_config_filename, const char *input_key_filen
 	return true;
 }
 
-void test_generate_csr()
+void test_ca()
 {
-	// csr 확인하는 명령어 : openssl req -text -noout -verify -csr.pem
 	bool ret = false;
-
 	std::string input_config_filename = "/home/hskim/share/certificate-manager/tests/test3/scripts/customer_openssl.cnf";
-	std::string input_privatekey_filename = "test_key.pem";
-	std::string output_csr_filename = "csr.pem";
+	std::string input_csr_filename = "csr.pem";
+	std::string output_certificate_filename = "customer_certificate.pem";
 
-	std::unique_ptr<subject_t> up_sub(new subject_t);
-	up_sub.get()->commonName = "Customer Inc";
-	up_sub.get()->countryName = "KR";
-	up_sub.get()->stateOrProvinceName = "Seoul";
-	up_sub.get()->localityName = "Seoul";
-	up_sub.get()->organizationName = "Customer Inc R&D";
-	up_sub.get()->emailAddress = "customer@rnd.com";
-
-	ret = generate_csr(static_cast<const char*>(input_config_filename.c_str()), static_cast<const char*>(input_privatekey_filename.c_str()), up_sub.get(), static_cast<const char*>(output_csr_filename.c_str()));
+	ret = ca(static_cast<const char*>(input_config_filename.c_str()), static_cast<const char*>(input_csr_filename.c_str()), static_cast<const char*>(output_certificate_filename.c_str()));
 	if(ret == false)
 	{
-		LOGE("generate_csr")
+		LOGE("ca")
 		return;
 	}
 
-	LOGI("success")
+	LOGI("Success")	
 }
 
 int main()
 {
-	test_generate_csr();
+	test_ca();
 	return 0;
 }

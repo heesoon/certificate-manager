@@ -32,6 +32,8 @@ default_crl_days  = 30
 # SHA-1 is deprecated, so use SHA-2 instead.
 default_md        = sha256
 
+string_mask       = utf8only
+utf8			  = no
 name_opt          = ca_default
 cert_opt          = ca_default
 default_days      = 3750
@@ -69,7 +71,7 @@ string_mask         = utf8only
 default_md          = sha256
 
 # Extension to add when the -x509 option is used.
-x509_extensions     = v3_ca
+x509_extensions     = usr_cert
 
 [ req_distinguished_name ]
 # See <https://en.wikipedia.org/wiki/Certificate_signing_request>.
