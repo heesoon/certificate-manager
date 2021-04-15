@@ -106,155 +106,6 @@ static const char *modestr(char mode, int format)
     return NULL;
 }
 
-CONF* load_config(const char *filename)
-{
-	long errorline = -1;
-	int i;
-	BIO *in = NULL;
-	CONF *conf;
-
-	in = BIO_new_file(filename, modestr('r', FORMAT_TEXT));
-	if(in == NULL)
-	{
-		std::cout << "error in BIO_new_file" << std::endl;
-		return NULL;
-	}
-
-	conf = NCONF_new(NULL);
-	i = NCONF_load_bio(conf, in, &errorline);
-	if(i > 0)
-	{
-		std::cout << "success in NCONF_load_bio" << std::endl;
-		BIO_free(in);
-		return conf;
-	}
-	
-	std::cout << "error in NCONF_load_bio" << std::endl;
-
-	BIO_free(in);
-	NCONF_free(conf);
-}
-
-#if 0
-bool generate_csr(const char *config_filename, const char *req_filename, const char *privatekey_file, subject_t *subject)
-{
-	int ret = 0;
-	CONF *conf = NULL;
-	X509_REQ *req = NULL;
-	X509_NAME *subject = NULL;
-	const EVP_MD *evp_md;
-
-	conf = load_config(config_filename);
-	if(conf == NULL)
-	{
-		std::cout << "error in load_config" << std::endl;
-		NCONF_free(conf);
-		return 1;
-	}
-
-	ret = CONF_modules_load(conf, NULL, 0);
-	if(ret <= 0)
-	{
-		std::cout << "error in CONF_modules_load" << std::endl;
-		NCONF_free(conf);
-		return 1;
-	}
-
-	// load signing algorithm
-	char *md = NCONF_get_string(conf, section, "default_md");
-	if(p == NULL)
-	{
-		std::cout << "error in default_md" << std::endl;
-		return 1;
-	}
-	std::cout << "default_md : " << md << std::endl;
-
-	//load private key
-	EVP_PKEY *pkey = NULL;
-	BIO *bio = BIO_new_file(privatekey_file, modestr('r', FORMAT_PEM));
-	if(bio == NULL)
-	{
-		std::cout << "error in BIO_new_file" << std::endl;
-		return 1;
-	}
-
-	BIO *bio_out = BIO_new_file(req_filename, modestr('w', FORMAT_PEM));
-	if(bio_out == NULL)
-	{
-		std::cout << "error in BIO_new_file" << std::endl;
-		return 1;
-	}
-
-	pkey = PEM_read_bio_PrivateKey(bio, NULL, NULL, NULL);
-	if(pkey == NULL)
-	{
-		std::cout << "error in PEM_read_bio_PrivateKey" << std::endl;
-		return 1;
-	}
-
-	ret = X509_REQ_set_version(req, 0L); /*version 1 */
-	if(ret == 0)
-	{
-		std::cout << "error in X509_REQ_set_version" << std::endl;
-		return 1;		
-	}
-
-	// create a certificate request
-	req = X509_REQ_new();
-
-	// set certificate request 'Subject:'
-	x509_subject = X509_NAME_new();
-
-	X509_NAME_add_entry_by_txt(x509_subject, "commonName", MBSTRING_ASC, (unsigned char*)subject->commonName, -1, -1, 0);
-	X509_NAME_add_entry_by_txt(x509_subject, "countryName", MBSTRING_ASC, (unsigned char*)subject->countryName, -1, -1, 0);
-	X509_NAME_add_entry_by_txt(x509_subject, "stateOrProvinceName", MBSTRING_ASC, (unsigned char*)subject->stateOrProvinceName, -1, -1, 0);
-	X509_NAME_add_entry_by_txt(x509_subject, "localityName", MBSTRING_ASC, (unsigned char*)subject->localityName, -1, -1, 0);
-	X509_NAME_add_entry_by_txt(x509_subject, "emailAddress", MBSTRING_ASC, (unsigned char*)subject->emailAddress, -1, -1, 0);
-	X509_NAME_add_entry_by_txt(x509_subject, "organizationName", MBSTRING_ASC, (unsigned char*)subject->organizationName, -1, -1, 0);
-
-	X509_REQ_set_subject_name(req, subject);
-	X509_NAME_free(subject);
-
-	// set certificate request public key
-	X509_REQ_set_pubkey(req, keyring);
-
-	// create a message digest
-	evp_md = EVP_get_digestbyname(md);
-	if(evp_md == NULL)
-	{
-		return false;
-	}
-
-	// sign certificate request
-	X509_REQ_sign(req, pkey, evp_md);
-
-	// verify
-	EVP_PKEY *tpubkey = pkey;
-	if(pkey == NULL)
-	{
-		tpubkey = X509_REQ_get0_pubkey(req);
-		if(tpubkey == NULL)
-		{
-			return false;
-		}
-	}
-
-	ret = X509_REQ_verify(req, tpubkey);
-	if(i <= 0)
-	{
-		return false;
-	}
-
-	ret = PEM_write_bio_X509_REQ(bio_out, req);
-	if(ret == 0)
-	{
-		return false;
-	}
-
-	return true;
-}
-#endif
-
 bool generate_csr(const char *input_config_filename, const char *input_key_filename, subject_t *subject, const char *output_csr_filename)
 {
 	int ret = 0;
@@ -285,7 +136,7 @@ bool generate_csr(const char *input_config_filename, const char *input_key_filen
 	}
 
 	ret = NCONF_load_bio(up_config.get(), up_bio_input_config.get(), &errorline);
-	if(ret > 0)
+	if(ret == 0)
 	{
 		LOGE("NCONF_load_bio");
 		return false;
@@ -460,10 +311,11 @@ bool generate_csr(const char *input_config_filename, const char *input_key_filen
 
 void test_generate_csr()
 {
+	// csr 확인하는 명령어 : openssl req -text -noout -verify -csr.pem
 	bool ret = false;
 
 	std::string input_config_filename = "/home/hskim/share/certificate-manager/tests/test3/scripts/customer_openssl.cnf";
-	std::string input_privatekey_filename = "test_privatekey.pem";
+	std::string input_privatekey_filename = "test_key.pem";
 	std::string output_csr_filename = "csr.pem";
 
 	std::unique_ptr<subject_t> up_sub(new subject_t);
