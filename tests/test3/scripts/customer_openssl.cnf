@@ -31,12 +31,12 @@ default_crl_days  = 30
 
 # SHA-1 is deprecated, so use SHA-2 instead.
 default_md        = sha256
-
 string_mask       = utf8only
 utf8			  = no
 name_opt          = ca_default
 cert_opt          = ca_default
 default_days      = 3750
+email_in_dn		  = yes
 preserve          = no
 policy            = policy_loose
 x509_extensions   = usr_cert
