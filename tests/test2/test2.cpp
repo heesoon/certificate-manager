@@ -7,7 +7,7 @@
 #include <openssl/x509v3.h>
 #include <openssl/pem.h>
 #include <openssl/conf.h>
-
+ 
 # define B_FORMAT_TEXT   0x8000
 # define FORMAT_UNDEF    0
 # define FORMAT_TEXT    (1 | B_FORMAT_TEXT)     /* Generic text */
@@ -54,8 +54,9 @@
 #define ENV_CERTOPT             "cert_opt"
 #define ENV_EXTCOPY             "copy_extensions"
 #define ENV_UNIQUE_SUBJECT      "unique_subject"
-
 #define ENV_DATABASE            "database"
+
+# define SERIAL_RAND_BITS        159
 
 #if defined(LOG_PRINT)
 #define LOGE(x) std::cout << "ERROR : " << "[" << __FILE__ << ", " << __FUNCTION__ << ", " << __LINE__ << "] " << x << std::endl;
@@ -66,6 +67,13 @@
 #define LOGI(x)
 #define LOGD(x)
 #endif
+
+auto delPtrBN = [](BIGNUM *bn)
+{
+	if(bn != NULL)
+		BN_free(bn);
+	LOGD("called ..")
+};
 
 auto delPtrBIO = [](BIO *bio)
 {
@@ -110,6 +118,7 @@ auto delPtrX509 = [](X509 *x509)
 	LOGD("called ..")
 };
 
+using unique_ptr_bn_type_t 				= std::unique_ptr<BIGNUM, decltype(delPtrBN)>;
 using unique_ptr_bio_type_t				= std::unique_ptr<BIO, decltype(delPtrBIO)>;
 using unique_ptr_conf_type_t			= std::unique_ptr<CONF, decltype(delPtrCONF)>;
 using unique_ptr_x509_req_type_t		= std::unique_ptr<X509_REQ, decltype(delPtrX509_REQ)>;
@@ -138,6 +147,78 @@ static const char *modestr(char mode, int format)
     return NULL;
 }
 
+int rand_serial(BIGNUM *b, ASN1_INTEGER *ai)
+{
+    BIGNUM *btmp;
+    int ret = 0;
+
+    btmp = b == NULL ? BN_new() : b;
+    if (btmp == NULL)
+        return 0;
+
+    if (!BN_rand(btmp, SERIAL_RAND_BITS, BN_RAND_TOP_ANY, BN_RAND_BOTTOM_ANY))
+        goto error;
+    if (ai && !BN_to_ASN1_INTEGER(btmp, ai))
+        goto error;
+
+    ret = 1;
+
+ error:
+
+    if (btmp != b)
+        BN_free(btmp);
+
+    return ret;
+}
+
+BIGNUM *load_serial(const char *serialfile, int create, ASN1_INTEGER **retai)
+{
+    BIO *in = NULL;
+    BIGNUM *ret = NULL;
+    char buf[1024];
+    ASN1_INTEGER *ai = NULL;
+
+    ai = ASN1_INTEGER_new();
+    if (ai == NULL)
+        goto err;
+
+    in = BIO_new_file(serialfile, "r");
+    if (in == NULL) {
+        if (!create) {
+            perror(serialfile);
+            goto err;
+        }
+        //ERR_clear_error();
+        ret = BN_new();
+        if (ret == NULL || !rand_serial(ret, ai))
+            //BIO_printf(bio_err, "Out of memory\n");
+			std::cout << "Out of memory" << std::endl;
+    } 
+	else {
+        if (!a2i_ASN1_INTEGER(in, ai, buf, 1024)) {
+            //BIO_printf(bio_err, "Unable to load number from %s\n",
+            //           serialfile);
+            goto err;
+        }
+        ret = ASN1_INTEGER_to_BN(ai, NULL);
+        if (ret == NULL) {
+            //BIO_printf(bio_err, "Error converting number from bin to BIGNUM\n");
+            goto err;
+        }
+    }
+
+    if (ret && retai) {
+        *retai = ai;
+        ai = NULL;
+    }
+ err:
+    //ERR_print_errors(bio_err);
+    BIO_free(in);
+    ASN1_INTEGER_free(ai);
+    return ret;
+}
+
+
 bool ca(const char *input_config_filename, const char *input_csr_filename, const char *output_certificate_filename)
 {
 	int ret = 0;
@@ -147,11 +228,13 @@ bool ca(const char *input_config_filename, const char *input_csr_filename, const
 	char *ca_certificate_file = NULL;
 	char *md_name = NULL;
 	char *policy = NULL;
+	const char *serialfile = NULL;
 	char *extensions = NULL;
 	const EVP_MD *evp_md;
 	unsigned long chtype = MBSTRING_ASC;
 	long days = 0;
 	int email_dn = 0;
+	EVP_PKEY *pktmp = NULL;
 	STACK_OF(CONF_VALUE) *attribs = NULL;
 
 	if(input_config_filename == NULL || input_csr_filename == NULL || output_certificate_filename == NULL)
@@ -190,7 +273,7 @@ bool ca(const char *input_config_filename, const char *input_csr_filename, const
 	}
 
 	// load signing algorithm from configuration file
-	pChar = NCONF_get_string(up_config.get(), ENV_DEFAULT_CA, STRING_MASK);
+	pChar = NCONF_get_string(up_config.get(), BASE_SECTION, STRING_MASK);
 	if(pChar == NULL)
 	{
 		LOGE("NCONF_get_string");
@@ -267,6 +350,20 @@ bool ca(const char *input_config_filename, const char *input_csr_filename, const
 	// just skip ENV_PRESERVE, ENV_MSIE_HACK, ENV_NAMEOPT, ENV_CERTOPT
 	// TO DO
 
+	serialfile = NCONF_get_string(up_config.get(), ENV_DEFAULT_CA, ENV_SERIAL);
+	if(serialfile == NULL)
+	{
+		LOGE("NCONF_get_string");
+		return false;
+	}
+
+	unique_ptr_bn_type_t up_bn_serial(load_serial(serialfile, 0, NULL), delPtrBN);
+	if(up_bn_serial.get() == NULL)
+	{
+		LOGE("load_serial");
+		return false;
+	}	
+
 	// load signing algorithm from configuration file
 	md_name = NCONF_get_string(up_config.get(), ENV_DEFAULT_CA, ENV_DEFAULT_MD);
 	if(md_name == NULL)
@@ -320,6 +417,28 @@ bool ca(const char *input_config_filename, const char *input_csr_filename, const
 	if(attribs == NULL)
 	{
 		LOGE("NCONF_get_section");
+		return false;
+	}
+
+	// read csr
+	unique_ptr_bio_type_t up_bio_input_csr(BIO_new_file(input_csr_filename, modestr('r', FORMAT_PEM)), delPtrBIO);
+	if(up_bio_input_csr.get() == NULL)
+	{
+		LOGE("BIO_new_file");
+		return false;
+	}
+
+	unique_ptr_x509_req_type_t up_x509_req(PEM_read_bio_X509_REQ(up_bio_input_csr.get(), NULL, NULL, NULL), delPtrX509_REQ);
+	if(up_evp_pkey.get() == NULL)
+	{
+		LOGE("PEM_read_bio_X509_REQ");
+		return false;
+	}
+
+	pktmp = X509_REQ_get0_pubkey(up_x509_req.get());
+	if(pktmp == NULL)
+	{
+		LOGE("X509_REQ_get0_pubkey");
 		return false;
 	}
 
