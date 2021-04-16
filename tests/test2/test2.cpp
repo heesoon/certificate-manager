@@ -218,6 +218,25 @@ BIGNUM *load_serial(const char *serialfile, int create, ASN1_INTEGER **retai)
     return ret;
 }
 
+X509* generate_x509(X509 *x509_ca, X509_REQ *req, EVP_PKEY *pkey, const EVP_MD *dgst, STACK_OF(CONF_VALUE) *policy, BIGNUM *serial, long days)
+{
+	X509 *x509 = NULL;
+	const X509_NAME *name = NULL;
+	X509_NAME *CAname = NULL, *subject = NULL;;
+
+	x509 = X509_new();
+	if(x509 == NULL)
+	{
+		LOGE("x509 == NULL")
+		return NULL;
+	}
+
+	// 1. getting subjects from csr
+	name = X509_REQ_get_subject_name(req);
+	CAname = X509_NAME_dup(X509_get_subject_name(x509_ca));
+
+	return x509;
+}
 
 bool ca(const char *input_config_filename, const char *input_csr_filename, const char *output_certificate_filename)
 {
@@ -340,12 +359,20 @@ bool ca(const char *input_config_filename, const char *input_csr_filename, const
 		return false;
 	}
 
-	unique_ptr_x509_type_t up_x509(PEM_read_bio_X509_AUX(up_bio_input_ca_private_key.get(), NULL, NULL, NULL), delPtrX509);
-	if(up_x509.get() == NULL)
+	unique_ptr_x509_type_t up_x509_ca(PEM_read_bio_X509_AUX(up_bio_input_ca_certificate.get(), NULL, NULL, NULL), delPtrX509);
+	if(up_x509_ca.get() == NULL)
 	{
 		LOGE("PEM_read_bio_X509_AUX");
 		return false;
 	}
+
+	// compare private key between loaded private key and loaded private key from certificate
+	ret = X509_check_private_key(up_x509_ca.get(), up_evp_pkey.get());
+	if(ret == 0)
+	{
+		LOGE("X509_check_private_key");
+		return false;
+	}	
 
 	// just skip ENV_PRESERVE, ENV_MSIE_HACK, ENV_NAMEOPT, ENV_CERTOPT
 	// TO DO
@@ -439,6 +466,35 @@ bool ca(const char *input_config_filename, const char *input_csr_filename, const
 	if(pktmp == NULL)
 	{
 		LOGE("X509_REQ_get0_pubkey");
+		return false;
+	}
+
+	ret = X509_REQ_verify(up_x509_req.get(), pktmp);
+	if(ret <= 0)
+	{
+		LOGE("X509_REQ_verify");
+		return false;
+	}
+
+	unique_ptr_x509_type_t up_x509(generate_x509(up_x509_ca.get(), up_x509_req.get(), up_evp_pkey.get(), evp_md, attribs, up_bn_serial.get(), days), delPtrX509);
+	if(up_x509.get() == NULL)
+	{
+		LOGE("generate_x509");
+		return false;
+	}	
+
+	// write certificate
+	unique_ptr_bio_type_t up_bio_output_x509(BIO_new_file(output_certificate_filename, modestr('w', FORMAT_PEM)), delPtrBIO);
+	if(up_bio_output_x509.get() == NULL)
+	{
+		LOGE("BIO_new_file");
+		return false;
+	}
+
+	ret = PEM_write_bio_X509(up_bio_output_x509.get(), up_x509.get());
+	if(ret == 0)
+	{
+		LOGE("PEM_write_bio_X509")
 		return false;
 	}
 
