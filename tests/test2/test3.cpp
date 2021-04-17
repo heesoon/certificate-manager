@@ -163,6 +163,7 @@ bool check(X509_STORE *ctx, const char *input_certificate_file, bool show_chain)
 			{
 				X509 *cert = sk_X509_value(chain, j);
 				LOGD("depth = " << j)
+				X509_NAME_print_ex_fp(stdout, X509_get_subject_name(cert), 0, XN_FLAG_COMPAT);
 
 				if(j < num_untrusted)
 				{
