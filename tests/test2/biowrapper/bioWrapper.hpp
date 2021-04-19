@@ -1,3 +1,4 @@
+#include <string>
 #include <openssl/bio.h>
 
 # define B_FORMAT_TEXT   0x8000
@@ -23,8 +24,10 @@ public:
     BioWrapper();
     int isText(int format);
     const char* modestr(char mode, int format); 
-    bool open(const char *filename, char mode, int format);
+    bool open(const std::string &filename, char mode, int format);
+	BIO* getBio();
     virtual ~BioWrapper();
+
 private:
-    BIO *bio;
+    BIO *bio = NULL;
 };

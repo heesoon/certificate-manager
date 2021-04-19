@@ -28,6 +28,11 @@ add_library(crypto
 	IMPORTED
 )
 
+add_library(libBioWrapper
+	SHARED
+	${CMAKE_SOURCE_DIR}/tests/test2/biowrapper/bioWrapper.cpp
+)
+
 set_target_properties(crypto
 	PROPERTIES IMPORTED_LOCATION
 	${CMAKE_SOURCE_DIR}/openssl/libs/libcrypto.so
@@ -41,4 +46,5 @@ include_directories(
 target_link_libraries(
 	${PROJECT_NAME} PRIVATE
 	crypto
+	libBioWrapper
 )

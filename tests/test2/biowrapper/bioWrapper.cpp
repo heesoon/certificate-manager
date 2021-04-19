@@ -29,17 +29,17 @@ const char* BioWrapper::modestr(char mode, int format)
     return NULL;
 }
 
-bool BioWrapper::open(const char *filename, char mode, int format)
+bool BioWrapper::open(const std::string &filename, char mode, int format)
 {
 	BIO *ret = NULL;
 
-	if(filename == NULL)
+	if(filename.empty())
 	{
 		std::cout << "error : filename" << std::endl;
 		return false;
 	}
 
-	ret = BIO_new_file(filename, modestr(mode, format));
+	ret = BIO_new_file(filename.c_str(), modestr(mode, format));
 	if(ret == NULL)
 	{
 		std::cout << "Bio_new_file NULL" << std::endl;
@@ -49,6 +49,11 @@ bool BioWrapper::open(const char *filename, char mode, int format)
 	bio = ret;
 
 	return true;
+}
+
+BIO* BioWrapper::getBio()
+{
+	return bio;
 }
 
 BioWrapper::~BioWrapper()
