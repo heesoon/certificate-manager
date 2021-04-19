@@ -1,11 +1,10 @@
-project(loadwrapper)
+project(loadCnfwrapper)
 cmake_minimum_required(VERSION 3.10)
 
 set(SRCS
-	"loadWrapper.cpp"
-	"loadWrapper_test.cpp"
+	"loadCnfWrapper.cpp"
+	"loadCnfWrapper_test.cpp"
 )
-
 
 #add_compile_definitions(__DEBUG__)
 #target_compile_definitions(${PROJECT_NAME} PRIVATE __DEBUG__)
@@ -29,14 +28,23 @@ add_library(crypto
 	IMPORTED
 )
 
+add_library(biowrapper4Cnf
+	SHARED
+	${CMAKE_SOURCE_DIR}/tests/test2/biowrapper/bioWrapper.cpp
+)
+
 set_target_properties(crypto
 	PROPERTIES IMPORTED_LOCATION
 	${CMAKE_SOURCE_DIR}/openssl/libs/libcrypto.so
 )
 
-include_directories(${CMAKE_SOURCE_DIR}/openssl/include)
+include_directories(
+	${CMAKE_SOURCE_DIR}/openssl/include
+	${CMAKE_SOURCE_DIR}/tests/test2/biowrapper
+)
 #link_directories(${CMAKE_SOURCE_DIR}/openssl/libs)
 target_link_libraries(
 	${PROJECT_NAME} PRIVATE
 	crypto
+	biowrapper4Cnf
 )

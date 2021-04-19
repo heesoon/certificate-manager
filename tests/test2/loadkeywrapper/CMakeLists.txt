@@ -28,7 +28,7 @@ add_library(crypto
 	IMPORTED
 )
 
-add_library(libBioWrapper
+add_library(biowrapper4Key
 	SHARED
 	${CMAKE_SOURCE_DIR}/tests/test2/biowrapper/bioWrapper.cpp
 )
@@ -46,5 +46,5 @@ include_directories(
 target_link_libraries(
 	${PROJECT_NAME} PRIVATE
 	crypto
-	libBioWrapper
+	biowrapper4Key
 )
