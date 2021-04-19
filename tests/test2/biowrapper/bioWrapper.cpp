@@ -1,7 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <cassert>
-#include "biowrapper.hpp"
+#include "bioWrapper.hpp"
 
 BioWrapper::BioWrapper()
 {

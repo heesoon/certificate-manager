@@ -1,11 +1,10 @@
-project(bioWrapper)
+project(loadKeywrapper)
 cmake_minimum_required(VERSION 3.10)
 
 set(SRCS
-	"bioWrapper.cpp"
-	"bioWrapper_test.cpp"
+	"loadKeyWrapper.cpp"
+	"loadKeyWrapper_test.cpp"
 )
-
 
 #add_compile_definitions(__DEBUG__)
 #target_compile_definitions(${PROJECT_NAME} PRIVATE __DEBUG__)
@@ -34,7 +33,10 @@ set_target_properties(crypto
 	${CMAKE_SOURCE_DIR}/openssl/libs/libcrypto.so
 )
 
-include_directories(${CMAKE_SOURCE_DIR}/openssl/include)
+include_directories(
+	${CMAKE_SOURCE_DIR}/openssl/include
+	${CMAKE_SOURCE_DIR}/tests/test2/biowrapper
+)
 #link_directories(${CMAKE_SOURCE_DIR}/openssl/libs)
 target_link_libraries(
 	${PROJECT_NAME} PRIVATE

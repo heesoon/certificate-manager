@@ -1,9 +1,9 @@
-project(bioWrapper)
+project(loadwrapper)
 cmake_minimum_required(VERSION 3.10)
 
 set(SRCS
-	"bioWrapper.cpp"
-	"bioWrapper_test.cpp"
+	"loadWrapper.cpp"
+	"loadWrapper_test.cpp"
 )
 
 

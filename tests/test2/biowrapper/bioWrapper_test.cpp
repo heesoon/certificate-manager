@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <memory>
-#include "biowrapper.hpp"
+#include "bioWrapper.hpp"
 
 void test_biowrapper_text()
 {
