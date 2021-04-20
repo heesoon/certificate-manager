@@ -1,9 +1,9 @@
-project(loadCnfwrapper)
+project(Cnfwrapper)
 cmake_minimum_required(VERSION 3.10)
 
 set(SRCS
-	"loadCnfWrapper.cpp"
-	"loadCnfWrapper_test.cpp"
+	"CnfWrapper.cpp"
+	"CnfWrapper_test.cpp"
 )
 
 #add_compile_definitions(__DEBUG__)

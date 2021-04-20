@@ -1,15 +1,15 @@
 #include <iostream>
 #include <memory>
 #include <cassert>
-#include "loadKeyWrapper.hpp"
+#include "KeyWrapper.hpp"
 
-LoadKeyWrapper::LoadKeyWrapper()
+KeyWrapper::KeyWrapper()
 {
     privatePkey = NULL;
     publicPkey = NULL;
 }
 
-bool LoadKeyWrapper::loadPrivateKey(std::string inputKeyFilename, int format)
+bool KeyWrapper::loadPrivateKey(std::string inputKeyFilename, int format)
 {
     bool ret = false;
     BioWrapper bioWrapper;
@@ -51,7 +51,7 @@ bool LoadKeyWrapper::loadPrivateKey(std::string inputKeyFilename, int format)
     }
 }
 
-bool LoadKeyWrapper::loadPublicKey(std::string inputKeyFilename, int format)
+bool KeyWrapper::loadPublicKey(std::string inputKeyFilename, int format)
 {
     bool ret = false;
     BioWrapper bioWrapper;
@@ -93,17 +93,17 @@ bool LoadKeyWrapper::loadPublicKey(std::string inputKeyFilename, int format)
     }
 }
 
-EVP_PKEY* LoadKeyWrapper::getEvpPrivateKey()
+EVP_PKEY* KeyWrapper::getEvpPrivateKey()
 {
     return privatePkey;
 }
 
-EVP_PKEY* LoadKeyWrapper::getEvpPubliceKey()
+EVP_PKEY* KeyWrapper::getEvpPubliceKey()
 {
     return publicPkey;
 }
 
-LoadKeyWrapper::~LoadKeyWrapper()
+KeyWrapper::~KeyWrapper()
 {
     if(privatePkey != NULL)
     {
@@ -115,5 +115,5 @@ LoadKeyWrapper::~LoadKeyWrapper()
         EVP_PKEY_free(publicPkey);
     }
 
-    std::cout << "~LoadKeyWrapper called.." << std::endl;
+    std::cout << "~KeyWrapper called.." << std::endl;
 }

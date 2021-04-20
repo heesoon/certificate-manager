@@ -1,12 +1,12 @@
 #include <iostream>
-#include "loadCnfWrapper.hpp"
+#include "CnfWrapper.hpp"
 
-LoadCnfWrapper::LoadCnfWrapper()
+CnfWrapper::CnfWrapper()
 {
     conf = NULL;
 }
 
-bool LoadCnfWrapper::loadConf(const std::string &inputKeyFilename)
+bool CnfWrapper::loadConf(const std::string &inputKeyFilename)
 {
     bool ret = false;
     CONF *tconf = NULL;
@@ -43,7 +43,7 @@ bool LoadCnfWrapper::loadConf(const std::string &inputKeyFilename)
     return true;
 }
 
-char* LoadCnfWrapper::lookupEntry(const std::string &section, const std::string &tag)
+char* CnfWrapper::lookupEntry(const std::string &section, const std::string &tag)
 {
     char *entry = NULL;
 
@@ -61,7 +61,7 @@ char* LoadCnfWrapper::lookupEntry(const std::string &section, const std::string 
     return entry;
 }
 
-char* LoadCnfWrapper::getString(const std::string &section, const std::string &tag)
+char* CnfWrapper::getString(const std::string &section, const std::string &tag)
 {
     char *s = NCONF_get_string(conf, section.c_str(), tag.c_str());
 
@@ -73,7 +73,7 @@ char* LoadCnfWrapper::getString(const std::string &section, const std::string &t
     return s;
 }
 
-long LoadCnfWrapper::getNumber(const std::string &section, const std::string &tag)
+long CnfWrapper::getNumber(const std::string &section, const std::string &tag)
 {
     int ret = 0;
     long result = 0;
@@ -88,13 +88,13 @@ long LoadCnfWrapper::getNumber(const std::string &section, const std::string &ta
     return result;
 }
 
-CONF* LoadCnfWrapper::getConf()
+CONF* CnfWrapper::getConf()
 {
     return conf;
 }
 
-LoadCnfWrapper::~LoadCnfWrapper()
+CnfWrapper::~CnfWrapper()
 {
     NCONF_free(conf);
-    std::cout << "~LoadCnfWrapper called.." << std::endl;
+    std::cout << "~CnfWrapper called.." << std::endl;
 }

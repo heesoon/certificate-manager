@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <memory>
-#include "loadCnfWrapper.hpp"
+#include "CnfWrapper.hpp"
 
 #define BASE_SECTION		"ca"
 #define ENV_DEFAULT_CA		"default_ca"
@@ -16,17 +16,17 @@ void testConf()
 	long number = 0;
 
 	std::string input_config_filename = "/home/hskim/share/certificate-manager/tests/test3/scripts/customer_openssl.cnf";
-	std::unique_ptr<LoadCnfWrapper> upLoadCnfWrapper(new LoadCnfWrapper());
-	upLoadCnfWrapper->loadConf(input_config_filename);
-	entry = upLoadCnfWrapper->lookupEntry(BASE_SECTION, ENV_DEFAULT_CA);
+	std::unique_ptr<CnfWrapper> upCnfWrapper(new CnfWrapper());
+	upCnfWrapper->loadConf(input_config_filename);
+	entry = upCnfWrapper->lookupEntry(BASE_SECTION, ENV_DEFAULT_CA);
 
-	str = upLoadCnfWrapper->getString(entry, STRING_MASK);
+	str = upCnfWrapper->getString(entry, STRING_MASK);
 	std::cout << "STRING_MASK : " << str << std::endl;
 
-	str = upLoadCnfWrapper->getString(entry, UTF8_IN);
+	str = upCnfWrapper->getString(entry, UTF8_IN);
 	std::cout << "UTF8_IN : " << str << std::endl;
 
-	number = upLoadCnfWrapper->getNumber(entry, ENV_DEFAULT_DAYS);
+	number = upCnfWrapper->getNumber(entry, ENV_DEFAULT_DAYS);
 	std::cout << "ENV_DEFAULT_DAYS : " << number << std::endl;	
 }
 

@@ -1,9 +1,9 @@
-project(loadKeywrapper)
+project(Certwrapper)
 cmake_minimum_required(VERSION 3.10)
 
 set(SRCS
-	"loadKeyWrapper.cpp"
-	"loadKeyWrapper_test.cpp"
+	"CertWrapper.cpp"
+	"CertWrapper_test.cpp"
 )
 
 #add_compile_definitions(__DEBUG__)
@@ -28,7 +28,7 @@ add_library(crypto
 	IMPORTED
 )
 
-add_library(biowrapper4Key
+add_library(biowrapper4Cert
 	SHARED
 	${CMAKE_SOURCE_DIR}/tests/test2/biowrapper/bioWrapper.cpp
 )
@@ -46,5 +46,5 @@ include_directories(
 target_link_libraries(
 	${PROJECT_NAME} PRIVATE
 	crypto
-	biowrapper4Key
+	biowrapper4Cert
 )
