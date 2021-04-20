@@ -1,4 +1,5 @@
 #include <iostream>
+#include "bioWrapper.hpp"
 #include "CnfWrapper.hpp"
 
 CnfWrapper::CnfWrapper()

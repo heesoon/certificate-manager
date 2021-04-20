@@ -1,4 +1,4 @@
-project(Certwrapper)
+project(Csrwrapper)
 cmake_minimum_required(VERSION 3.10)
 
 set(SRCS
@@ -33,6 +33,11 @@ add_library(biowrapper4Csr
 	${CMAKE_SOURCE_DIR}/tests/test2/biowrapper/bioWrapper.cpp
 )
 
+add_library(cnfwrapper4Csr
+	SHARED
+	${CMAKE_SOURCE_DIR}/tests/test2/cnfwrapper/CnfWrapper.cpp
+)
+
 set_target_properties(crypto
 	PROPERTIES IMPORTED_LOCATION
 	${CMAKE_SOURCE_DIR}/openssl/libs/libcrypto.so
@@ -41,10 +46,12 @@ set_target_properties(crypto
 include_directories(
 	${CMAKE_SOURCE_DIR}/openssl/include
 	${CMAKE_SOURCE_DIR}/tests/test2/biowrapper
+	${CMAKE_SOURCE_DIR}/tests/test2/cnfwrapper
 )
 #link_directories(${CMAKE_SOURCE_DIR}/openssl/libs)
 target_link_libraries(
 	${PROJECT_NAME} PRIVATE
 	crypto
 	biowrapper4Csr
+	cnfwrapper4Csr
 )

@@ -1,4 +1,3 @@
-#include "bioWrapper.hpp"
 #include <string>
 #include <openssl/conf.h>
 

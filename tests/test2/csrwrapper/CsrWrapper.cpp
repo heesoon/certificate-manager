@@ -1,5 +1,7 @@
 #include <iostream>
-#include "CertWrapper.hpp"
+#include "bioWrapper.hpp"
+#include "CsrWrapper.hpp"
+#include "CnfWrapper.hpp"
 
 CsrWrapper::CsrWrapper()
 {
@@ -83,7 +85,7 @@ bool CsrWrapper::writeCsr(const std::string &outputFileName, int format)
 
     if(format == FORMAT_ASN1)
     {
-        ret = i2d_X509_REQ_bio(cert, x509WriteReq);
+        ret = i2d_X509_REQ_bio(csr, x509WriteReq);
     }
     else if(format == FORMAT_PEM)
     {
@@ -106,6 +108,8 @@ bool CsrWrapper::writeCsr(const std::string &outputFileName, int format)
 
 bool CsrWrapper::makeCsr(const std::string &inputKeyFilename, const std::string &inputCnfFilename, const subject_t &subject)
 {
+    CnfWrapper cnfwrapper;
+
 	if(inputKeyFilename.empty() || inputCnfFilename.empty())
 	{
 		return false;
@@ -117,7 +121,7 @@ X509_REQ* CsrWrapper::getX509ReadReq()
     return x509ReadReq;
 }
 
-X509_REQ* CsrWrapper::getX509WritedReq()
+X509_REQ* CsrWrapper::getX509WriteReq()
 {
     return x509WriteReq;
 }
