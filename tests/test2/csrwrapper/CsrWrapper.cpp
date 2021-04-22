@@ -311,6 +311,8 @@ bool CsrWrapper::makeCsr(const std::string &inputKeyFilename, const std::string 
 		X509_NAME_free(x509_name);
 		return false;
 	}
+
+    return true;
 }
 
 X509_REQ* CsrWrapper::getX509ReadReq()

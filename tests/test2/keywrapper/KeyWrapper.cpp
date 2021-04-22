@@ -50,6 +50,8 @@ bool KeyWrapper::loadPrivateKey(std::string inputKeyFilename, int format)
     {
         return false;
     }
+	
+	return true;
 }
 
 bool KeyWrapper::loadPublicKey(std::string inputKeyFilename, int format)
@@ -92,6 +94,8 @@ bool KeyWrapper::loadPublicKey(std::string inputKeyFilename, int format)
     {
         return false;
     }
+	
+	return true;
 }
 
 EVP_PKEY* KeyWrapper::getEvpPrivateKey()

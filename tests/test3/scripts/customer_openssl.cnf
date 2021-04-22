@@ -67,6 +67,7 @@ emailAddress            = optional
 default_bits        = 4096
 distinguished_name  = req_distinguished_name
 string_mask         = utf8only
+utf8			    = no
 
 # SHA-1 is deprecated, so use SHA-2 instead.
 default_md          = sha256
