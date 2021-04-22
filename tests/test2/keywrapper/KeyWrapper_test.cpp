@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <memory>
+#include "bioWrapper.hpp"
 #include "KeyWrapper.hpp"
 
 // pirvate key load test

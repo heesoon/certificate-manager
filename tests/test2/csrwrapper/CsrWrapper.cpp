@@ -2,6 +2,7 @@
 #include <cstring>
 #include "bioWrapper.hpp"
 #include "CsrWrapper.hpp"
+#include "KeyWrapper.hpp"
 #include "CnfWrapper.hpp"
 #include <openssl/x509v3.h>
 
@@ -125,9 +126,12 @@ bool CsrWrapper::makeCsr(const std::string &inputKeyFilename, const std::string 
 {
     int ret = 0;
     CnfWrapper cnfwrapper;
+    KeyWrapper keywrapper;
     char *cnfData = NULL;
-    const EVP_MD *md_alg = NULL;
+    const EVP_MD *evpMd = NULL;
     X509_NAME *x509_name = NULL;
+    EVP_PKEY *evpKey = NULL;
+    EVP_PKEY *tpubkey = NULL;
     unsigned long chtype = MBSTRING_ASC;
 
 	if(inputKeyFilename.empty() || inputCnfFilename.empty())
@@ -144,8 +148,8 @@ bool CsrWrapper::makeCsr(const std::string &inputKeyFilename, const std::string 
         return false;
     }
 
-	md_alg = EVP_get_digestbyname(cnfData);
-	if(md_alg == NULL)
+	evpMd = EVP_get_digestbyname(cnfData);
+	if(evpMd == NULL)
 	{
 		return false;
 	}
@@ -199,49 +203,114 @@ bool CsrWrapper::makeCsr(const std::string &inputKeyFilename, const std::string 
         return false;
     }
 
-    char *p = subject.commonName.c_str();
-	ret = X509_NAME_add_entry_by_txt(x509_name, "commonName", chtype, (unsigned char*)p, -1, -1, 0);
+	ret = X509_NAME_add_entry_by_txt(x509_name, "commonName", chtype, reinterpret_cast<const unsigned char*>(subject.countryName.c_str()), -1, -1, 0);
 	if(ret == 0)
 	{
 		X509_NAME_free(x509_name);
 		return false;
 	}
-#if 0
-	ret = X509_NAME_add_entry_by_txt(up_x509_name.get(), "countryName", MBSTRING_ASC, reinterpret_cast<unsigned char*>(subject->countryName), -1, -1, 0);
+
+	ret = X509_NAME_add_entry_by_txt(x509_name, "countryName", chtype, reinterpret_cast<const unsigned char*>(subject.countryName.c_str()), -1, -1, 0);
 	if(ret == 0)
 	{
-		LOGE("X509_NAME_add_entry_by_txt");
+		X509_NAME_free(x509_name);
 		return false;
 	}
 
-	ret = X509_NAME_add_entry_by_txt(up_x509_name.get(), "stateOrProvinceName", MBSTRING_ASC, reinterpret_cast<unsigned char*>(subject->stateOrProvinceName), -1, -1, 0);
+	ret = X509_NAME_add_entry_by_txt(x509_name, "stateOrProvinceName", chtype, reinterpret_cast<const unsigned char*>(subject.stateOrProvinceName.c_str()), -1, -1, 0);
 	if(ret == 0)
 	{
-		LOGE("X509_NAME_add_entry_by_txt");
+		X509_NAME_free(x509_name);
 		return false;
 	}
 
-	ret = X509_NAME_add_entry_by_txt(up_x509_name.get(), "localityName", MBSTRING_ASC, reinterpret_cast<unsigned char*>(subject->localityName), -1, -1, 0);
+	ret = X509_NAME_add_entry_by_txt(x509_name, "localityName", chtype, reinterpret_cast<const unsigned char*>(subject.localityName.c_str()), -1, -1, 0);
 	if(ret == 0)
 	{
-		LOGE("X509_NAME_add_entry_by_txt");
+		X509_NAME_free(x509_name);
 		return false;
 	}
 
-	ret = X509_NAME_add_entry_by_txt(up_x509_name.get(), "organizationName", MBSTRING_ASC, reinterpret_cast<unsigned char*>(subject->organizationName), -1, -1, 0);
+	ret = X509_NAME_add_entry_by_txt(x509_name, "organizationName", chtype, reinterpret_cast<const unsigned char*>(subject.organizationName.c_str()), -1, -1, 0);
 	if(ret == 0)
 	{
-		LOGE("X509_NAME_add_entry_by_txt");
+		X509_NAME_free(x509_name);
 		return false;
 	}
 
-	ret = X509_NAME_add_entry_by_txt(up_x509_name.get(), "emailAddress", MBSTRING_ASC, reinterpret_cast<unsigned char*>(subject->emailAddress), -1, -1, 0);
+	ret = X509_NAME_add_entry_by_txt(x509_name, "emailAddress", chtype, reinterpret_cast<const unsigned char*>(subject.emailAddress.c_str()), -1, -1, 0);
 	if(ret == 0)
 	{
-		LOGE("X509_NAME_add_entry_by_txt");
+		X509_NAME_free(x509_name);
 		return false;
 	}
-#endif    
+
+    // 7. read public key
+    if(keywrapper.loadPrivateKey(inputKeyFilename, FORMAT_PEM) == false)
+    {
+        X509_NAME_free(x509_name);
+        return false;
+    }
+
+    // 8. build X509_REQ structure
+    x509WriteReq = X509_REQ_new();
+  	if(x509WriteReq == NULL)
+	{
+		X509_NAME_free(x509_name);
+		return false;
+	}
+
+	// 8.1. setting req revsion. currently there is only version 1
+	ret = X509_REQ_set_version(x509WriteReq, 0L);
+	if(ret == 0)
+	{
+		X509_NAME_free(x509_name);
+		return false;
+	}
+
+	// 8.2. setting subject to req
+	ret = X509_REQ_set_subject_name(x509WriteReq, x509_name);
+	if(ret == 0)
+	{
+		X509_NAME_free(x509_name);
+		return false;
+	}
+
+    // 8.3. setting subject to req
+    evpKey = keywrapper.getEvpPrivateKey();
+	ret = X509_REQ_set_pubkey(x509WriteReq, evpKey);
+	if(ret == 0)
+	{
+		X509_NAME_free(x509_name);
+		return false;
+	}
+
+    // 8.4. signing
+	ret = X509_REQ_sign(x509WriteReq, evpKey, evpMd);
+	if(ret == 0)
+	{
+		X509_NAME_free(x509_name);
+		return false;
+	}
+
+    // 8.5. req verify
+	tpubkey = evpKey;
+	if(tpubkey == NULL)
+	{
+		tpubkey = X509_REQ_get0_pubkey(x509WriteReq);
+		if(tpubkey == NULL)
+		{
+			X509_NAME_free(x509_name);
+			return false;
+		}
+	}
+
+	ret = X509_REQ_verify(x509WriteReq, tpubkey);
+	if(ret <= 0)
+	{
+		X509_NAME_free(x509_name);
+		return false;
+	}
 }
 
 X509_REQ* CsrWrapper::getX509ReadReq()

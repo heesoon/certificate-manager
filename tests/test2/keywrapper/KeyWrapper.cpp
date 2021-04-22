@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <cassert>
+#include "bioWrapper.hpp"
 #include "KeyWrapper.hpp"
 
 KeyWrapper::KeyWrapper()

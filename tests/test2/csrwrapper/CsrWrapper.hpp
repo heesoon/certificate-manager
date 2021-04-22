@@ -2,18 +2,6 @@
 #include <openssl/x509.h>
 #include <openssl/pem.h>
 
-#define REQ_BASE_SECTION         "req"
-
-#define BITS            "default_bits"
-#define KEYFILE         "default_keyfile"
-#define PROMPT          "prompt"
-#define DISTINGUISHED_NAME      "distinguished_name"
-#define ATTRIBUTES      "attributes"
-#define V3_EXTENSIONS   "x509_extensions"
-#define REQ_EXTENSIONS  "req_extensions"
-#define STRING_MASK     "string_mask"
-#define UTF8_IN         "utf8"
-
 typedef struct st_subject
 {
 	std::string commonName;

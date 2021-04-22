@@ -1,4 +1,3 @@
-#include "bioWrapper.hpp"
 #include <openssl/evp.h>
 #include <openssl/pem.h>
 

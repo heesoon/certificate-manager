@@ -38,6 +38,11 @@ add_library(cnfwrapper4Csr
 	${CMAKE_SOURCE_DIR}/tests/test2/cnfwrapper/CnfWrapper.cpp
 )
 
+add_library(keywrapper4Csr
+	SHARED
+	${CMAKE_SOURCE_DIR}/tests/test2/keywrapper/KeyWrapper.cpp
+)
+
 set_target_properties(crypto
 	PROPERTIES IMPORTED_LOCATION
 	${CMAKE_SOURCE_DIR}/openssl/libs/libcrypto.so
@@ -47,6 +52,7 @@ include_directories(
 	${CMAKE_SOURCE_DIR}/openssl/include
 	${CMAKE_SOURCE_DIR}/tests/test2/biowrapper
 	${CMAKE_SOURCE_DIR}/tests/test2/cnfwrapper
+	${CMAKE_SOURCE_DIR}/tests/test2/keywrapper
 )
 #link_directories(${CMAKE_SOURCE_DIR}/openssl/libs)
 target_link_libraries(
@@ -54,4 +60,5 @@ target_link_libraries(
 	crypto
 	biowrapper4Csr
 	cnfwrapper4Csr
+	keywrapper4Csr
 )
