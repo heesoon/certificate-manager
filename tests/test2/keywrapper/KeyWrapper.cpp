@@ -160,10 +160,11 @@ bool KeyWrapper::savePrivateKey(const std::string &outputKeyFilename, const std:
 
     if( (passwd.empty() == false) && (cipherName.empty() == false) )
     {
-        // keygeneration with encryption and password.
-        if(passwd.size() < 8)
+        // keygeneration with encryption and password.        
+        if(passwd.size() < 4 || passwd.size() > 8)
         {
             // too much short password so return.
+            std::cout << "error" << std::endl;
             return false;
         }
 
@@ -206,9 +207,10 @@ bool KeyWrapper::savePrivateKey(const std::string &outputKeyFilename, const std:
     }
     else if(format == FORMAT_PEM)
     {
-        //if(!PEM_write_bio_PrivateKey(key, createdRsaKey, EVP_aes_256_cbc(), (unsigned char*)password, sizeof(password), NULL, NULL))
+        //if(!PEM_write_bio_PrivateKey(key, createdRsaKey, EVP_aes_256_cbc(), (unsigned char*)"password", sizeof("password"), NULL, NULL))
         if(!PEM_write_bio_PrivateKey(key, createdRsaKey, cipherp, (unsigned char*)password, sizeof(password), NULL, NULL))
         {
+            std::cout << "error" << std::endl;
             return false;
         }
     }
@@ -217,6 +219,7 @@ bool KeyWrapper::savePrivateKey(const std::string &outputKeyFilename, const std:
         std::cout << "currently not support" << std::endl;
         return false;
     }
+
     std::cout << "Success " << std::endl;
 	return true;
 }
