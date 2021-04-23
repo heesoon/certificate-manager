@@ -277,7 +277,7 @@ bool CsrWrapper::makeCsr(const std::string &inputKeyFilename, const std::string 
 	}
 
     // 8.3. setting subject to req
-    evpKey = keywrapper.getEvpPrivateKey();
+    evpKey = keywrapper.getEvpPrivateKey(ENUM_KEY_TYPE::LOADED_FROM_FILE);
 	ret = X509_REQ_set_pubkey(x509WriteReq, evpKey);
 	if(ret == 0)
 	{

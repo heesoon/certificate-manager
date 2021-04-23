@@ -6,11 +6,13 @@
 
 KeyWrapper::KeyWrapper()
 {
-    privatePkey = NULL;
-    publicPkey = NULL;
+    EVP_PKEY *loadedPrivateKey = NULL;
+    EVP_PKEY *loadedPublicKey = NULL;
+    EVP_PKEY *createdPrivateKey = NULL;
+    EVP_PKEY *createdPublicKey = NULL;
 }
 
-bool KeyWrapper::loadPrivateKey(std::string inputKeyFilename, int format)
+bool KeyWrapper::loadPrivateKey(const std::string &inputKeyFilename, int format)
 {
     bool ret = false;
     BioWrapper bioWrapper;
@@ -28,7 +30,7 @@ bool KeyWrapper::loadPrivateKey(std::string inputKeyFilename, int format)
 
     if(format == FORMAT_ASN1)
     {
-        privatePkey = d2i_PrivateKey_bio(key, NULL);
+        loadedPrivateKey = d2i_PrivateKey_bio(key, NULL);
     }
     else if(format == FORMAT_PKCS12)
     {
@@ -38,7 +40,7 @@ bool KeyWrapper::loadPrivateKey(std::string inputKeyFilename, int format)
     }
     else if(format == FORMAT_PEM)
     {
-        privatePkey = PEM_read_bio_PrivateKey(key, NULL, NULL, NULL);
+        loadedPrivateKey = PEM_read_bio_PrivateKey(key, NULL, NULL, NULL);
     }
     else
     {
@@ -46,7 +48,7 @@ bool KeyWrapper::loadPrivateKey(std::string inputKeyFilename, int format)
         return false;
     }
 
-    if(privatePkey == NULL)
+    if(loadedPrivateKey == NULL)
     {
         return false;
     }
@@ -54,7 +56,7 @@ bool KeyWrapper::loadPrivateKey(std::string inputKeyFilename, int format)
 	return true;
 }
 
-bool KeyWrapper::loadPublicKey(std::string inputKeyFilename, int format)
+bool KeyWrapper::loadPublicKey(const std::string &inputKeyFilename, int format)
 {
     bool ret = false;
     BioWrapper bioWrapper;
@@ -72,7 +74,7 @@ bool KeyWrapper::loadPublicKey(std::string inputKeyFilename, int format)
 
     if(format == FORMAT_ASN1)
     {
-        publicPkey = d2i_PUBKEY_bio(key, NULL);
+        loadedPublicKey = d2i_PUBKEY_bio(key, NULL);
     }
     else if(format == FORMAT_PEMRSA)
     {
@@ -82,7 +84,7 @@ bool KeyWrapper::loadPublicKey(std::string inputKeyFilename, int format)
     }
     else if(format == FORMAT_PEM)
     {
-        publicPkey = PEM_read_bio_PUBKEY(key, NULL, NULL, NULL);
+        loadedPublicKey = PEM_read_bio_PUBKEY(key, NULL, NULL, NULL);
     }
     else
     {
@@ -90,7 +92,7 @@ bool KeyWrapper::loadPublicKey(std::string inputKeyFilename, int format)
         return false;
     }
 
-    if(publicPkey == NULL)
+    if(loadedPublicKey == NULL)
     {
         return false;
     }
@@ -98,27 +100,140 @@ bool KeyWrapper::loadPublicKey(std::string inputKeyFilename, int format)
 	return true;
 }
 
-EVP_PKEY* KeyWrapper::getEvpPrivateKey()
+bool KeyWrapper::savePrivateKey(const std::string &outputKeyFilename, int format)
 {
-    return privatePkey;
+    bool ret = false;
+    BioWrapper bioWrapper;
+
+    if(createdPrivateKey == NULL)
+    {
+        return false;
+    }
+
+    assert(format == FORMAT_ASN1 || format == FORMAT_PEM);
+
+    ret = bioWrapper.open(outputKeyFilename, 'w', format);
+    if(ret == false)
+    {
+        std::cout << "open bio error" << std::endl;
+        return false;
+    }
+
+    BIO *key = bioWrapper.getBio();
+
+    // refer from pkey.c 241 line
+    if(format == FORMAT_ASN1)
+    {
+        if(!i2d_PrivateKey_bio(key, createdPrivateKey))
+        {
+            return false;
+        }
+    }
+    else if(format == FORMAT_PEM)
+    {
+        if(!PEM_write_bio_PrivateKey(key, createdPrivateKey, NULL, NULL, 0, NULL, NULL))
+        {
+            return false;
+        }
+    }
+    else
+    {
+        std::cout << "currently not support" << std::endl;
+        return false;
+    }
+
+	return true;
 }
 
-EVP_PKEY* KeyWrapper::getEvpPubliceKey()
+bool KeyWrapper::savePublicKey(const std::string &outputKeyFilename, int format)
 {
-    return publicPkey;
+    bool ret = false;
+    BioWrapper bioWrapper;
+
+    if(createdPublicKey == NULL)
+    {
+        return false;
+    }
+
+    assert(format == FORMAT_ASN1 || format == FORMAT_PEM);
+
+    ret = bioWrapper.open(outputKeyFilename, 'w', format);
+    if(ret == false)
+    {
+        std::cout << "open bio error" << std::endl;
+        return false;
+    }
+
+    BIO *key = bioWrapper.getBio();
+
+    if(format == FORMAT_ASN1)
+    {
+        if(!i2d_PUBKEY_bio(key, createdPublicKey))
+        {
+            return false;
+        }
+    }
+    else if(format == FORMAT_PEM)
+    {
+        if(!PEM_write_bio_PUBKEY(key, createdPublicKey))
+        {
+            return false;
+        }
+    }
+    else
+    {
+        std::cout << "currently not support" << std::endl;
+        return false;
+    }
+
+	return true;
+}
+
+EVP_PKEY* KeyWrapper::getEvpPrivateKey(ENUM_KEY_TYPE keyType)
+{
+    if(keyType == ENUM_KEY_TYPE::NEW_CREATED)
+    {
+        return createdPrivateKey;
+    }
+    else if(keyType == ENUM_KEY_TYPE::LOADED_FROM_FILE)
+    {
+        return loadedPrivateKey;
+    }
+}
+
+EVP_PKEY* KeyWrapper::getEvpPubliceKey(ENUM_KEY_TYPE keyType)
+{
+    if(keyType == ENUM_KEY_TYPE::NEW_CREATED)
+    {
+        return createdPublicKey;
+    }
+    else if(keyType == ENUM_KEY_TYPE::LOADED_FROM_FILE)
+    {
+        return loadedPublicKey;
+    }
 }
 
 KeyWrapper::~KeyWrapper()
 {
-    if(privatePkey != NULL)
+    if(loadedPrivateKey != NULL)
     {
-        EVP_PKEY_free(privatePkey);
+        EVP_PKEY_free(loadedPrivateKey);
     }
 
-    if(publicPkey != NULL)
+    if(loadedPublicKey != NULL)
     {
-        EVP_PKEY_free(publicPkey);
+        EVP_PKEY_free(loadedPublicKey);
     }
+
+    if(createdPrivateKey != NULL)
+    {
+        EVP_PKEY_free(createdPrivateKey);
+    }
+
+    if(createdPublicKey != NULL)
+    {
+        EVP_PKEY_free(createdPublicKey);
+    }  
 
     std::cout << "~KeyWrapper called.." << std::endl;
 }
