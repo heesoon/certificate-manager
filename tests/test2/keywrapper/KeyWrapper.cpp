@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <cassert>
+//#include <regex>
 #include "bioWrapper.hpp"
 #include "KeyWrapper.hpp"
 
@@ -8,8 +9,7 @@ KeyWrapper::KeyWrapper()
 {
     EVP_PKEY *loadedPrivateKey = NULL;
     EVP_PKEY *loadedPublicKey = NULL;
-    EVP_PKEY *createdPrivateKey = NULL;
-    EVP_PKEY *createdPublicKey = NULL;
+    EVP_PKEY *createdRsaKey = NULL;
 }
 
 bool KeyWrapper::loadPrivateKey(const std::string &inputKeyFilename, int format)
@@ -105,7 +105,7 @@ bool KeyWrapper::savePrivateKey(const std::string &outputKeyFilename, int format
     bool ret = false;
     BioWrapper bioWrapper;
 
-    if(createdPrivateKey == NULL)
+    if(createdRsaKey == NULL)
     {
         return false;
     }
@@ -124,14 +124,88 @@ bool KeyWrapper::savePrivateKey(const std::string &outputKeyFilename, int format
     // refer from pkey.c 241 line
     if(format == FORMAT_ASN1)
     {
-        if(!i2d_PrivateKey_bio(key, createdPrivateKey))
+        if(!i2d_PrivateKey_bio(key, createdRsaKey))
         {
             return false;
         }
     }
     else if(format == FORMAT_PEM)
     {
-        if(!PEM_write_bio_PrivateKey(key, createdPrivateKey, NULL, NULL, 0, NULL, NULL))
+        if(!PEM_write_bio_PrivateKey(key, createdRsaKey, NULL, NULL, 0, NULL, NULL))
+        {
+            return false;
+        }
+    }
+    else
+    {
+        std::cout << "currently not support" << std::endl;
+        return false;
+    }
+
+	return true;
+}
+
+bool KeyWrapper::savePrivateKey(const std::string &outputKeyFilename, const std::string &passwd, const std::string &cipherName, int format)
+{
+    bool ret = false;
+    const EVP_CIPHER *cipherp = NULL;
+    char *password = NULL;
+    //const char *password = NULL;    
+    BioWrapper bioWrapper;
+
+    if(createdRsaKey == NULL)
+    {
+        return false;
+    }
+
+   if( (passwd.empty() == false) && (cipherName.empty() == false) )
+    {
+        // keygeneration with encryption and password.
+        if(passwd.size() < 8)
+        {
+            // too much short password so return.
+            return false;
+        }
+
+#if 0
+        if(std::regex_match(passwd, std::regex("(\\+|-)?[0-9]*(\\.?([0-9]+))$")))
+        {
+            // all character is number;
+            return false;
+        }
+#endif
+
+        password = const_cast<char *>(passwd.c_str());
+        //password = passwd.c_str();
+        cipherp = EVP_get_cipherbyname(cipherName.c_str());
+        if(cipherp == NULL)
+        {
+            return false;
+        }
+    }
+
+    assert(format == FORMAT_ASN1 || format == FORMAT_PEM);
+
+    ret = bioWrapper.open(outputKeyFilename, 'w', format);
+    if(ret == false)
+    {
+        std::cout << "open bio error" << std::endl;
+        return false;
+    }
+
+    BIO *key = bioWrapper.getBio();
+
+    // refer from pkey.c 241 line
+    if(format == FORMAT_ASN1)
+    {
+        if(!i2d_PrivateKey_bio(key, createdRsaKey))
+        {
+            return false;
+        }
+    }
+    else if(format == FORMAT_PEM)
+    {
+        if(!PEM_write_bio_PrivateKey(key, createdRsaKey, cipherp, NULL, 0, NULL, password))
         {
             return false;
         }
@@ -150,7 +224,7 @@ bool KeyWrapper::savePublicKey(const std::string &outputKeyFilename, int format)
     bool ret = false;
     BioWrapper bioWrapper;
 
-    if(createdPublicKey == NULL)
+    if(createdRsaKey == NULL)
     {
         return false;
     }
@@ -168,14 +242,14 @@ bool KeyWrapper::savePublicKey(const std::string &outputKeyFilename, int format)
 
     if(format == FORMAT_ASN1)
     {
-        if(!i2d_PUBKEY_bio(key, createdPublicKey))
+        if(!i2d_PUBKEY_bio(key, createdRsaKey))
         {
             return false;
         }
     }
     else if(format == FORMAT_PEM)
     {
-        if(!PEM_write_bio_PUBKEY(key, createdPublicKey))
+        if(!PEM_write_bio_PUBKEY(key, createdRsaKey))
         {
             return false;
         }
@@ -189,11 +263,13 @@ bool KeyWrapper::savePublicKey(const std::string &outputKeyFilename, int format)
 	return true;
 }
 
+#if 0
+
 EVP_PKEY* KeyWrapper::getEvpPrivateKey(ENUM_KEY_TYPE keyType)
 {
     if(keyType == ENUM_KEY_TYPE::NEW_CREATED)
     {
-        return createdPrivateKey;
+        return createdRsaKey;
     }
     else if(keyType == ENUM_KEY_TYPE::LOADED_FROM_FILE)
     {
@@ -205,12 +281,61 @@ EVP_PKEY* KeyWrapper::getEvpPubliceKey(ENUM_KEY_TYPE keyType)
 {
     if(keyType == ENUM_KEY_TYPE::NEW_CREATED)
     {
-        return createdPublicKey;
+        return createdRsaKey;
     }
     else if(keyType == ENUM_KEY_TYPE::LOADED_FROM_FILE)
     {
         return loadedPublicKey;
     }
+}
+#endif
+
+EVP_PKEY* KeyWrapper::getLoadedEvpPrivateKey()
+{
+    return loadedPrivateKey;
+}
+
+EVP_PKEY* KeyWrapper::getLoadedEvpPubliceKey()
+{
+    return loadedPublicKey;
+}
+
+EVP_PKEY* KeyWrapper::getCreatedEvpRsaKey()
+{
+    return createdRsaKey;
+}
+
+bool KeyWrapper::createRsaKey(int nBits)
+{
+    EVP_PKEY_CTX *ctx = NULL;
+
+    ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+    if(ctx == NULL)
+    {
+        return false;
+    }
+
+    if(EVP_PKEY_keygen_init(ctx) <= 0)
+    {
+        EVP_PKEY_CTX_free(ctx);
+        return false;
+    }
+
+    if(EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, nBits) <= 0)
+    {
+        EVP_PKEY_CTX_free(ctx);
+        return false;       
+    }
+
+    if(EVP_PKEY_keygen(ctx, &createdRsaKey) <= 0)
+    {
+        EVP_PKEY_CTX_free(ctx);
+        return false;
+    }
+
+    EVP_PKEY_CTX_free(ctx);
+
+    return true;
 }
 
 KeyWrapper::~KeyWrapper()
@@ -225,15 +350,10 @@ KeyWrapper::~KeyWrapper()
         EVP_PKEY_free(loadedPublicKey);
     }
 
-    if(createdPrivateKey != NULL)
+    if(createdRsaKey != NULL)
     {
-        EVP_PKEY_free(createdPrivateKey);
+        EVP_PKEY_free(createdRsaKey);
     }
-
-    if(createdPublicKey != NULL)
-    {
-        EVP_PKEY_free(createdPublicKey);
-    }  
 
     std::cout << "~KeyWrapper called.." << std::endl;
 }
