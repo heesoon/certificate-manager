@@ -25,7 +25,7 @@ public:
 #endif
     EVP_PKEY* getLoadedEvpPrivateKey();
     EVP_PKEY* getLoadedEvpPubliceKey();
-    EVP_PKEY* getCreatedEvpRsaKey();   
+    EVP_PKEY* getCreatedEvpRsaKey();
     virtual ~KeyWrapper();
 private:
     EVP_PKEY *loadedPrivateKey = NULL;

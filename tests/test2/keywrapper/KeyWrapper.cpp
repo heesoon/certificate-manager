@@ -158,7 +158,7 @@ bool KeyWrapper::savePrivateKey(const std::string &outputKeyFilename, const std:
         return false;
     }
 
-   if( (passwd.empty() == false) && (cipherName.empty() == false) )
+    if( (passwd.empty() == false) && (cipherName.empty() == false) )
     {
         // keygeneration with encryption and password.
         if(passwd.size() < 8)
@@ -215,7 +215,7 @@ bool KeyWrapper::savePrivateKey(const std::string &outputKeyFilename, const std:
         std::cout << "currently not support" << std::endl;
         return false;
     }
-
+    std::cout << "Success " << std::endl;
 	return true;
 }
 

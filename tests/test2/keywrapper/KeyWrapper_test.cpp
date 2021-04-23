@@ -55,8 +55,18 @@ void testPublicKeyPEMRSALoadKeyWrapper()
 	upLoadKeyWrapper->loadPublicKey(inputKeyFilename, FORMAT_PEMRSA);
 }
 
+void testKeyGenerationAndWrite()
+{
+	std::string outputKeyFilename = "createdPrivateKey.pem";
+	std::unique_ptr<KeyWrapper> upLoadKeyWrapper(new KeyWrapper());
+	upLoadKeyWrapper->createRsaKey(2048);
+	upLoadKeyWrapper->savePrivateKey(outputKeyFilename, "123456789", "AES-256-GCM", FORMAT_PEM);
+}
+
 int main()
 {
+	testKeyGenerationAndWrite();
+
 	// public key load test
 	testPublicKeyANSILoadKeyWrapper();
 	testPublicKeyPEMLoadKeyWrapper();
@@ -67,6 +77,7 @@ int main()
 	testPrivateKeyPEMLoadKeyWrapper();
 	testPrivateKeyPKCS12LoadKeyWrapper();
 	testPrivateKeyPVKLoadKeyWrapper();
+
 
 	return 0;
 }
