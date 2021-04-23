@@ -180,6 +180,7 @@ bool KeyWrapper::savePrivateKey(const std::string &outputKeyFilename, const std:
         cipherp = EVP_get_cipherbyname(cipherName.c_str());
         if(cipherp == NULL)
         {
+            std::cout << "error" << std::endl;
             return false;
         }
     }
@@ -205,7 +206,8 @@ bool KeyWrapper::savePrivateKey(const std::string &outputKeyFilename, const std:
     }
     else if(format == FORMAT_PEM)
     {
-        if(!PEM_write_bio_PrivateKey(key, createdRsaKey, cipherp, NULL, 0, NULL, password))
+        //if(!PEM_write_bio_PrivateKey(key, createdRsaKey, EVP_aes_256_cbc(), (unsigned char*)password, sizeof(password), NULL, NULL))
+        if(!PEM_write_bio_PrivateKey(key, createdRsaKey, cipherp, (unsigned char*)password, sizeof(password), NULL, NULL))
         {
             return false;
         }

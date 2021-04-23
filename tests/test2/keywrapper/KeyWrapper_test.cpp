@@ -60,7 +60,7 @@ void testKeyGenerationAndWrite()
 	std::string outputKeyFilename = "createdPrivateKey.pem";
 	std::unique_ptr<KeyWrapper> upLoadKeyWrapper(new KeyWrapper());
 	upLoadKeyWrapper->createRsaKey(2048);
-	upLoadKeyWrapper->savePrivateKey(outputKeyFilename, "123456789", "AES-256-GCM", FORMAT_PEM);
+	upLoadKeyWrapper->savePrivateKey(outputKeyFilename, "123456789", "AES-256-CBC", FORMAT_PEM);
 }
 
 int main()
