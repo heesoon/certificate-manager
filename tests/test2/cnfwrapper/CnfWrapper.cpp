@@ -89,6 +89,11 @@ long CnfWrapper::getNumber(const std::string &section, const std::string &tag)
     return result;
 }
 
+STACK_OF(CONF_VALUE)* CnfWrapper::getSection(const CONF *conf, const std::string &section)
+{
+	return NCONF_get_section(conf, section.c_str());
+}
+
 CONF* CnfWrapper::getConf()
 {
     return conf;

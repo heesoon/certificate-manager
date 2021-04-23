@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <memory>
+#include "bioWrapper.hpp"
 #include "CertWrapper.hpp"
 
 void testCert()

@@ -1,4 +1,5 @@
 #include <iostream>
+#include "bioWrapper.hpp"
 #include "CertWrapper.hpp"
 
 CertWrapper::CertWrapper()

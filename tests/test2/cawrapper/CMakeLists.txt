@@ -28,24 +28,13 @@ add_library(crypto
 	IMPORTED
 )
 
-add_library(biowrapper4Ca
+add_library(api
 	SHARED
 	${CMAKE_SOURCE_DIR}/tests/test2/biowrapper/bioWrapper.cpp
-)
-
-add_library(cnfwrapper4Ca
-	SHARED
 	${CMAKE_SOURCE_DIR}/tests/test2/cnfwrapper/CnfWrapper.cpp
-)
-
-add_library(keywrapper4Ca
-	SHARED
 	${CMAKE_SOURCE_DIR}/tests/test2/keywrapper/KeyWrapper.cpp
-)
-
-add_library(ksrwrapper4Ca
-	SHARED
 	${CMAKE_SOURCE_DIR}/tests/test2/csrwrapper/CsrWrapper.cpp
+	${CMAKE_SOURCE_DIR}/tests/test2/certwrapper/CertWrapper.cpp
 )
 
 set_target_properties(crypto
@@ -59,13 +48,11 @@ include_directories(
 	${CMAKE_SOURCE_DIR}/tests/test2/cnfwrapper
 	${CMAKE_SOURCE_DIR}/tests/test2/keywrapper
 	${CMAKE_SOURCE_DIR}/tests/test2/csrwrapper
+	${CMAKE_SOURCE_DIR}/tests/test2/certwrapper
 )
 #link_directories(${CMAKE_SOURCE_DIR}/openssl/libs)
 target_link_libraries(
 	${PROJECT_NAME} PRIVATE
 	crypto
-	biowrapper4Csr
-	cnfwrapper4Csr
-	keywrapper4Csr
-	ksrwrapper4Ca
+	api
 )

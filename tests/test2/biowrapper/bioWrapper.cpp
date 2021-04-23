@@ -58,10 +58,7 @@ BIO* BioWrapper::getBio()
 
 BioWrapper::~BioWrapper()
 {
-	if(bio != NULL)
-	{
-		BIO_free(bio);
-	}
+	BIO_free(bio);
 
 	std::cout << "~BioWrapper called.." << std::endl;
 }
