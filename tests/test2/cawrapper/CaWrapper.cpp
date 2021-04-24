@@ -109,6 +109,11 @@ BIGNUM* CaWrapper::load_serial(const char *serialfile, int create, ASN1_INTEGER 
     return ret;
 }
 
+bool CaWrapper::generateX509(X509_REQ *x509Req, X509 *x509Ca, EVP_PKEY *caPkey, BIGNUM *serial, long days, int email_dn, STACK_OF(CONF_VALUE) *policy,const EVP_MD *dgst)
+{
+
+}
+
 bool CaWrapper::ca(const std::string &inputConfigFile, const std::string &inputCsrFile)
 {
     bool ret = false;

@@ -39,6 +39,7 @@ class CaWrapper
 {
 public:
     CaWrapper();
+    bool generateX509(X509_REQ *x509Req, X509 *x509Ca, EVP_PKEY *caPkey, BIGNUM *serial, long days, int email_dn, STACK_OF(CONF_VALUE) *policy,const EVP_MD *dgst);
     bool ca(const std::string &inputConfigFile, const std::string &inputCsrFile);
     virtual ~CaWrapper();
 private:
