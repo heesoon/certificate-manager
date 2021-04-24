@@ -12,7 +12,19 @@ void testCa()
 	std::string input_csr_filename = "/home/hskim/certificates/customer/csr/customer.csr.pem";
 	std::string output_certificate_filename = "customer_certificate.pem";
 
+	ret = cawrapper.init();
+	if(ret == false)
+	{
+		return;
+	}
+
 	ret = cawrapper.ca(input_config_filename, input_csr_filename);
+	if(ret == false)
+	{
+		return;
+	}
+
+	ret = cawrapper.saveSignedCert(output_certificate_filename, FORMAT_PEM);
 	if(ret == false)
 	{
 		return;

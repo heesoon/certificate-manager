@@ -57,7 +57,7 @@ bool CertWrapper::readCert(const std::string &inputFileName, int format)
     return true;
 }
 
-bool CertWrapper::writeCert(const std::string &outputFileName, int format)
+bool CertWrapper::writeCert(X509 *x509, const std::string &outputFileName, int format)
 {
     bool ret = false;
     BIO *cert = NULL;

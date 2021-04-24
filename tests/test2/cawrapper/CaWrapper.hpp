@@ -39,11 +39,19 @@ class CaWrapper
 {
 public:
     CaWrapper();
-    bool generateX509(X509_REQ *x509Req, X509 *x509Ca, EVP_PKEY *caPkey, BIGNUM *serial, long days, int email_dn, STACK_OF(CONF_VALUE) *policy,const EVP_MD *dgst);
+    bool init();
+    bool setCertTimes(const char *startdate, const char *enddate, int days);
+    int pkey_ctrl_string(EVP_PKEY_CTX *ctx, const char *value);
+    int do_pkey_ctx_init(EVP_PKEY_CTX *pkctx, STACK_OF(OPENSSL_STRING) *opts);
+    int adapt_keyid_ext(X509 *cert, X509V3_CTX *ext_ctx, const char *name, const char *value, int add_default);
+    int do_sign_init(EVP_MD_CTX *ctx, EVP_PKEY *pkey, const EVP_MD *md, STACK_OF(OPENSSL_STRING) *sigopts);
+    int do_X509_sign(X509 *cert, EVP_PKEY *pkey, const EVP_MD *md, STACK_OF(OPENSSL_STRING) *sigopts, X509V3_CTX *ext_ctx);
+    bool generateX509(X509_REQ *x509Req, X509 *x509Ca, EVP_PKEY *caPkey, BIGNUM *serial, long days, int email_dn, STACK_OF(CONF_VALUE) *policy,const EVP_MD *evpMd);
     bool ca(const std::string &inputConfigFile, const std::string &inputCsrFile);
+    bool saveSignedCert(const std::string &outputFile, int format);
     virtual ~CaWrapper();
 private:
     X509 *x509 = NULL;
-    bool rand_serial(BIGNUM *b, ASN1_INTEGER *ai);
-    BIGNUM *load_serial(const char *serialfile, int create, ASN1_INTEGER **retai);
+    bool randSerial(BIGNUM *b, ASN1_INTEGER *ai);
+    BIGNUM *loadSerial(const char *serialfile, int create, ASN1_INTEGER **retai);
 };
