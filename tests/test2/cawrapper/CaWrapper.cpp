@@ -837,7 +837,7 @@ bool CaWrapper::verify(const std::string &inputCaChainFile, const std::string &i
 	bool ret = false;
 	X509_STORE *store = NULL;
 
-	if(inputCaChainFile.empty() == false || inputCertFile.empty() == false)
+	if(inputCaChainFile.empty() == true || inputCertFile.empty() == true)
 	{
 		goto end;
 	}
