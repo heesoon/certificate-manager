@@ -49,6 +49,9 @@ public:
     bool generateX509(X509_REQ *x509Req, X509 *x509Ca, EVP_PKEY *caPkey, BIGNUM *serial, long days, int email_dn, STACK_OF(CONF_VALUE) *policy,const EVP_MD *evpMd);
     bool ca(const std::string &inputConfigFile, const std::string &inputCsrFile);
     bool saveSignedCert(const std::string &outputFile, int format);
+    X509_STORE* setup_verify(const std::string &inputCaFile);
+    bool check(X509_STORE *ctx, const std::string &inputCertFile, bool show_chain);
+    bool verify(const std::string &inputCaChainFile, const std::string &inputCertFile);
     virtual ~CaWrapper();
 private:
     X509 *x509 = NULL;
