@@ -111,19 +111,62 @@ BIGNUM* CaWrapper::load_serial(const char *serialfile, int create, ASN1_INTEGER 
 
 bool CaWrapper::generateX509(X509_REQ *x509Req, X509 *x509Ca, EVP_PKEY *caPkey, BIGNUM *serial, long days, int email_dn, STACK_OF(CONF_VALUE) *policy,const EVP_MD *dgst)
 {
+    bool ret = false;
+	const X509_NAME *x509ReqSubject = NULL;
+    const X509_NAME *x509CaSubject = NULL; 
+	X509_NAME *subject = NULL;
 
+    x509 = X509_new();
+    if(x509 == NULL)
+    {
+        goto end;
+    }
+
+    // 1. get subject from X509_REQ (certificate sign request)
+	x509ReqSubject = X509_REQ_get_subject_name(x509Req);
+	if(x509ReqSubject == NULL)
+	{
+		goto end;
+	}
+	
+	x509CaSubject = X509_NAME_dup(X509_get_subject_name(x509Ca));
+	if(x509CaSubject == NULL)
+	{
+        return end;
+	}
+
+	subject = X509_NAME_new();
+	if(subject == NULL)
+	{
+		LOGE("subject == NULL")
+		goto end;
+	}
+
+    ret = true;
+
+end:
+    if(ret == false)
+    {
+        X509_free(x509);
+        X509_NAME_free(subject);
+    }
+
+    return ret;
 }
 
 bool CaWrapper::ca(const std::string &inputConfigFile, const std::string &inputCsrFile)
 {
     bool ret = false;
-    char *entry = NULL, *cnfData = NULL, *caPrivateKeyFile = NULL, *caCertificateFile = NULL;
-    const EVP_MD *evpMd = NULL;
+    long days = 0;
+    int emailDn = 1;
     unsigned long chtype = MBSTRING_ASC;
-	long days = 0;
-	int email_dn = 1;
     EVP_PKEY *pkey = NULL;
+    X509_REQ *x509Req = NULL;
+    X509 *x509Ca = NULL;
+    EVP_PKEY *caPkey;
+    const EVP_MD *evpMd = NULL;
     STACK_OF(CONF_VALUE) *policy = NULL;
+    char *entry = NULL, *cnfData = NULL, *caPrivateKeyFile = NULL, *caCertificateFile = NULL;
     CnfWrapper cnfwrapper;
     KeyWrapper cakeywrapper;
     CertWrapper cacertwrapper;
@@ -229,7 +272,7 @@ bool CaWrapper::ca(const std::string &inputConfigFile, const std::string &inputC
 
 	if(std::strcmp(cnfData, "no") == 0)
 	{
-		email_dn = 0;
+		emailDn = 0;
 	}
 
     // 9. get day information from configuration file
@@ -269,6 +312,32 @@ bool CaWrapper::ca(const std::string &inputConfigFile, const std::string &inputC
     // 13. read csr
     ret = csrwrapper.readCsr(inputCsrFile, FORMAT_PEM);
     if(ret == false)
+    {
+        return false;
+    }
+
+    // == prepare for generating signed certificate by CA
+    x509Req = csrwrapper.getX509ReadReq();
+    if(x509Req == NULL)
+    {
+        return false;
+    }
+
+    x509Ca = cacertwrapper.getX509();
+    if(x509Ca == NULL)
+    {
+        return false;
+    }
+
+    caPkey = cakeywrapper.getLoadedEvpPrivateKey();
+    if(caPkey == NULL)
+    {
+        return false;
+    }
+
+    // 14. generated signed certificate by CA based on certificate signed request
+    ret = generateX509(x509Req, x509Ca, caPkey, upBnSerial.get(), days, emailDn, policy, evpMd);
+    if(req == false)
     {
         return false;
     }
