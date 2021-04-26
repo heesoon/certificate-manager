@@ -1,4 +1,4 @@
-#include "log.hpp"
+#include "Log.hpp"
 
 void PmLogMsg(const char* logContext, const char *fmt, ...)
 {

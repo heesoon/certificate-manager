@@ -2,8 +2,9 @@ project(certificate-manager)
 cmake_minimum_required(VERSION 3.10)
 
 set(SRCS
-	"log.cpp"
-	"certificateManager.cpp"
+	"Log.cpp"
+	"OpensslBioWrapper.cpp"
+	"CertificateManager.cpp"
 )
 
 add_executable(${PROJECT_NAME}
