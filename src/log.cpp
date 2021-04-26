@@ -2,6 +2,7 @@
 
 void PmLogMsg(const char* logContext, const char *fmt, ...)
 {
+#if 0
     int n;
     char buf[MAX_BUFF_LENGTH] = {0, };
 
@@ -17,4 +18,5 @@ void PmLogMsg(const char* logContext, const char *fmt, ...)
     }
 
     printf("[%s]: %s\n", logContext, buf);
+#endif	
 }
