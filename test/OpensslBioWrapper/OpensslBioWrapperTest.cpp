@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <memory>
+#include "Log.hpp"
 #include "OpensslBioWrapper.hpp"
 
 void test_OpensslBioWrapper_text()
@@ -8,18 +9,20 @@ void test_OpensslBioWrapper_text()
 	bool ret = false;
 
 	// configuration file open based on text
-	std::string input_config_filename = "/home/hskim/share/certificate-manager/tests/test3/scripts/customer_openssl.cnf";
+	std::string input_config_filename = "../scripts/root_openssl.cnf";
 	std::unique_ptr<OpensslBioWrapper> bioWrapperCnf(new OpensslBioWrapper);
 
 	ret = bioWrapperCnf->open(input_config_filename.c_str(), 'r', FORMAT_TEXT);
 	if(ret == false)
 	{
-		std::cout << "bio open error" << std::endl;
+		PmLogError("[%s,%d]", __FUNCTION__, __LINE__);
 		return;
 	}
-	std::cout << "Success open configuration file based on TEXT" << std::endl;
+
+	PmLogDebug("[%s,%d] Success", __FUNCTION__, __LINE__);
 }
 
+#if 0
 void test_OpensslBioWrapper_pem()
 {
 	bool ret = false;
@@ -31,15 +34,17 @@ void test_OpensslBioWrapper_pem()
 	ret = bioWrapperKey->open(input_key_filename.c_str(), 'r', FORMAT_PEM);
 	if(ret == false)
 	{
-		std::cout << "bio open error" << std::endl;
+		PmLogError("[%s,%d]", __FUNCTION__, __LINE__);
 		return;
-	}	
-	std::cout << "Success open key file based on PEM" << std::endl;
+	}
+
+	PmLogDebug("[%s,%d] Success", __FUNCTION__, __LINE__);
 }
+#endif
 
 int main()
 {
 	test_OpensslBioWrapper_text();
-	test_OpensslBioWrapper_pem();
+	//test_OpensslBioWrapper_pem();
 	return 0;
 }

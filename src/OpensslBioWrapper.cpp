@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <cassert>
+#include "Log.hpp"
 #include "OpensslBioWrapper.hpp"
 
 OpensslBioWrapper::OpensslBioWrapper()
@@ -35,14 +36,14 @@ bool OpensslBioWrapper::open(const std::string &filename, char mode, int format)
 
 	if(filename.empty())
 	{
-		std::cout << "error : filename" << std::endl;
+		PmLogError("[%s,%d] File Name Empty", __FUNCTION__, __LINE__);
 		return false;
 	}
 
 	ret = BIO_new_file(filename.c_str(), modestr(mode, format));
 	if(ret == NULL)
 	{
-		std::cout << "Bio_new_file NULL" << std::endl;
+		PmLogError("[%s,%d] BIO_new_file", __FUNCTION__, __LINE__);
 		return false;
 	}
 
@@ -59,6 +60,5 @@ BIO* OpensslBioWrapper::getBio()
 OpensslBioWrapper::~OpensslBioWrapper()
 {
 	BIO_free(bio);
-
-	std::cout << "~BioWrapper called.." << std::endl;
+	PmLogDebug("[%s,%d]", __FUNCTION__, __LINE__);
 }
