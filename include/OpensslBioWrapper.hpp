@@ -25,11 +25,13 @@ class OpensslBioWrapper
 {
 public:
     OpensslBioWrapper();
-    int isText(int format);
-    const char* modestr(char mode, int format); 
     bool open(const std::string &filename, char mode, int format);
 	BIO* getBio();
     virtual ~OpensslBioWrapper();
+
+protected:
+    int isText(int format);
+    const char* modestr(char mode, int format);
 
 private:
     BIO *bio = NULL;
