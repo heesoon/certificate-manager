@@ -1,11 +1,11 @@
-project(OpensslRsaKeyWrapper)
+project(OpensslCertWrapper)
 cmake_minimum_required(VERSION 3.10)
 
 set(SRCS
 	${CMAKE_SOURCE_DIR}/src/Log.cpp
 	${CMAKE_SOURCE_DIR}/src/OpensslBioWrapper.cpp
-	${CMAKE_SOURCE_DIR}/src/OpensslRsaKeyWrapper.cpp
-	"OpensslRsaKeyWrapperTest.cpp"
+	${CMAKE_SOURCE_DIR}/src/OpensslCertWrapper.cpp
+	"OpensslCertWrapperTest.cpp"
 )
 
 add_executable(${PROJECT_NAME}

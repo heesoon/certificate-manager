@@ -16,8 +16,8 @@ void testKey()
 		return;
 	}
 
-	//ret = upOpenRsaPrivateKey->write(PKEY_TYPE_T::PKEY_PRIVATE_KEY, outputKeyFilename, NULL, NULL);
-	ret = upOpenRsaPrivateKey->write(PKEY_TYPE_T::PKEY_PRIVATE_KEY, outputKeyFilename, "12345", "AES-256-CBC");
+	ret = upOpenRsaPrivateKey->write(PKEY_TYPE_T::PKEY_PRIVATE_KEY, outputKeyFilename, NULL, NULL);
+	//ret = upOpenRsaPrivateKey->write(PKEY_TYPE_T::PKEY_PRIVATE_KEY, outputKeyFilename, "12345", "AES-256-CBC");
 	if(ret == false)
 	{
 		return;
