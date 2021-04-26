@@ -25,9 +25,9 @@ class OpensslBioWrapper
 {
 public:
     OpensslBioWrapper();
-    bool openBio(const std::string &filename, char mode, int format);
+    bool open(const std::string &filename, char mode, int format);
 	BIO* getBio();
-	bool closeBio();
+	bool close();
     virtual ~OpensslBioWrapper();
 
 protected:

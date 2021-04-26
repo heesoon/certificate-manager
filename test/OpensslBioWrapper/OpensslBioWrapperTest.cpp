@@ -12,7 +12,7 @@ void test_OpensslBioWrapper_text()
 	std::string inputConfigFile = "../scripts/root_openssl.cnf";
 	std::unique_ptr<OpensslBioWrapper> bioWrapperCnf(new OpensslBioWrapper);
 
-	ret = bioWrapperCnf->openBio(inputConfigFile.c_str(), 'r', FORMAT_TEXT);
+	ret = bioWrapperCnf->open(inputConfigFile.c_str(), 'r', FORMAT_TEXT);
 	if(ret == false)
 	{
 		PmLogError("[%s,%d]", __FUNCTION__, __LINE__);

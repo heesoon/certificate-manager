@@ -17,7 +17,7 @@ void testConf()
 
 	std::string inputConfigFile = "../scripts/root_openssl.cnf";
 	std::unique_ptr<OpensslConfWrapper> upOpensslConfWrapper(new OpensslConfWrapper());
-	upOpensslConfWrapper->openConf(inputConfigFile);
+	upOpensslConfWrapper->open(inputConfigFile);
 	entry = upOpensslConfWrapper->lookupEntry(BASE_SECTION, ENV_DEFAULT_CA);
 
 	//str = upOpensslConfWrapper->getString(entry, STRING_MASK);

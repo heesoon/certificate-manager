@@ -7,7 +7,7 @@ OpensslConfWrapper::OpensslConfWrapper()
     conf = NULL;
 }
 
-bool OpensslConfWrapper::openConf(const std::string &inputKeyFilename)
+bool OpensslConfWrapper::open(const std::string &inputKeyFilename)
 {
 	int ret = 0;
     long errorline = -1;	
@@ -15,7 +15,7 @@ bool OpensslConfWrapper::openConf(const std::string &inputKeyFilename)
 	BIO *bio = NULL;
 
     OpensslBioWrapper opensslBioWrapper;
-    if(opensslBioWrapper.openBio(inputKeyFilename, 'r', FORMAT_TEXT) == false)
+    if(opensslBioWrapper.open(inputKeyFilename, 'r', FORMAT_TEXT) == false)
     {
         PmLogError("[%s, %d] Bio Open Fail", __FUNCTION__, __LINE__);
         goto error;
@@ -110,7 +110,7 @@ CONF* OpensslConfWrapper::getConf()
     return conf;
 }
 
-bool OpensslConfWrapper::closeConf()
+bool OpensslConfWrapper::close()
 {
 	NCONF_free(conf);
 	conf = NULL;
