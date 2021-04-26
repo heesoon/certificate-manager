@@ -9,10 +9,10 @@ void test_OpensslBioWrapper_text()
 	bool ret = false;
 
 	// configuration file open based on text
-	std::string input_config_filename = "../scripts/root_openssl.cnf";
+	std::string inputConfigFile = "../scripts/root_openssl.cnf";
 	std::unique_ptr<OpensslBioWrapper> bioWrapperCnf(new OpensslBioWrapper);
 
-	ret = bioWrapperCnf->open(input_config_filename.c_str(), 'r', FORMAT_TEXT);
+	ret = bioWrapperCnf->openBio(inputConfigFile.c_str(), 'r', FORMAT_TEXT);
 	if(ret == false)
 	{
 		PmLogError("[%s,%d]", __FUNCTION__, __LINE__);

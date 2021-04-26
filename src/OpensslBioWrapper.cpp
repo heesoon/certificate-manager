@@ -30,7 +30,7 @@ const char* OpensslBioWrapper::modestr(char mode, int format)
     return NULL;
 }
 
-bool OpensslBioWrapper::open(const std::string &filename, char mode, int format)
+bool OpensslBioWrapper::openBio(const std::string &filename, char mode, int format)
 {
 	BIO *ret = NULL;
 
@@ -55,6 +55,14 @@ bool OpensslBioWrapper::open(const std::string &filename, char mode, int format)
 BIO* OpensslBioWrapper::getBio()
 {
 	return bio;
+}
+
+bool OpensslBioWrapper::closeBio()
+{
+	BIO_free(bio);
+	bio = NULL;
+	
+	return true;
 }
 
 OpensslBioWrapper::~OpensslBioWrapper()
