@@ -1,14 +1,13 @@
-project(certificate-manager)
+project(OpensslCsrWrapper)
 cmake_minimum_required(VERSION 3.10)
 
 set(SRCS
-	"Log.cpp"
-	"OpensslBioWrapper.cpp"
-	"OpensslConfWrapper.cpp"
-	"OpensslRsaKeyWrapper.cpp"
-	"OpensslCertWrapper.cpp"
-	"OpensslCsrWrapper.cpp"
-	"CertificateManager.cpp"
+	${CMAKE_SOURCE_DIR}/src/Log.cpp
+	${CMAKE_SOURCE_DIR}/src/OpensslBioWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/OpensslConfWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/OpensslRsaKeyWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/OpensslCsrWrapper.cpp
+	"OpensslCsrWrapperTest.cpp"
 )
 
 add_executable(${PROJECT_NAME}
@@ -27,8 +26,8 @@ set_target_properties(crypto
 )
 
 include_directories(
-	${CMAKE_SOURCE_DIR}/lib/openssl/include
 	${CMAKE_SOURCE_DIR}/include
+	${CMAKE_SOURCE_DIR}/lib/openssl/include
 )
 
 target_link_libraries(
