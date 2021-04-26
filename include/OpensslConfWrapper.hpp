@@ -9,7 +9,7 @@ class OpensslConfWrapper
 public:
     OpensslConfWrapper();
     virtual ~OpensslConfWrapper();
-    bool open(const std::string &inputKeyFilename);
+    bool open(const std::string &inputConfFilename);
     CONF* getConf();    
     bool close();
     char* lookupEntry(const std::string &section, const std::string &tag);

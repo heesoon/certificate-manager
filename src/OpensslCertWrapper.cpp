@@ -134,6 +134,11 @@ bool OpensslCertWrapper::write(X509 *x509)
     return true;
 }
 
+X509* OpensslCertWrapper::getX509()
+{
+	return x509;
+}
+
 bool OpensslCertWrapper::close()
 {
     X509_free(x509);
