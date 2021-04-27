@@ -35,8 +35,8 @@ public:
 	void close();
     virtual ~OpensslBioWrapper();
 
-    //OpensslBioWrapper(OpensslBioWrapper const &) = delete;
-    //OpensslBioWrapper &operator=(OpensslBioWrapper const &) = delete;
+    OpensslBioWrapper(OpensslBioWrapper const &) = delete;
+    OpensslBioWrapper &operator=(OpensslBioWrapper const &) = delete;
 
 protected:
     int isText(int format);

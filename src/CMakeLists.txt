@@ -6,7 +6,7 @@ set(SRCS
 	"OpensslBioWrapper.cpp"
 #	"OpensslConfWrapper.cpp"
 #	"OpensslRsaKeyWrapper.cpp"
-#	"OpensslCertWrapper.cpp"
+	"OpensslCertWrapper.cpp"
 #	"OpensslCsrWrapper.cpp"
 #	"OpensslCaWrapper.cpp"
 	"CertificateManager.cpp"

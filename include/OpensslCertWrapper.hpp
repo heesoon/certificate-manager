@@ -13,13 +13,12 @@ public:
     bool open(const std::string &filename, char mode, int format);
     bool read();
     bool write(X509 *x509);
-    bool close();
+    void close();
     X509* getX509();
     virtual ~OpensslCertWrapper();
 
 private:
     X509 *x509 = NULL;
-    int format = 0;
-    std::unique_ptr<OpensslBioWrapper> upOpensslBioWrapper;
+    std::unique_ptr<OpensslBioWrapper> upBio;
 };
 #endif
