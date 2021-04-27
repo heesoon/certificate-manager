@@ -1,8 +1,8 @@
 #include <iostream>
-#include <memory>
 #include <cassert>
 #include "Log.hpp"
 #include "OpensslBioWrapper.hpp"
+
 
 OpensslBioWrapper::OpensslBioWrapper()
 {
@@ -32,6 +32,7 @@ const char* OpensslBioWrapper::modestr(char mode, int format)
 
 bool OpensslBioWrapper::open(const std::string &filename, char mode, int format)
 {
+#if 1
 	BIO *ret = NULL;
 
 	if(filename.empty())
@@ -47,9 +48,37 @@ bool OpensslBioWrapper::open(const std::string &filename, char mode, int format)
 		return false;
 	}
 
+	this->mode = mode;
+	this->format = format;
 	bio = ret;
 
 	return true;
+#else
+	using unique_ptr_bio_t = std::unique_ptr<BIO, void(*)(BIO *)>;
+
+	if(filename.empty())
+	{
+		PmLogError("[%s,%d] File Name Empty", __FUNCTION__, __LINE__);
+		return false;
+	}
+
+	if(mode != 'w' || mode != 'r')
+	{
+		PmLogError("[%s,%d]", __FUNCTION__, __LINE__);
+		return false;		
+	}
+
+	unique_ptr_bio_t upTempBio(BIO_new_file(filename.c_str(), modestr(mode, format)), BIO_free_all);
+	if(upTempBio == nullptr)
+	{
+		return false;
+	}
+
+	this->mode = mode;
+	this->format = format;
+	bio = upTempBio.release();
+	return true;
+#endif
 }
 
 BIO* OpensslBioWrapper::getBio()
@@ -57,16 +86,24 @@ BIO* OpensslBioWrapper::getBio()
 	return bio;
 }
 
-bool OpensslBioWrapper::close()
+char OpensslBioWrapper::getOpenMode()
 {
-	BIO_free(bio);
+	return mode;
+}
+
+int OpensslBioWrapper::getOpenFormat()
+{
+	return format;	
+}
+
+void OpensslBioWrapper::close()
+{
+	BIO_free_all(bio);
 	bio = NULL;
-	
-	return true;
 }
 
 OpensslBioWrapper::~OpensslBioWrapper()
 {
-	BIO_free(bio);
+	BIO_free_all(bio);
 	PmLogDebug("[%s,%d]", __FUNCTION__, __LINE__);
 }

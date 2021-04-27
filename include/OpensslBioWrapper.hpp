@@ -2,6 +2,7 @@
 #define OPENSSLBIOWRAPPER_HPP_INCLUDED
 
 #include <string>
+#include <memory>
 #include <openssl/bio.h>
 
 # define B_FORMAT_TEXT   0x8000
@@ -21,21 +22,31 @@
 # define FORMAT_HTTP     13                     /* Download using HTTP */
 # define FORMAT_NSS      14                     /* NSS keylog format */
 
+//using unique_ptr_bio_t = std::unique_ptr<BIO, void(*)(BIO *)>;
+
 class OpensslBioWrapper
 {
 public:
     OpensslBioWrapper();
     bool open(const std::string &filename, char mode, int format);
 	BIO* getBio();
-	bool close();
+    char getOpenMode();
+    int getOpenFormat();    
+	void close();
     virtual ~OpensslBioWrapper();
+
+    //OpensslBioWrapper(OpensslBioWrapper const &) = delete;
+    //OpensslBioWrapper &operator=(OpensslBioWrapper const &) = delete;
 
 protected:
     int isText(int format);
     const char* modestr(char mode, int format);
 
 private:
-    BIO *bio = NULL;
+    char mode;
+    int format;
+    BIO *bio;
+    //unique_ptr_bio_t upBio;    
 };
 
 #endif

@@ -4,11 +4,11 @@ cmake_minimum_required(VERSION 3.10)
 set(SRCS
 	"Log.cpp"
 	"OpensslBioWrapper.cpp"
-	"OpensslConfWrapper.cpp"
-	"OpensslRsaKeyWrapper.cpp"
-	"OpensslCertWrapper.cpp"
-	"OpensslCsrWrapper.cpp"
-	"OpensslCaWrapper.cpp"
+#	"OpensslConfWrapper.cpp"
+#	"OpensslRsaKeyWrapper.cpp"
+#	"OpensslCertWrapper.cpp"
+#	"OpensslCsrWrapper.cpp"
+#	"OpensslCaWrapper.cpp"
 	"CertificateManager.cpp"
 )
 
