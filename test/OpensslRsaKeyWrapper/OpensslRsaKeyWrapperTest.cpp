@@ -7,6 +7,7 @@
 void testKey()
 {
 	bool ret = false;
+#if 0	
 	const std::string outputKeyFilename = "privateKey.pem";
 	std::unique_ptr<OpensslRsaKeyWrapper> upOpenRsaPrivateKey(new OpensslRsaKeyWrapper());
 	
@@ -22,7 +23,7 @@ void testKey()
 	{
 		return;
 	}
-
+#endif
 	PmLogDebug("[%s, %d] Success", __FUNCTION__, __LINE__);
 }
 

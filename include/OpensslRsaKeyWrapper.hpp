@@ -16,16 +16,16 @@ class OpensslRsaKeyWrapper
 public:
     OpensslRsaKeyWrapper();
     bool open(const std::string &inputKeyFilename, char mode, int format, int nBits);
+    bool open(const std::string &inputKeyFilename, char mode, int format);
     bool read(PKEY_TYPE_T pkeyType);
-    bool write(PKEY_TYPE_T pkeyType, const std::string &outputKeyFilename, const std::string &passwd, const std::string &cipherName);
-    bool close();
+    bool write(EVP_PKEY *pkey, PKEY_TYPE_T pkeyType, const std::string &passwd, const std::string &cipherName);
+    void close();
     EVP_PKEY* getPkey();
     virtual ~OpensslRsaKeyWrapper();
 
 private:
     EVP_PKEY *pkey = NULL;
-    int format = 0;
-    std::unique_ptr<OpensslBioWrapper> upOpensslBioWrapper;
+    std::unique_ptr<OpensslBioWrapper> upBio;
     bool createRsaPkey(int nBits);
 };
 #endif

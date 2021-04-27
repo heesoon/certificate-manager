@@ -68,43 +68,83 @@ bool OpensslRsaKeyWrapper::open(const std::string &inputKeyFilename, char mode, 
         }
     }
 
-    std::unique_ptr<OpensslBioWrapper> upInternalOpensslBioWrapper(new OpensslBioWrapper());
-    if(upInternalOpensslBioWrapper == nullptr)
+    std::unique_ptr<OpensslBioWrapper> upTempBio(new OpensslBioWrapper());
+    if(upTempBio == nullptr)
     {
         PmLogError("[%s, %d] Bio open fail", __FUNCTION__, __LINE__);
         return false;
     }
 
-    if(upInternalOpensslBioWrapper->open(inputKeyFilename, mode, format) == false)
+    if(upTempBio->open(inputKeyFilename, mode, format) == false)
     {
         PmLogError("[%s, %d] Bio open fail", __FUNCTION__, __LINE__);
         return false;
     }
 
-    this->format = format;
-    upOpensslBioWrapper = std::move(upInternalOpensslBioWrapper);
+    upBio = std::move(upTempBio);
+    return true;
+}
 
+bool OpensslRsaKeyWrapper::open(const std::string &inputKeyFilename, char mode, int format)
+{
+    if(inputKeyFilename.empty() == true)
+    {
+        PmLogError("[%s, %d] Bio open fail", __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    std::unique_ptr<OpensslBioWrapper> upTempBio(new OpensslBioWrapper());
+    if(upTempBio == nullptr)
+    {
+        PmLogError("[%s, %d] Bio open fail", __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    if(upTempBio->open(inputKeyFilename, mode, format) == false)
+    {
+        PmLogError("[%s, %d] Bio open fail", __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    upBio = std::move(upTempBio);
     return true;
 }
 
 bool OpensslRsaKeyWrapper::read(PKEY_TYPE_T pkeyType)
 {
     BIO *bio = NULL;
+    char mode = ' ';
+    int format = 0;
 
-    bio = upOpensslBioWrapper->getBio();
+    if(upBio == nullptr)
+    {
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    mode = upBio->getOpenMode();
+    if(mode != 'r')
+    {
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    bio = upBio->getBio();
     if(bio == NULL)
     {
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
+    format = upBio->getOpenFormat();
+
     if(pkeyType == PKEY_TYPE_T::PKEY_PRIVATE_KEY)
     {
-        if(this->format == FORMAT_ASN1)
+        if(format == FORMAT_ASN1)
         {
             pkey = d2i_PrivateKey_bio(bio, NULL);
         }
-        else if(this->format == FORMAT_PKCS12)
+        else if(format == FORMAT_PKCS12)
         {
             // TO DO.
             return false;
@@ -112,16 +152,16 @@ bool OpensslRsaKeyWrapper::read(PKEY_TYPE_T pkeyType)
     }
     else if(pkeyType == PKEY_TYPE_T::PKEY_PUBLIC_KEY)
     {
-        if(this->format == FORMAT_ASN1)
+        if(format == FORMAT_ASN1)
         {
             pkey = d2i_PUBKEY_bio(bio, NULL);
         }
-        else if(this->format == FORMAT_PEMRSA)
+        else if(format == FORMAT_PEMRSA)
         {
             // TO DO.
             return false;
         }
-        else if(this->format == FORMAT_PEM)
+        else if(format == FORMAT_PEM)
         {
             pkey = PEM_read_bio_PUBKEY(bio, NULL, NULL, NULL);
         }
@@ -144,13 +184,34 @@ bool OpensslRsaKeyWrapper::read(PKEY_TYPE_T pkeyType)
     return true;
 }
 
-bool OpensslRsaKeyWrapper::write(PKEY_TYPE_T pkeyType, const std::string &outputKeyFilename, const std::string &passwd, const std::string &cipherName)
+bool OpensslRsaKeyWrapper::write(EVP_PKEY *pkey, PKEY_TYPE_T pkeyType, const std::string &passwd, const std::string &cipherName)
 {
     BIO *bio = NULL;
+    char mode = ' ';
+    int format = 0;
     const EVP_CIPHER *cipherp = NULL;
     char *password = NULL;
 
-    bio = upOpensslBioWrapper->getBio();
+    if(pkey == NULL)
+    {
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    if(upBio == nullptr)
+    {
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    mode = upBio->getOpenMode();
+    if(mode != 'w')
+    {
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    bio = upBio->getBio();
     if(bio == NULL)
     {
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
@@ -185,10 +246,12 @@ bool OpensslRsaKeyWrapper::write(PKEY_TYPE_T pkeyType, const std::string &output
         }
     }
 
+    format = upBio->getOpenFormat();
+
     if(pkeyType == PKEY_TYPE_T::PKEY_PRIVATE_KEY)
     {
         // refer from pkey.c 241 line
-        if(this->format == FORMAT_ASN1)
+        if(format == FORMAT_ASN1)
         {
             if(!i2d_PrivateKey_bio(bio, pkey))
             {
@@ -196,7 +259,7 @@ bool OpensslRsaKeyWrapper::write(PKEY_TYPE_T pkeyType, const std::string &output
                 return false;
             }
         }
-        else if(this->format == FORMAT_PEM)
+        else if(format == FORMAT_PEM)
         {
             //if(!PEM_write_bio_PrivateKey(key, createdRsaKey, EVP_aes_256_cbc(), (unsigned char*)"password", sizeof("password"), NULL, NULL))
             if(!PEM_write_bio_PrivateKey(bio, pkey, cipherp, (unsigned char*)password, sizeof(password), NULL, NULL))
@@ -213,7 +276,7 @@ bool OpensslRsaKeyWrapper::write(PKEY_TYPE_T pkeyType, const std::string &output
     }
     else if(pkeyType == PKEY_TYPE_T::PKEY_PUBLIC_KEY)
     {
-        if(this->format == FORMAT_ASN1)
+        if(format == FORMAT_ASN1)
         {
             if(!i2d_PUBKEY_bio(bio, pkey))
             {
@@ -221,7 +284,7 @@ bool OpensslRsaKeyWrapper::write(PKEY_TYPE_T pkeyType, const std::string &output
                 return false;
             }
         }
-        else if(this->format == FORMAT_PEM)
+        else if(format == FORMAT_PEM)
         {
             if(!PEM_write_bio_PUBKEY(bio, pkey))
             {
@@ -248,11 +311,10 @@ EVP_PKEY* OpensslRsaKeyWrapper::getPkey()
     return pkey;
 }
 
-bool OpensslRsaKeyWrapper::close()
+void OpensslRsaKeyWrapper::close()
 {
     EVP_PKEY_free(pkey);
     pkey = NULL;
-    return true;
 }
 
 OpensslRsaKeyWrapper::~OpensslRsaKeyWrapper()

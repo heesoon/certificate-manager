@@ -5,7 +5,7 @@ set(SRCS
 	"Log.cpp"
 	"OpensslBioWrapper.cpp"
 	"OpensslConfWrapper.cpp"
-#	"OpensslRsaKeyWrapper.cpp"
+	"OpensslRsaKeyWrapper.cpp"
 	"OpensslCertWrapper.cpp"
 	"OpensslCsrWrapper.cpp"
 #	"OpensslCaWrapper.cpp"
