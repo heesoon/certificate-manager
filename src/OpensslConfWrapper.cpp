@@ -110,12 +110,10 @@ CONF* OpensslConfWrapper::getConf()
     return conf;
 }
 
-bool OpensslConfWrapper::close()
+void OpensslConfWrapper::close()
 {
 	NCONF_free(conf);
 	conf = NULL;
-
-	return true;
 }
 
 OpensslConfWrapper::~OpensslConfWrapper()
