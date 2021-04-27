@@ -946,6 +946,149 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
     return true;
 }
 
+X509_STORE* OpensslCaWrapper::setup_verify(const std::string &inputCaFile)
+{
+    X509_STORE *store = NULL;
+    X509_LOOKUP *lookup = NULL;
+
+    if(inputCaFile.empty() == true)
+    {
+        goto end;
+    }
+
+	store = X509_STORE_new();
+	if(store == NULL)
+	{
+		goto end;
+	}
+
+	lookup = X509_STORE_add_lookup(store, X509_LOOKUP_file());
+	if(lookup == NULL)
+	{
+		goto end;
+	}
+
+	if (!X509_LOOKUP_load_file_ex(lookup, inputCaFile.c_str(), X509_FILETYPE_PEM, NULL, NULL))
+	{
+		goto end;		
+	}
+
+	return store;
+
+end:
+	if(store != NULL)
+	{
+		X509_STORE_free(store);
+	}
+
+	return NULL;
+}
+
+bool OpensslCaWrapper::check(X509_STORE *ctx, const std::string &inputCertFile, bool show_chain)
+{
+    bool ret = false;
+	int i = 0;
+    int num_untrusted;
+	X509_STORE_CTX *csc = NULL;
+	STACK_OF(X509) *chain = NULL;
+    X509 *x509 = NULL;
+    OpensslCertWrapper opensslCertWrapper;
+
+    opensslCertWrapper.open(inputCertFile, 'r', FORMAT_PEM);
+    opensslCertWrapper.read();
+    x509 = opensslCertWrapper.getX509();
+    if(x509 == NULL)
+    {
+        PmLogDebug("[%s, %d]", __FUNCTION__, __LINE__);
+        goto end;
+    }
+
+	csc = X509_STORE_CTX_new();
+	if(csc == NULL)
+	{
+		goto end;
+	}
+
+	X509_STORE_set_flags(ctx, 0);
+
+	if(!X509_STORE_CTX_init(csc, ctx, x509, NULL))
+	{
+		 X509_STORE_CTX_free(csc);
+		goto end;
+	}
+
+	i = X509_verify_cert(csc);
+
+	if(i > 0 && X509_STORE_CTX_get_error(csc) == X509_V_OK)
+	{
+		ret = true;
+
+		if(show_chain == true)
+		{
+			int j = 0;
+
+			chain = X509_STORE_CTX_get1_chain(csc);
+			num_untrusted = X509_STORE_CTX_get_num_untrusted(csc);
+
+			for(j = 0; j < sk_X509_num(chain); j++)
+			{
+				X509 *cert = sk_X509_value(chain, j);
+				X509_NAME_print_ex_fp(stdout, X509_get_subject_name(cert), 0, XN_FLAG_COMPAT);
+
+				if(j < num_untrusted)
+				{
+					//LOGD("(untrusted)")
+				}
+			}
+
+			sk_X509_pop_free(chain, X509_free);
+		}
+	}
+	else
+	{
+		goto end;
+	}
+
+	X509_STORE_CTX_free(csc);
+end:
+	//X509_free(x509);
+	return (ret == true) ? true : false;
+}
+
+bool OpensslCaWrapper::verifyByCa(const std::string &inputCaChainFile, const std::string &inputCertFile)
+{
+	bool ret = false;
+	X509_STORE *store = NULL;
+
+	if(inputCaChainFile.empty() == true || inputCertFile.empty() == true)
+	{
+		goto end;
+	}
+
+	store = setup_verify(inputCaChainFile);
+	if(store == NULL)
+	{
+		goto end;		
+	}
+
+	X509_STORE_set_verify_cb(store, NULL);
+
+	if(check(store, inputCertFile, true) == false)
+	{
+		goto end;
+	}
+
+	ret = true;
+end:
+
+	if(store != NULL)
+	{
+		X509_STORE_free(store);
+	}
+
+	return (ret == true) ? true : false;    
+}
+
 X509* OpensslCaWrapper::getX509()
 {
     return x509;

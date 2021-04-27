@@ -13,6 +13,7 @@ public:
     bool read();
     bool write(X509 *x509);
     bool generateCertSignedByCa(const std::string &inputConfigFile, const std::string &inputCsrFile);
+    bool verifyByCa(const std::string &inputCaChainFile, const std::string &inputCertFile);
     //bool close();
     X509* getX509();
     virtual ~OpensslCaWrapper();
@@ -27,6 +28,8 @@ protected:
     int adapt_keyid_ext(X509 *cert, X509V3_CTX *ext_ctx, const char *name, const char *value, int add_default);
     int do_sign_init(EVP_MD_CTX *ctx, EVP_PKEY *pkey, const EVP_MD *md, STACK_OF(OPENSSL_STRING) *sigopts);
     int do_X509_sign(X509 *cert, EVP_PKEY *pkey, const EVP_MD *md, STACK_OF(OPENSSL_STRING) *sigopts, X509V3_CTX *ext_ctx);
+    bool check(X509_STORE *ctx, const std::string &inputCertFile, bool show_chain);
+    X509_STORE* setup_verify(const std::string &inputCaFile);
 
 private:
     X509 *x509 = NULL;
