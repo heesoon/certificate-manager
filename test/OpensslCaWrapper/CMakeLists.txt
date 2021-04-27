@@ -5,9 +5,11 @@ set(SRCS
 	${CMAKE_SOURCE_DIR}/src/Log.cpp
 	${CMAKE_SOURCE_DIR}/src/OpensslBioWrapper.cpp
 	${CMAKE_SOURCE_DIR}/src/OpensslConfWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/OpensslCertWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/OpensslCsrWrapper.cpp
 	${CMAKE_SOURCE_DIR}/src/OpensslRsaKeyWrapper.cpp
 	${CMAKE_SOURCE_DIR}/src/OpensslCaWrapper.cpp
-	"OpensslCsrWrapperTest.cpp"
+	"OpensslCaWrapperTest.cpp"
 )
 
 add_executable(${PROJECT_NAME}

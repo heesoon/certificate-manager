@@ -24,6 +24,7 @@ public:
     bool read();
     bool write(X509_REQ *x509Req);
     bool makeCsr(const std::string &inputCnfFilename, const std::string &inputKeyFilename, const subject_t &subject);
+	X509_REQ* getX509Req();
     bool close();
     EVP_PKEY* getPkey();
     virtual ~OpensslCsrWrapper();

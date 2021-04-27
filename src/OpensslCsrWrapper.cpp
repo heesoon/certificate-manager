@@ -370,6 +370,11 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
     return true;    
 }
 
+X509_REQ* OpensslCsrWrapper::getX509Req()
+{
+    return x509Req;
+}
+
 bool OpensslCsrWrapper::close()
 {
     X509_REQ_free(x509Req);
