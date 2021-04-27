@@ -164,7 +164,7 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
 {
     int ret = 0;
     char mode = ' ';
-    int format = 0;
+    //int format = 0;
     char *cnfData = NULL;
     const EVP_MD *evpMd = NULL;
     X509_REQ *x509tReq = NULL;
@@ -188,7 +188,7 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
         return false;
     }
 
-    format = upBio->getOpenFormat();
+    //format = upBio->getOpenFormat();
 
     if(opensslConfWrapper.open(inputCnfFilename) == false)
     {
@@ -301,7 +301,8 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
 	}
 
     // 7. read public key
-    if(opensslRsaKeyWrapper.open(inputKeyFilename, 'r', format, 0) == false)
+    //if(opensslRsaKeyWrapper.open(inputKeyFilename, 'r', format) == false)
+    if(opensslRsaKeyWrapper.open(inputKeyFilename, 'r', FORMAT_PEM) == false)
     {
         X509_NAME_free(x509_name);
         return false;
