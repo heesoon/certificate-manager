@@ -25,14 +25,12 @@ public:
     bool write(X509_REQ *x509Req);
     bool makeCsr(const std::string &inputCnfFilename, const std::string &inputKeyFilename, const subject_t &subject);
 	X509_REQ* getX509Req();
-    bool close();
+    void close();
     EVP_PKEY* getPkey();
     virtual ~OpensslCsrWrapper();
 
 private:
     X509_REQ *x509Req = NULL;
-    int format = 0;
-    char mode;
-    std::unique_ptr<OpensslBioWrapper> upOpensslBioWrapper;
+    std::unique_ptr<OpensslBioWrapper> upBio;
 };
 #endif

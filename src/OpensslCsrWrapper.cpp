@@ -23,8 +23,6 @@
 OpensslCsrWrapper::OpensslCsrWrapper()
 {
     x509Req = NULL;
-    mode = ' ';
-    format = 0;
 }
 
 bool OpensslCsrWrapper::open(const std::string &filename, char mode, int format)
@@ -35,23 +33,20 @@ bool OpensslCsrWrapper::open(const std::string &filename, char mode, int format)
         return false;
     }
 
-    std::unique_ptr<OpensslBioWrapper> upInternalOpensslBioWrapper(new OpensslBioWrapper());
-    if(upInternalOpensslBioWrapper == nullptr)
+    std::unique_ptr<OpensslBioWrapper> upTempBio(new OpensslBioWrapper());
+    if(upTempBio == nullptr)
     {
         PmLogError("[%s, %d] Bio open fail", __FUNCTION__, __LINE__);
         return false;
     }
 
-    if(upInternalOpensslBioWrapper->open(filename, mode, format) == false)
+    if(upTempBio->open(filename, mode, format) == false)
     {
         PmLogError("[%s, %d] Bio open fail", __FUNCTION__, __LINE__);
         return false;
     }
 
-    this->format = format;
-    this->mode = mode;
-    upOpensslBioWrapper = std::move(upInternalOpensslBioWrapper);
-
+    upBio = std::move(upTempBio);
     return true;
 }
 
@@ -59,31 +54,35 @@ bool OpensslCsrWrapper::read()
 {
     BIO *bio = NULL;
     X509_REQ *req = NULL;
+    char mode = ' ';
+    int format = 0;
 
-    if(upOpensslBioWrapper == nullptr)
+    if(upBio == nullptr)
     {
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
-    if(this->mode != 'r')
+    mode = upBio->getOpenMode();
+    if(mode != 'r')
     {
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
-    bio = upOpensslBioWrapper->getBio();
+    bio = upBio->getBio();
     if(bio == NULL)
     {
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
-    if(this->format == FORMAT_ASN1)
+    format = upBio->getOpenFormat();
+    if(format == FORMAT_ASN1)
     {
         req = d2i_X509_REQ_bio(bio, NULL);
     }
-    else if(this->format == FORMAT_PEM)
+    else if(format == FORMAT_PEM)
     {
         req = PEM_read_bio_X509_REQ(bio, NULL, NULL, NULL);
     }
@@ -107,6 +106,8 @@ bool OpensslCsrWrapper::write(X509_REQ *x509Req)
 {
     int ret = 0;
     BIO *bio = NULL;
+    char mode = ' ';
+    int format = 0;
 
     if(x509Req == NULL)
     {
@@ -114,25 +115,27 @@ bool OpensslCsrWrapper::write(X509_REQ *x509Req)
         return false;
     }
 
-    if(this->mode != 'w')
+    if(upBio == nullptr)
     {
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
-    if(upOpensslBioWrapper == nullptr)
+    mode = upBio->getOpenMode();
+    if(mode != 'w')
     {
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
-    bio = upOpensslBioWrapper->getBio();
+    bio = upBio->getBio();
     if(bio == NULL)
     {
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;        
     }
 
+    format = upBio->getOpenFormat();
     if(format == FORMAT_ASN1)
     {
         ret = i2d_X509_REQ_bio(bio, x509Req);
@@ -160,6 +163,8 @@ bool OpensslCsrWrapper::write(X509_REQ *x509Req)
 bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::string &inputKeyFilename, const subject_t &subject)
 {
     int ret = 0;
+    char mode = ' ';
+    int format = 0;
     char *cnfData = NULL;
     const EVP_MD *evpMd = NULL;
     X509_REQ *x509tReq = NULL;
@@ -176,11 +181,14 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
         return false;        
     }
 
-    if(this->mode != 'w')
+    mode = upBio->getOpenMode();
+    if(mode != 'w')
     {
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
+
+    format = upBio->getOpenFormat();
 
     if(opensslConfWrapper.open(inputCnfFilename) == false)
     {
@@ -293,7 +301,7 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
 	}
 
     // 7. read public key
-    if(opensslRsaKeyWrapper.open(inputKeyFilename, 'r', this->format, 0) == false)
+    if(opensslRsaKeyWrapper.open(inputKeyFilename, 'r', format, 0) == false)
     {
         X509_NAME_free(x509_name);
         return false;
@@ -375,7 +383,7 @@ X509_REQ* OpensslCsrWrapper::getX509Req()
     return x509Req;
 }
 
-bool OpensslCsrWrapper::close()
+void OpensslCsrWrapper::close()
 {
     X509_REQ_free(x509Req);
     x509Req = NULL;
