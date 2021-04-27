@@ -14,7 +14,7 @@ public:
     bool write(X509 *x509);
     bool generateCertSignedByCa(const std::string &inputConfigFile, const std::string &inputCsrFile);
     bool verifyByCa(const std::string &inputCaChainFile, const std::string &inputCertFile);
-    //bool close();
+    //void close();
     X509* getX509();
     virtual ~OpensslCaWrapper();
 
@@ -33,8 +33,6 @@ protected:
 
 private:
     X509 *x509 = NULL;
-    int format = 0;
-    char mode;
-    std::unique_ptr<OpensslBioWrapper> upOpensslBioWrapper;
+    std::unique_ptr<OpensslBioWrapper> upBio;
 };
 #endif

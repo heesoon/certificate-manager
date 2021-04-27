@@ -68,8 +68,6 @@ using unique_ptr_x509_name_t = std::unique_ptr<X509_NAME, decltype(delRawPtrX509
 OpensslCaWrapper::OpensslCaWrapper()
 {
     x509 = NULL;
-    mode = ' ';
-    format = 0;
 }
 
 bool OpensslCaWrapper::open(const std::string &filename, char mode, int format)
@@ -80,59 +78,61 @@ bool OpensslCaWrapper::open(const std::string &filename, char mode, int format)
         return false;
     }
 
-    std::unique_ptr<OpensslBioWrapper> upInternalOpensslBioWrapper(new OpensslBioWrapper());
-    if(upInternalOpensslBioWrapper == nullptr)
+    std::unique_ptr<OpensslBioWrapper> upTempBio(new OpensslBioWrapper());
+    if(upTempBio == nullptr)
     {
         PmLogError("[%s, %d] Bio open fail", __FUNCTION__, __LINE__);
         return false;
     }
 
-    if(upInternalOpensslBioWrapper->open(filename, mode, format) == false)
+    if(upTempBio->open(filename, mode, format) == false)
     {
         PmLogError("[%s, %d] Bio open fail", __FUNCTION__, __LINE__);
         return false;
     }
 
-    this->format = format;
-    this->mode = mode;
-    upOpensslBioWrapper = std::move(upInternalOpensslBioWrapper);
-
+    upBio = std::move(upTempBio);
     return true;
 }
 
 bool OpensslCaWrapper::read()
 {
     BIO *bio = NULL;
+    char mode = ' ';
+    int format = 0;
 
-    if(this->mode != 'r')
-    {
-        return false;
-    }
-
-    if(upOpensslBioWrapper == nullptr)
+    if(upBio == nullptr)
     {
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
-    bio = upOpensslBioWrapper->getBio();
+    mode = upBio->getOpenMode();
+    if(mode != 'r')
+    {
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    bio = upBio->getBio();
     if(bio == NULL)
     {
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
-    if(this->format == FORMAT_ASN1)
+    format = upBio->getOpenFormat();
+    if(format == FORMAT_ASN1)
     {
         x509 = d2i_X509_bio(bio, NULL);
     }
-    else if(this->format == FORMAT_PKCS12)
+    else if(format == FORMAT_PKCS12)
     {
         // TO DO.
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
-    else if(this->format == FORMAT_PEM)
+    else if(format == FORMAT_PEM)
     {
         x509 = PEM_read_bio_X509_AUX(bio, NULL, NULL, NULL);
     }
@@ -155,42 +155,41 @@ bool OpensslCaWrapper::write(X509 *x509)
 {
     int ret = 0;
     BIO *bio = NULL;
+    char mode = ' ';
+    int format = 0;
 
-    if(this->mode != 'w')
-    {
-        return false;
-    }
-
-    if(x509 == NULL)
+    if(upBio == nullptr)
     {
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
-    if(upOpensslBioWrapper == nullptr)
+    mode = upBio->getOpenMode();
+    if(mode != 'w')
     {
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
-    bio = upOpensslBioWrapper->getBio();
+    bio = upBio->getBio();
     if(bio == NULL)
     {
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
-    if(this->format == FORMAT_ASN1)
+    format = upBio->getOpenFormat();
+    if(format == FORMAT_ASN1)
     {
         ret = i2d_X509_bio(bio, x509);
     }
-    else if(this->format == FORMAT_PKCS12)
+    else if(format == FORMAT_PKCS12)
     {
         // TO DO.
         PmLogError("[%s, %d] Not Supported", __FUNCTION__, __LINE__);
         return false;
     }
-    else if(this->format == FORMAT_PEM)
+    else if(format == FORMAT_PEM)
     {
         ret = PEM_write_bio_X509_AUX(bio, x509);
         //ret = PEM_write_bio_X509(cert, x509);
@@ -468,6 +467,7 @@ int OpensslCaWrapper::do_X509_sign(X509 *cert, EVP_PKEY *pkey, const EVP_MD *md,
 bool OpensslCaWrapper::generateX509(X509 *x509, X509_REQ *x509Req, X509 *x509Ca, CONF *conf, const char *ext_sect, EVP_PKEY *caPkey, BIGNUM *serial, long days, int emailDn, STACK_OF(CONF_VALUE) *policy ,const EVP_MD *evpMd)
 {
     int i = 0, j = 0, last = 0;
+    char mode = ' ';
 	const X509_NAME *x509ReqSubject = NULL;
     const X509_NAME *x509CaSubject = NULL; 
 	X509_NAME *subject = NULL;
@@ -478,7 +478,8 @@ bool OpensslCaWrapper::generateX509(X509 *x509, X509_REQ *x509Req, X509 *x509Ca,
 	ASN1_OBJECT *obj;
     X509V3_CTX ext_ctx;
 
-    if(this->mode != 'w')
+    mode = upBio->getOpenMode();
+    if(mode != 'w')
     {
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;

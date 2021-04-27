@@ -8,7 +8,7 @@ set(SRCS
 	"OpensslRsaKeyWrapper.cpp"
 	"OpensslCertWrapper.cpp"
 	"OpensslCsrWrapper.cpp"
-#	"OpensslCaWrapper.cpp"
+	"OpensslCaWrapper.cpp"
 	"CertificateManager.cpp"
 )
 
