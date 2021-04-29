@@ -308,7 +308,7 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
         return false;
     }
 
-    if(opensslRsaKeyWrapper.read(PKEY_TYPE_T::PKEY_PRIVATE_KEY) == false)
+    if(opensslRsaKeyWrapper.read(PKEY_TYPE_T::PKEY_PRIVATE_KEY, "") == false)
     {
         X509_NAME_free(x509_name);
         return false;

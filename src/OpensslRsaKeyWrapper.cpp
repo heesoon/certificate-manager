@@ -1,6 +1,14 @@
+#include <iostream>
 #include "Log.hpp"
 #include "OpensslRsaKeyWrapper.hpp"
 #include <openssl/pem.h>
+
+auto delRawPtrEvpPkeyCtx = [](EVP_PKEY_CTX *ctx)
+{
+    EVP_PKEY_CTX_free(ctx);
+    PmLogDebug("[%s, %d] delRawPtrEvpPkeyCtx called ..", __FUNCTION__, __LINE__);
+};
+using unique_ptr_evpPkeyCtx_type_t = std::unique_ptr<EVP_PKEY_CTX, decltype(delRawPtrEvpPkeyCtx)>;
 
 OpensslRsaKeyWrapper::OpensslRsaKeyWrapper()
 {
@@ -9,13 +17,6 @@ OpensslRsaKeyWrapper::OpensslRsaKeyWrapper()
 
 bool OpensslRsaKeyWrapper::createRsaPkey(int nBits)
 {
-    auto delRawPtrEvpPkeyCtx = [](EVP_PKEY_CTX *ctx)
-    {
-        EVP_PKEY_CTX_free(ctx);
-        PmLogDebug("[%s, %d] delRawPtrEvpPkeyCtx called ..", __FUNCTION__, __LINE__);
-    };
-    using unique_ptr_evpPkeyCtx_type_t = std::unique_ptr<EVP_PKEY_CTX, decltype(delRawPtrEvpPkeyCtx)>;
-
     unique_ptr_evpPkeyCtx_type_t upEvpPkeyCtx(EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL), delRawPtrEvpPkeyCtx);
     if(upEvpPkeyCtx == nullptr)
     {
@@ -26,6 +27,13 @@ bool OpensslRsaKeyWrapper::createRsaPkey(int nBits)
     if(EVP_PKEY_keygen_init(upEvpPkeyCtx.get()) <= 0)
     {
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    //if(nBits <= OPENSSL_RSA_FIPS_MIN_MODULUS_BITS || nBits >= OPENSSL_RSA_MAX_MODULUS_BITS)
+    if(nBits <= 1024 || nBits >= 16384)
+    {
+        PmLogError("[%s, %d] Out of Valid Private Key Length (1024 ~ 16384)", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -54,13 +62,6 @@ bool OpensslRsaKeyWrapper::open(const std::string &inputKeyFilename, char mode, 
 
     if(mode == 'w')
     {
-        // create new rsa key
-        if(nBits < 2048)
-        {
-            PmLogError("[%s, %d] Key Size Too Short", __FUNCTION__, __LINE__);
-            return false;
-        }
-
         if(createRsaPkey(nBits) == false)
         {
             PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
@@ -93,6 +94,12 @@ bool OpensslRsaKeyWrapper::open(const std::string &inputKeyFilename, char mode, 
         return false;
     }
 
+    if(mode != 'r')
+    {
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
+        return false;
+    }
+
     std::unique_ptr<OpensslBioWrapper> upTempBio(new OpensslBioWrapper());
     if(upTempBio == nullptr)
     {
@@ -110,7 +117,7 @@ bool OpensslRsaKeyWrapper::open(const std::string &inputKeyFilename, char mode, 
     return true;
 }
 
-bool OpensslRsaKeyWrapper::read(PKEY_TYPE_T pkeyType)
+bool OpensslRsaKeyWrapper::read(PKEY_TYPE_T pkeyType, const std::string &passwd)
 {
     BIO *bio = NULL;
     char mode = ' ';
@@ -144,6 +151,10 @@ bool OpensslRsaKeyWrapper::read(PKEY_TYPE_T pkeyType)
         {
             pkey = d2i_PrivateKey_bio(bio, NULL);
         }
+        else if(format == FORMAT_PEM)
+        {
+            pkey = PEM_read_bio_PrivateKey(bio, NULL, NULL, NULL);
+        }
         else if(format == FORMAT_PKCS12)
         {
             // TO DO.
@@ -163,7 +174,15 @@ bool OpensslRsaKeyWrapper::read(PKEY_TYPE_T pkeyType)
         }
         else if(format == FORMAT_PEM)
         {
-            pkey = PEM_read_bio_PUBKEY(bio, NULL, NULL, NULL);
+            if(passwd.empty() == true)
+            {
+                pkey = PEM_read_bio_PUBKEY(bio, NULL, NULL, NULL);
+            }
+            else
+            {
+                char *password = const_cast<char *>(passwd.c_str());
+                pkey = PEM_read_bio_PUBKEY(bio, NULL, NULL, password);
+            }
         }
         else
         {
@@ -220,7 +239,7 @@ bool OpensslRsaKeyWrapper::write(EVP_PKEY *pkey, PKEY_TYPE_T pkeyType, const std
 
     if( (passwd.empty() == false) && (cipherName.empty() == false) )
     {
-        // keygeneration with encryption and password.        
+        // keygeneration with encryption and password.
         if(passwd.size() < 4 || passwd.size() > 8)
         {
             // too much short password so return.
@@ -240,6 +259,15 @@ bool OpensslRsaKeyWrapper::write(EVP_PKEY *pkey, PKEY_TYPE_T pkeyType, const std
         //password = passwd.c_str();
         cipherp = EVP_get_cipherbyname(cipherName.c_str());
         if(cipherp == NULL)
+        {
+            PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
+            return false;
+        }
+
+        if (EVP_CIPHER_mode(cipherp) == EVP_CIPH_GCM_MODE ||
+                EVP_CIPHER_mode(cipherp) == EVP_CIPH_CCM_MODE ||
+                EVP_CIPHER_mode(cipherp) == EVP_CIPH_XTS_MODE ||
+                EVP_CIPHER_mode(cipherp) == EVP_CIPH_OCB_MODE)
         {
             PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
             return false;

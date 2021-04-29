@@ -886,7 +886,7 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
         return false;
     }
 
-    ret = opensslRsaKeyWrapper.read(PKEY_TYPE_T::PKEY_PRIVATE_KEY);
+    ret = opensslRsaKeyWrapper.read(PKEY_TYPE_T::PKEY_PRIVATE_KEY, "");
     if(ret == false)
     {
         return false;

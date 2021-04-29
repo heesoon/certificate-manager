@@ -4,11 +4,43 @@
 #include "OpensslBioWrapper.hpp"
 #include "OpensslRsaKeyWrapper.hpp"
 
-void testKey()
+void testCreatePlainTextPrivateKey()
 {
 	bool ret = false;
-#if 0	
-	const std::string outputKeyFilename = "privateKey.pem";
+	EVP_PKEY *pkey = NULL;
+
+	const std::string outputKeyFilename = "plainTextPrivatekey.pem";
+	std::unique_ptr<OpensslRsaKeyWrapper> upOpenRsaPrivateKey(new OpensslRsaKeyWrapper());
+	
+	ret = upOpenRsaPrivateKey->open(outputKeyFilename, 'w', FORMAT_PEM, 2048);
+	if(ret == false)
+	{
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
+		return;
+	}
+
+	pkey = upOpenRsaPrivateKey->getPkey();
+	if(pkey == NULL)
+	{
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
+		return;
+	}
+
+	ret = upOpenRsaPrivateKey->write(pkey, PKEY_TYPE_T::PKEY_PRIVATE_KEY, "", "");
+	if(ret == false)
+	{
+		return;
+	}
+
+	PmLogDebug("[%s, %d] Success", __FUNCTION__, __LINE__);
+}
+
+void testCreateEncryptedPrivateKey()
+{
+	bool ret = false;
+	EVP_PKEY *pkey = NULL;
+
+	const std::string outputKeyFilename = "encryptedPrivatekey.pem";
 	std::unique_ptr<OpensslRsaKeyWrapper> upOpenRsaPrivateKey(new OpensslRsaKeyWrapper());
 	
 	ret = upOpenRsaPrivateKey->open(outputKeyFilename, 'w', FORMAT_PEM, 2048);
@@ -17,18 +49,26 @@ void testKey()
 		return;
 	}
 
-	ret = upOpenRsaPrivateKey->write(PKEY_TYPE_T::PKEY_PRIVATE_KEY, outputKeyFilename, NULL, NULL);
-	//ret = upOpenRsaPrivateKey->write(PKEY_TYPE_T::PKEY_PRIVATE_KEY, outputKeyFilename, "12345", "AES-256-CBC");
+	pkey = upOpenRsaPrivateKey->getPkey();
+	if(pkey == NULL)
+	{
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
+		return;
+	}	
+
+	//ret = upOpenRsaPrivateKey->write(pkey, PKEY_TYPE_T::PKEY_PRIVATE_KEY, "123456789", "AES-256-CBC");
+	ret = upOpenRsaPrivateKey->write(pkey, PKEY_TYPE_T::PKEY_PRIVATE_KEY, "12345678", "AES-256-CBC");
 	if(ret == false)
 	{
 		return;
 	}
-#endif
+
 	PmLogDebug("[%s, %d] Success", __FUNCTION__, __LINE__);
 }
 
 int main()
 {
-	testKey();
+	testCreatePlainTextPrivateKey();
+	testCreateEncryptedPrivateKey();
 	return 0;
 }
