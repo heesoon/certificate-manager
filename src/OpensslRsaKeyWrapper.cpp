@@ -153,7 +153,15 @@ bool OpensslRsaKeyWrapper::read(PKEY_TYPE_T pkeyType, const std::string &passwd)
         }
         else if(format == FORMAT_PEM)
         {
-            pkey = PEM_read_bio_PrivateKey(bio, NULL, NULL, NULL);
+            if(passwd.empty() == true)
+            {
+                pkey = PEM_read_bio_PrivateKey(bio, NULL, NULL, NULL);
+            }
+            else
+            {
+                char *password = const_cast<char *>(passwd.c_str());
+                pkey = PEM_read_bio_PrivateKey(bio, NULL, NULL, password);
+            }
         }
         else if(format == FORMAT_PKCS12)
         {
@@ -174,15 +182,7 @@ bool OpensslRsaKeyWrapper::read(PKEY_TYPE_T pkeyType, const std::string &passwd)
         }
         else if(format == FORMAT_PEM)
         {
-            if(passwd.empty() == true)
-            {
-                pkey = PEM_read_bio_PUBKEY(bio, NULL, NULL, NULL);
-            }
-            else
-            {
-                char *password = const_cast<char *>(passwd.c_str());
-                pkey = PEM_read_bio_PUBKEY(bio, NULL, NULL, password);
-            }
+            pkey = PEM_read_bio_PUBKEY(bio, NULL, NULL, NULL);
         }
         else
         {
@@ -239,6 +239,7 @@ bool OpensslRsaKeyWrapper::write(EVP_PKEY *pkey, PKEY_TYPE_T pkeyType, const std
 
     if( (passwd.empty() == false) && (cipherName.empty() == false) )
     {
+#if 0        
         // keygeneration with encryption and password.
         if(passwd.size() < 4 || passwd.size() > 8)
         {
@@ -246,7 +247,7 @@ bool OpensslRsaKeyWrapper::write(EVP_PKEY *pkey, PKEY_TYPE_T pkeyType, const std
             PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
             return false;
         }
-
+#endif
 #if 0
         if(std::regex_match(passwd, std::regex("(\\+|-)?[0-9]*(\\.?([0-9]+))$")))
         {
@@ -289,8 +290,8 @@ bool OpensslRsaKeyWrapper::write(EVP_PKEY *pkey, PKEY_TYPE_T pkeyType, const std
         }
         else if(format == FORMAT_PEM)
         {
-            //if(!PEM_write_bio_PrivateKey(key, createdRsaKey, EVP_aes_256_cbc(), (unsigned char*)"password", sizeof("password"), NULL, NULL))
-            if(!PEM_write_bio_PrivateKey(bio, pkey, cipherp, (unsigned char*)password, sizeof(password), NULL, NULL))
+            if(!PEM_write_bio_PrivateKey(bio, pkey, cipherp, NULL, 0, NULL, (unsigned char*)password))
+            //if (!PEM_write_bio_PKCS8PrivateKey(bio, pkey, cipherp, NULL, 0, 0, (unsigned char*)password))
             {
                 PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
                 return false;

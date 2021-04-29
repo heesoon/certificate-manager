@@ -57,9 +57,34 @@ void testCreateEncryptedPrivateKey()
 	}	
 
 	//ret = upOpenRsaPrivateKey->write(pkey, PKEY_TYPE_T::PKEY_PRIVATE_KEY, "123456789", "AES-256-CBC");
-	ret = upOpenRsaPrivateKey->write(pkey, PKEY_TYPE_T::PKEY_PRIVATE_KEY, "12345678", "AES-256-CBC");
+	ret = upOpenRsaPrivateKey->write(pkey, PKEY_TYPE_T::PKEY_PRIVATE_KEY, "123456789123456789", "AES-256-CBC");
 	if(ret == false)
 	{
+		return;
+	}
+
+	PmLogDebug("[%s, %d] Success", __FUNCTION__, __LINE__);
+}
+
+void testDecryptPrivateKey()
+{
+	bool ret = false;
+	EVP_PKEY *pkey = NULL;
+
+	const std::string inputKeyFilename = "encryptedPrivatekey.pem";
+	std::unique_ptr<OpensslRsaKeyWrapper> upOpenRsaPrivateKey(new OpensslRsaKeyWrapper());
+	
+	ret = upOpenRsaPrivateKey->open(inputKeyFilename, 'r', FORMAT_PEM);
+	if(ret == false)
+	{
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
+		return;
+	}
+
+	ret = upOpenRsaPrivateKey->read(PKEY_TYPE_T::PKEY_PRIVATE_KEY, "123456789123456789");
+	if(ret == false)
+	{
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		return;
 	}
 
@@ -70,5 +95,6 @@ int main()
 {
 	testCreatePlainTextPrivateKey();
 	testCreateEncryptedPrivateKey();
+	testDecryptPrivateKey();
 	return 0;
 }
