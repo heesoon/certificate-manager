@@ -338,9 +338,9 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
     }
 
     // 8. build X509_REQ structure
-    //x509tReq = X509_REQ_new();
-    unique_ptr_x509Req_type_t upX509Req(X509_REQ_new(), delRawPtrX509Req);
-    x509tReq = upX509Req.get();
+    x509tReq = X509_REQ_new();
+    //unique_ptr_x509Req_type_t upX509Req(X509_REQ_new(), delRawPtrX509Req);
+    //x509tReq = upX509Req.get();
   	if(x509tReq == NULL)
 	{
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
@@ -352,7 +352,7 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
 	if(ret == 0)
 	{
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
-		return false;
+		goto error;
 	}
 
 	// 8.2. setting subject to req
@@ -360,7 +360,7 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
 	if(ret == 0)
 	{
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
-		return false;
+		goto error;
 	}
 
     // 8.3. setting subject to req
@@ -370,7 +370,7 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
 	if(ret == 0)
 	{
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
-		return false;
+		goto error;
 	}
 
     // 8.4. get request extension from configuration file
@@ -385,7 +385,7 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
         if(!X509V3_EXT_REQ_add_nconf(conf, &ctx, req_exts, x509tReq))
         {
             PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
-            return false;
+            goto error;
         }
     }
 
@@ -394,7 +394,7 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
 	if(ret == 0)
 	{
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
-		return false;
+		goto error;
 	}
 
     // 8.6. req verify
@@ -405,7 +405,7 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
 		if(tpubkey == NULL)
 		{
             PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
-			return false;
+			goto error;
 		}
 	}
 
@@ -413,12 +413,16 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
 	if(ret <= 0)
 	{
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
-		return false;
+		goto error;
 	}
 
     PmLogDebug("[%s, %d] Success", __FUNCTION__, __LINE__);
     this->x509Req = x509tReq;
     return true;
+
+error:
+    X509_REQ_free(x509tReq);
+    return false;
 }
 
 X509_REQ* OpensslCsrWrapper::getX509Req()

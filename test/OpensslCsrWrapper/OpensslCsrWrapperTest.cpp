@@ -1,7 +1,6 @@
 #include <string>
 #include <memory>
 #include "Log.hpp"
-#include "OpensslBioWrapper.hpp"
 #include "OpensslCsrWrapper.hpp"
 
 void testMakeCsr()
@@ -56,6 +55,8 @@ void testMakeCsr()
 	}
 
 	PmLogDebug("[%s, %d] Success", __FUNCTION__, __LINE__);
+
+	//openssl req -noout -text -in csr.pem
 }
 
 int main()
