@@ -20,6 +20,20 @@
 #define UTF8_IN                     "utf8"
 #define DEFAULT_MD                  "default_md"
 
+auto delRawPtrX509Name = [](X509_NAME *x509Name)
+{
+    X509_NAME_free(x509Name);
+    PmLogDebug("[%s, %d] delRawPtrX509Name called ..", __FUNCTION__, __LINE__);
+};
+using unique_ptr_x509Name_type_t = std::unique_ptr<X509_NAME, decltype(delRawPtrX509Name)>;
+
+auto delRawPtrX509Req = [](X509_REQ *x509Req)
+{
+    X509_REQ_free(x509Req);
+    PmLogDebug("[%s, %d] delRawPtrX509Req called ..", __FUNCTION__, __LINE__);
+};
+using unique_ptr_x509Req_type_t = std::unique_ptr<X509_REQ, decltype(delRawPtrX509Req)>;
+
 OpensslCsrWrapper::OpensslCsrWrapper()
 {
     x509Req = NULL;
@@ -98,7 +112,7 @@ bool OpensslCsrWrapper::read()
         return false;
     }
 
-    x509Req = req;
+    this->x509Req = req;
     return true;
 }
 
@@ -166,6 +180,7 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
     char mode = ' ';
     //int format = 0;
     char *cnfData = NULL;
+    char *req_exts = NULL;
     const EVP_MD *evpMd = NULL;
     X509_REQ *x509tReq = NULL;
     X509_NAME *x509_name = NULL;
@@ -200,12 +215,14 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
     cnfData = opensslConfWrapper.getString(REQ_BASE_SECTION, DEFAULT_MD);
     if(cnfData == NULL)
     {
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
 	evpMd = EVP_get_digestbyname(cnfData);
 	if(evpMd == NULL)
 	{
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		return false;
 	}
 
@@ -213,12 +230,14 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
     cnfData = opensslConfWrapper.getString(REQ_BASE_SECTION, STRING_MASK);
     if(cnfData == NULL)
     {
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     ret = ASN1_STRING_set_default_mask_asc(cnfData);
     if(ret == 0)
     {
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -226,6 +245,7 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
     cnfData = opensslConfWrapper.getString(REQ_BASE_SECTION, UTF8_IN);
     if(cnfData == NULL)
     {
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -235,68 +255,71 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
     }
 
     // 4. get request extension from configuration file
-    cnfData = opensslConfWrapper.getString(REQ_BASE_SECTION, REQ_EXTENSIONS);
-    if(cnfData != NULL)
+    req_exts = opensslConfWrapper.getString(REQ_BASE_SECTION, REQ_EXTENSIONS);
+    if(req_exts != NULL)
     {
         /* Check syntax of file */
         X509V3_CTX ctx;
         CONF* conf = opensslConfWrapper.getConf();
         X509V3_set_ctx_test(&ctx);
         X509V3_set_nconf(&ctx, conf);
-        if(!X509V3_EXT_add_nconf(conf, &ctx, cnfData, NULL))
+        if(!X509V3_EXT_add_nconf(conf, &ctx, req_exts, NULL))
         {
+            PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
             return false;
         }
     }
-
     // 5. TO DO. if need to add more value from configuration file
 
     // 6. set subject from input
-    x509_name = X509_NAME_new();
+    //x509_name = X509_NAME_new();
+    unique_ptr_x509Name_type_t upX509Name(X509_NAME_new(), delRawPtrX509Name);
+    x509_name = upX509Name.get();
     if(x509_name == NULL)
     {
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
 	ret = X509_NAME_add_entry_by_txt(x509_name, "commonName", chtype, reinterpret_cast<const unsigned char*>(subject.countryName.c_str()), -1, -1, 0);
 	if(ret == 0)
 	{
-		X509_NAME_free(x509_name);
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		return false;
 	}
 
 	ret = X509_NAME_add_entry_by_txt(x509_name, "countryName", chtype, reinterpret_cast<const unsigned char*>(subject.countryName.c_str()), -1, -1, 0);
 	if(ret == 0)
 	{
-		X509_NAME_free(x509_name);
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		return false;
 	}
 
 	ret = X509_NAME_add_entry_by_txt(x509_name, "stateOrProvinceName", chtype, reinterpret_cast<const unsigned char*>(subject.stateOrProvinceName.c_str()), -1, -1, 0);
 	if(ret == 0)
 	{
-		X509_NAME_free(x509_name);
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		return false;
 	}
 
 	ret = X509_NAME_add_entry_by_txt(x509_name, "localityName", chtype, reinterpret_cast<const unsigned char*>(subject.localityName.c_str()), -1, -1, 0);
 	if(ret == 0)
 	{
-		X509_NAME_free(x509_name);
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		return false;
 	}
 
 	ret = X509_NAME_add_entry_by_txt(x509_name, "organizationName", chtype, reinterpret_cast<const unsigned char*>(subject.organizationName.c_str()), -1, -1, 0);
 	if(ret == 0)
 	{
-		X509_NAME_free(x509_name);
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		return false;
 	}
 
 	ret = X509_NAME_add_entry_by_txt(x509_name, "emailAddress", chtype, reinterpret_cast<const unsigned char*>(subject.emailAddress.c_str()), -1, -1, 0);
 	if(ret == 0)
 	{
-		X509_NAME_free(x509_name);
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		return false;
 	}
 
@@ -304,21 +327,23 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
     //if(opensslRsaKeyWrapper.open(inputKeyFilename, 'r', format) == false)
     if(opensslRsaKeyWrapper.open(inputKeyFilename, 'r', FORMAT_PEM) == false)
     {
-        X509_NAME_free(x509_name);
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     if(opensslRsaKeyWrapper.read(PKEY_TYPE_T::PKEY_PRIVATE_KEY, "") == false)
     {
-        X509_NAME_free(x509_name);
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     // 8. build X509_REQ structure
-    x509tReq = X509_REQ_new();
+    //x509tReq = X509_REQ_new();
+    unique_ptr_x509Req_type_t upX509Req(X509_REQ_new(), delRawPtrX509Req);
+    x509tReq = upX509Req.get();
   	if(x509tReq == NULL)
 	{
-		X509_NAME_free(x509_name);
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		return false;
 	}
 
@@ -326,7 +351,7 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
 	ret = X509_REQ_set_version(x509tReq, 0L);
 	if(ret == 0)
 	{
-		X509_NAME_free(x509_name);
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		return false;
 	}
 
@@ -334,7 +359,7 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
 	ret = X509_REQ_set_subject_name(x509tReq, x509_name);
 	if(ret == 0)
 	{
-		X509_NAME_free(x509_name);
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		return false;
 	}
 
@@ -344,26 +369,42 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
 	ret = X509_REQ_set_pubkey(x509tReq, evpKey);
 	if(ret == 0)
 	{
-		X509_NAME_free(x509_name);
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		return false;
 	}
 
-    // 8.4. signing
+    // 8.4. get request extension from configuration file
+    if(req_exts != NULL)
+    {
+        /* Check syntax of file */
+        X509V3_CTX ctx;
+        CONF* conf = opensslConfWrapper.getConf();
+        //X509V3_set_ctx_test(&ctx);
+        X509V3_set_ctx(&ctx, NULL, NULL, x509tReq, NULL, 0);
+        X509V3_set_nconf(&ctx, conf);
+        if(!X509V3_EXT_REQ_add_nconf(conf, &ctx, req_exts, x509tReq))
+        {
+            PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
+            return false;
+        }
+    }
+
+    // 8.5. signing
 	ret = X509_REQ_sign(x509tReq, evpKey, evpMd);
 	if(ret == 0)
 	{
-		X509_NAME_free(x509_name);
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		return false;
 	}
 
-    // 8.5. req verify
+    // 8.6. req verify
 	tpubkey = evpKey;
 	if(tpubkey == NULL)
 	{
 		tpubkey = X509_REQ_get0_pubkey(x509tReq);
 		if(tpubkey == NULL)
 		{
-			X509_NAME_free(x509_name);
+            PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 			return false;
 		}
 	}
@@ -371,12 +412,13 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
 	ret = X509_REQ_verify(x509tReq, tpubkey);
 	if(ret <= 0)
 	{
-		X509_NAME_free(x509_name);
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		return false;
 	}
 
+    PmLogDebug("[%s, %d] Success", __FUNCTION__, __LINE__);
     this->x509Req = x509tReq;
-    return true;    
+    return true;
 }
 
 X509_REQ* OpensslCsrWrapper::getX509Req()
