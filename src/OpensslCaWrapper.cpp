@@ -297,10 +297,11 @@ BIGNUM* OpensslCaWrapper::loadSerial(const char *serialfile, int create, ASN1_IN
     return ret;
 }
 
-bool OpensslCaWrapper::setCertTimes(const char *startdate, const char *enddate, int days)
+bool OpensslCaWrapper::setCertTimes(X509 *x509, const char *startdate, const char *enddate, int days)
 {
     if(x509 == NULL)
     {
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -308,6 +309,7 @@ bool OpensslCaWrapper::setCertTimes(const char *startdate, const char *enddate, 
     {
         if(X509_gmtime_adj(X509_getm_notBefore(x509), 0) == NULL)
         {
+            PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
             return false;
         }
     } 
@@ -315,6 +317,7 @@ bool OpensslCaWrapper::setCertTimes(const char *startdate, const char *enddate, 
     {
         if(!ASN1_TIME_set_string_X509(X509_getm_notBefore(x509), startdate))
         {
+            PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
             return false;
         }
     }
@@ -323,11 +326,13 @@ bool OpensslCaWrapper::setCertTimes(const char *startdate, const char *enddate, 
     {
         if(X509_time_adj_ex(X509_getm_notAfter(x509), days, 0, NULL) == NULL)
         {
+            PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
             return false;
         }
     }
     else if(!ASN1_TIME_set_string_X509(X509_getm_notAfter(x509), enddate))
     {
+        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -650,7 +655,7 @@ again2:
 	}
 
     // 7. set days to x509
-    if(setCertTimes(NULL, NULL, days) == false)
+    if(setCertTimes(x509, NULL, NULL, days) == false)
     {
         PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;

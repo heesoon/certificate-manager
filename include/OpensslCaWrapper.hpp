@@ -22,7 +22,7 @@ protected:
     bool generateX509(X509 *x509, X509_REQ *x509Req, X509 *x509Ca, CONF *conf, const char *ext_sect, EVP_PKEY *caPkey, BIGNUM *serial, long days, int emailDn, STACK_OF(CONF_VALUE) *policy ,const EVP_MD *evpMd);
     bool randSerial(BIGNUM *b, ASN1_INTEGER *ai);
     BIGNUM* loadSerial(const char *serialfile, int create, ASN1_INTEGER **retai);
-    bool setCertTimes(const char *startdate, const char *enddate, int days);
+    bool setCertTimes(X509 *x509, const char *startdate, const char *enddate, int days);
     int pkey_ctrl_string(EVP_PKEY_CTX *ctx, const char *value);
     int do_pkey_ctx_init(EVP_PKEY_CTX *pkctx, STACK_OF(OPENSSL_STRING) *opts);
     int adapt_keyid_ext(X509 *cert, X509V3_CTX *ext_ctx, const char *name, const char *value, int add_default);
