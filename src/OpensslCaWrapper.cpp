@@ -665,7 +665,20 @@ again2:
         return false;
 	}
 
-    // 9. set email to x509
+    // 9. Initialize the context structure
+	X509V3_set_ctx(&ext_ctx, x509Ca, x509, x509Req, NULL, X509V3_CTX_REPLACE);
+
+    // 10. get request extension from configuration file
+    if(ext_sect != NULL)
+    {
+        X509V3_set_nconf(&ext_ctx, conf);
+        if(!X509V3_EXT_add_nconf(conf, &ext_ctx, ext_sect, x509))
+        {
+            return false;
+        }
+    }
+
+    // 11. set email to x509
 	if(!emailDn)
 	{
         X509_NAME_ENTRY *tmpne;
@@ -694,30 +707,23 @@ again2:
         X509_NAME_free(dn_subject);		
 	}
 
-    // 10. set CA public key to x509
+#if 0
+    // 12. set CA public key to x509
 	pkeyPublic = X509_get0_pubkey(x509Ca);
 
     if(EVP_PKEY_missing_parameters(pkeyPublic) && !EVP_PKEY_missing_parameters(caPkey))
 	{
 		EVP_PKEY_copy_parameters(pkeyPublic, caPkey);
 	}
+#else
+    // 12. set CA public key to x509
+	pkeyPublic = X509_get0_pubkey(x509);
 
-    // 11. get request extension from configuration file
-    if(ext_sect != NULL)
-    {
-        /* Check syntax of file */
-        X509V3_CTX ctx;
-        X509V3_set_ctx_test(&ctx);
-        X509V3_set_nconf(&ctx, conf);
-        if(!X509V3_EXT_add_nconf(conf, &ctx, ext_sect, x509))
-        {
-            return false;
-        }
-    }
-
-    // Initialize the context structure
-	X509V3_set_ctx(&ext_ctx, x509Ca, x509, x509Req, NULL, X509V3_CTX_REPLACE);
-
+    if(EVP_PKEY_missing_parameters(pkeyPublic) && !EVP_PKEY_missing_parameters(caPkey))
+	{
+		EVP_PKEY_copy_parameters(pkeyPublic, caPkey);
+	}
+#endif
     if(!do_X509_sign(x509, caPkey, evpMd, NULL, &ext_ctx))
 	{
 		return false;
@@ -736,7 +742,7 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
     X509_REQ *x509Req = NULL;
     X509 *x509Ca = NULL;
     EVP_PKEY *caPkey;
-    char *extension = NULL;
+    char *extensions = NULL;
     CONF *conf = NULL;
     const EVP_MD *evpMd = NULL;
     STACK_OF(CONF_VALUE) *policy = NULL;
@@ -801,25 +807,21 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
         chtype = MBSTRING_UTF8;
     }
 
-#if 0
     // 4. get request extension from configuration file
-    cnfData = opensslConfWrapper.getString(entry, ENV_EXTENSIONS);
-    if(cnfData != NULL)
+    extensions = opensslConfWrapper.getString(entry, ENV_EXTENSIONS);
+    if(extensions != NULL)
     {
         /* Check syntax of file */
         X509V3_CTX ctx;
         CONF* conf = opensslConfWrapper.getConf();
         X509V3_set_ctx_test(&ctx);
         X509V3_set_nconf(&ctx, conf);
-        if(!X509V3_EXT_add_nconf(conf, &ctx, cnfData, x509))
+        if(!X509V3_EXT_add_nconf(conf, &ctx, extensions, NULL))
         {
             return false;
         }
     }
-#else
-    // 4. get request extension from configuration file
-    extension = opensslConfWrapper.getString(entry, ENV_EXTENSIONS);
-#endif
+
     // 5. get default md from configuration file
     cnfData = opensslConfWrapper.getString(entry, ENV_DEFAULT_MD);
     if(cnfData == NULL)
@@ -905,6 +907,12 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
         return false;
     }    
 
+    // check CA private key and CA certificate
+    if(!X509_check_private_key(opensslCertWrapper.getX509(), opensslRsaKeyWrapper.getPkey()))
+    {
+        return false;
+    }
+
     // 13. read csr
     ret = opensslCsrWrapper.open(inputCsrFile, 'r', FORMAT_PEM);
     if(ret == false)
@@ -938,7 +946,7 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
     }
 
     // 14. generated signed certificate by CA based on certificate signed request
-    if(generateX509(upX509.get(), x509Req, x509Ca, opensslConfWrapper.getConf(), extension, caPkey, upBnSerial.get(), days, emailDn, policy, evpMd) == false)
+    if(generateX509(upX509.get(), x509Req, x509Ca, opensslConfWrapper.getConf(), extensions, caPkey, upBnSerial.get(), days, emailDn, policy, evpMd) == false)
     {
         return false;
     }
