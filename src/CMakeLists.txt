@@ -1,7 +1,22 @@
-project(certificate-manager)
-cmake_minimum_required(VERSION 3.10)
+# Copyright (c) 2008-2018 LG Electronics, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
 
-set(SRCS
+project(certificate-manager)
+
+set(SOURCES
 	"Log.cpp"
 	"OpensslBioWrapper.cpp"
 	"OpensslConfWrapper.cpp"
@@ -12,27 +27,60 @@ set(SRCS
 	"CertificateManager.cpp"
 )
 
-add_executable(${PROJECT_NAME}
-	${SRCS}
-)
+include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
-add_library(crypto
-	SHARED
-	IMPORTED
-)
+include(FindPkgConfig)
 
-set_target_properties(crypto
-	PROPERTIES IMPORTED_LOCATION
-	#${CMAKE_SOURCE_DIR}/lib/openssl/libs/libcrypto.so
-	${CMAKE_SOURCE_DIR}/lib/openssl/libs/libcrypto.so.3
-)
+pkg_check_modules(GLIB2 REQUIRED glib-2.0)
+webos_add_compiler_flags(ALL ${GLIB2_CFLAGS})
 
-include_directories(
-	${CMAKE_SOURCE_DIR}/lib/openssl/include
-	${CMAKE_SOURCE_DIR}/include
-)
+pkg_check_modules(LUNASERVICE REQUIRED luna-service2)
+webos_add_compiler_flags(ALL ${LUNASERVICE_CFLAGS})
 
-target_link_libraries(
-	${PROJECT_NAME} PRIVATE
+pkg_check_modules(PMLOG REQUIRED PmLogLib)
+include_directories(${PMLOG_INCLUDE_DIRS})
+webos_add_compiler_flags(ALL ${PMLOG_CFLAGS_OTHER})
+
+pkg_check_modules(PBNJSON_CPP REQUIRED pbnjson_cpp)
+include_directories(${PBNJSON_CPP_INCLUDE_DIRS})
+webos_add_compiler_flags(ALL ${PBNJSON_CPP_CFLAGS_OTHER})
+
+pkg_check_modules(LUNASERVICE2PP REQUIRED luna-service2++)
+include_directories(${LUNASERVICE2PP_INCLUDE_DIRS})
+webos_add_compiler_flags(ALL ${LUNASERVICE2PP_CFLAGS_OTHER})
+
+pkg_check_modules(LIBIM REQUIRED libim)
+include_directories(${LIBIM_INCLUDE_DIRS})
+webos_add_compiler_flags(ALL -lim)
+
+set (ADDITIONAL_LIB_LISTS
+	ssl
 	crypto
 )
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+add_executable(${PROJECT_NAME} ${SOURCES})
+
+target_link_libraries (${PROJECT_NAME}
+	${GLIB2_LDFLAGS}
+	${PBNJSON_CPP_LDFLAGS}
+	${PMLOG_LDFLAGS}
+	${LUNASERVICE2_LDFLAGS}
+	${LUNASERVICE2PP_LDFLAGS}
+	${ADDITIONAL_LIB_LISTS}
+)
+
+webos_build_program(NAME ${PROJECT_NAME})
+
+# add bin file /usr/bin/certificate-manager
+install (TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+
+# for pmlog
+#webos_build_configured_file(files/conf/pmlog/certificate-manager.conf SYSCONFDIR pmlog.d)
+
+# add dbus and lunaservice2 from  files/sysbus/*
+#install(FILES ../files/sysbus/certificate-manager.json DESTINATION share/ls2/roles/pub)
+#install(FILES ../files/sysbus/certificate-manager.json DESTINATION share/ls2/roles/prv)
+#install(FILES ../files/sysbus/certificate-manager.service DESTINATION share/dbus-1/services)
+#install(FILES ../files/sysbus/certificate-manager.service DESTINATION share/dbus-1/system-services)
