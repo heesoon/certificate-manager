@@ -14,25 +14,17 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+cmake_minimum_required(VERSION 2.8.7)
 project(certificate-manager)
 
-set(SOURCES
-	"Log.cpp"
-	"OpensslBioWrapper.cpp"
-	"OpensslConfWrapper.cpp"
-	"OpensslRsaKeyWrapper.cpp"
-	"OpensslCertWrapper.cpp"
-	"OpensslCsrWrapper.cpp"
-	"OpensslCaWrapper.cpp"
-	"CertificateManager.cpp"
-)
-
-include_directories(${CMAKE_SOURCE_DIR})
-include_directories(${CMAKE_SOURCE_DIR}/include)
-
+include(webOS/webOS)
 include(FindPkgConfig)
 
+webos_modules_init(1 0 0 QUALIFIER RC4)
+webos_component(1 0 0)
+
 pkg_check_modules(GLIB2 REQUIRED glib-2.0)
+include_directories(${GLIB2_INCLUDE_DIRS})
 webos_add_compiler_flags(ALL ${GLIB2_CFLAGS})
 
 pkg_check_modules(LUNASERVICE REQUIRED luna-service2)
@@ -46,9 +38,23 @@ pkg_check_modules(PBNJSON_CPP REQUIRED pbnjson_cpp)
 include_directories(${PBNJSON_CPP_INCLUDE_DIRS})
 webos_add_compiler_flags(ALL ${PBNJSON_CPP_CFLAGS_OTHER})
 
-#pkg_check_modules(LUNASERVICE2PP REQUIRED luna-service2++)
-#include_directories(${LUNASERVICE2PP_INCLUDE_DIRS})
-#webos_add_compiler_flags(ALL ${LUNASERVICE2PP_CFLAGS_OTHER})
+pkg_check_modules(LUNASERVICE2PP REQUIRED luna-service2++)
+include_directories(${LUNASERVICE2PP_INCLUDE_DIRS})
+webos_add_compiler_flags(ALL ${LUNASERVICE2PP_CFLAGS_OTHER})
+
+include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${CMAKE_SOURCE_DIR}/include)
+
+set(SOURCES
+	${CMAKE_SOURCE_DIR}/src/Log.cpp
+	${CMAKE_SOURCE_DIR}/src/OpensslBioWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/OpensslConfWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/OpensslRsaKeyWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/OpensslCertWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/OpensslCsrWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/OpensslCaWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/CertificateManager.cpp
+)
 
 set (ADDITIONAL_LIB_LISTS
 	ssl
