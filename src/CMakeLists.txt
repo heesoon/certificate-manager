@@ -46,14 +46,18 @@ pkg_check_modules(PBNJSON_CPP REQUIRED pbnjson_cpp)
 include_directories(${PBNJSON_CPP_INCLUDE_DIRS})
 webos_add_compiler_flags(ALL ${PBNJSON_CPP_CFLAGS_OTHER})
 
+#pkg_check_modules(DB8 REQUIRED db8)
+#include_directories(${DB8_INCLUDE_DIRS})
+#webos_add_compiler_flags(ALL ${DB8_CFLAGS_OTHER})
+
+pkg_check_modules(OPENSSL REQUIRED openssl)
+include_directories(${OPENSSL_INCLUDE_DIRS})
+webos_add_compiler_flags(ALL ${OPENSSL_CFLAGS_OTHER})
+
 #pkg_check_modules(LUNASERVICE2PP REQUIRED luna-service2++)
 #include_directories(${LUNASERVICE2PP_INCLUDE_DIRS})
 #webos_add_compiler_flags(ALL ${LUNASERVICE2PP_CFLAGS_OTHER})
 
-set (ADDITIONAL_LIB_LISTS
-	ssl
-	crypto
-)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -64,7 +68,8 @@ target_link_libraries (${PROJECT_NAME}
 	${PMLOG_LDFLAGS}
 	${LUNASERVICE2_LDFLAGS}
 	${LUNASERVICE2PP_LDFLAGS}
-	${ADDITIONAL_LIB_LISTS}
+	${DB8_LDFLAGS}
+	${OPENSSL_LDFLAGS}
 )
 
 webos_build_program(NAME ${PROJECT_NAME})

@@ -5,7 +5,7 @@ AUTHOR = "Hee-Soon Kim <heesoon.kim@lge.com>"
 SECTION = "webos/base"
 LICENSE = "CLOSED"
 
-DEPENDS = "glib-2.0 luna-service2 openssl pmloglib libpbnjson"
+DEPENDS = "glib-2.0 luna-service2 openssl pmloglib libpbnjson db8"
 
 RDEPENDS_${PN} = "gzip"
 
