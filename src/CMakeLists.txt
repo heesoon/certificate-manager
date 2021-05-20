@@ -70,7 +70,7 @@ webos_build_system_bus_files()
 webos_build_db8_files()
 
 # add bin file /usr/bin/certificate-manager
-install (TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+#install (TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
 
 # for pmlog
 #webos_build_configured_file(files/conf/pmlog/certificate-manager.conf SYSCONFDIR pmlog.d)

@@ -1,0 +1,11 @@
+{
+	"exeName" : "@WEBOS_INSTALL_BINDIR@/certificate-manager",
+	"allowedNames" : ["com.webos.service.certificateManager"],
+	"type" : "regular",
+	"permissions" : [
+		{
+			"service" : "com.webos.service.certificateManager",
+			"outbound" : ["com.palm.db"]
+		}
+	]
+}
