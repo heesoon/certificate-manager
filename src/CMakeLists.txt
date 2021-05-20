@@ -53,6 +53,7 @@ set(SOURCES
 	"OpensslCsrWrapper.cpp"
 	"OpensslCaWrapper.cpp"
 	"CertificateManager.cpp"
+	"main.cpp"
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
