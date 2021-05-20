@@ -22,4 +22,7 @@ include(webOS/webOS)
 webos_modules_init(1 0 0)
 webos_component(1 0 0)
 
+#webos_add_compiler_flags(ALL -DMOJ_LINUX -std=c++11 -fno-exceptions -Wall -Werror)
+webos_add_compiler_flags(ALL -std=c++11 -Wall)
+
 add_subdirectory(src)

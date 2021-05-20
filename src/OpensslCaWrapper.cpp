@@ -9,6 +9,7 @@
 #include "OpensslCsrWrapper.hpp"
 #include <openssl/x509v3.h>
 #include <openssl/x509v3.h>
+#include <openssl/x509_vfy.h>
 #include <openssl/pem.h>
 
 #define BASE_SECTION            "ca"
@@ -473,8 +474,8 @@ bool OpensslCaWrapper::generateX509(X509 *x509, X509_REQ *x509Req, X509 *x509Ca,
 {
     int i = 0, j = 0, last = 0;
     char mode = ' ';
-	const X509_NAME *x509ReqSubject = NULL;
-    const X509_NAME *x509CaSubject = NULL; 
+	X509_NAME *x509ReqSubject = NULL;
+    X509_NAME *x509CaSubject = NULL; 
 	X509_NAME *subject = NULL;
 	X509_NAME_ENTRY *ne, *tne;
 	ASN1_STRING *str, *str2;
@@ -982,7 +983,8 @@ X509_STORE* OpensslCaWrapper::setup_verify(const std::string &inputCaFile)
 		goto end;
 	}
 
-	if (!X509_LOOKUP_load_file_ex(lookup, inputCaFile.c_str(), X509_FILETYPE_PEM, NULL, NULL))
+	//if(!X509_LOOKUP_load_file_ex(lookup, inputCaFile.c_str(), X509_FILETYPE_PEM, NULL, NULL))
+	if(!X509_LOOKUP_load_file(lookup, inputCaFile.c_str(), X509_FILETYPE_PEM))
 	{
 		goto end;		
 	}

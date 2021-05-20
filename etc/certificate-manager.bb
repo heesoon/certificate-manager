@@ -7,7 +7,7 @@ LICENSE = "CLOSED"
 
 DEPENDS = "glib-2.0 luna-service2 openssl pmloglib libpbnjson db8"
 
-RDEPENDS_${PN} = "gzip"
+RDEPENDS_${PN} = ""
 
 WEBOS_VERSION = "1.0.0-8_728d37a6a04e06a76a0f09bf940eada16e47f6c0"
 PR = "r1"
