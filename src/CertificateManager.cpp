@@ -38,7 +38,8 @@ bool CertificateManager::generateKey(LSMessage &message)
 	//if (LSMessageIsSubscription(&message))
 	//	subscribed = LSSubscriptionProcess(lshandle, &message, &subscribed, &lserror);
 
-	pbnjson::JValue request = pbnjson::Object();
+	//pbnjson::JValue request = pbnjson::Object();
+	return true;
 }
 
 bool CertificateManager::csr(LSMessage &message)
