@@ -45,12 +45,12 @@ bool CertificateManager::generateKey(LSMessage &message)
 
 	//if (LSMessageIsSubscription(&message))
 	//	subscribed = LSSubscriptionProcess(lshandle, &message, &subscribed, &lserror);
-
+	pbnjson::JValue json = pbnjson::Object();
     pbnjson::JValue request = pbnjson::Object();
     request = JUtil::parse(LSMessageGetPayload(&message), "", nullptr);
 
-	outputKeyFilename = request['outputKeyFilename'].asString();
-	if(keyOutPath.empty())
+	outputKeyFilename = request['KeyFilename'].asString();
+	if(outputKeyFilename.empty())
 	{
 		success = false;
 		goto end;
@@ -81,8 +81,6 @@ bool CertificateManager::generateKey(LSMessage &message)
 		success = false;
 		goto end;
 	}
-
-	pbnjson::JValue json = pbnjson::Object();
 
 end:
 
