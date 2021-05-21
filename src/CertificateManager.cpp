@@ -23,12 +23,13 @@ CertificateManager::CertificateManager() : LS::Handle(LS::registerService(servic
 
 bool CertificateManager::generateKey(LSMessage &message)
 {
-    LSErrorSafe lserror;
+    //LSErrorSafe lserror;
     //bool subscribed = false;
 	bool success = true;
 	std::string outputKeyFilename = "";
 	int nBits = 0;
 	EVP_PKEY *pkey = NULL;
+	OpensslRsaKeyWrapper opensslRsaKeyWrapper;
 
 	auto *appid = LSMessageGetApplicationID(&message);
 	auto servicename = LSMessageGetSenderServiceName(&message);
@@ -62,7 +63,6 @@ bool CertificateManager::generateKey(LSMessage &message)
 		goto end;
 	}
 
-	OpensslRsaKeyWrapper opensslRsaKeyWrapper;
 	if(opensslRsaKeyWrapper.open(outputKeyFilename, 'w', FORMAT_PEM, nBits) == false)
 	{
 		success = false;
