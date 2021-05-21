@@ -36,14 +36,12 @@ bool OpensslBioWrapper::open(const std::string &filename, char mode, int format)
 
 	if(filename.empty())
 	{
-		PmLogError("[%s,%d] File Name Empty", __FUNCTION__, __LINE__);
 		return false;
 	}
 
 	ret = BIO_new_file(filename.c_str(), modestr(mode, format));
 	if(ret == NULL)
 	{
-		PmLogError("[%s,%d] BIO_new_file", __FUNCTION__, __LINE__);
 		return false;
 	}
 
