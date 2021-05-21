@@ -29,7 +29,9 @@ bool CertificateManager::generateKey(LSMessage &message)
 	std::string outputKeyFilename = "";
 	int nBits = 0;
 	EVP_PKEY *pkey = NULL;
+	std::string result = "";
 	OpensslRsaKeyWrapper opensslRsaKeyWrapper;
+	LS::Message lsResponseMsg(&message);
 
 	auto *appid = LSMessageGetApplicationID(&message);
 	auto servicename = LSMessageGetSenderServiceName(&message);
@@ -83,8 +85,22 @@ bool CertificateManager::generateKey(LSMessage &message)
 	}
 
 end:
+	if(success = false)
+	{
+        json.put("returnValue", false);
+        json.put("errorText", "wrong of keyFilename or keySize");
+	}
+	else
+	{
+		json.put("KeyFilename", outputKeyFilename.c_str());
+		json.put("keySize", nBits);
+        json.put("returnValue", true);
+	}
 
-	return true;
+	result = pbnjson::JGenerator::serialize(json, pbnjson::JSchemaFragment("{}"));
+	lsResponseMsg.respond(result.c_str());
+
+	return success ? true : false;
 }
 
 bool CertificateManager::csr(LSMessage &message)
