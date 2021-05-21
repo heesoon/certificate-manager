@@ -11,20 +11,17 @@ bool OpensslCertWrapper::open(const std::string &filename, char mode, int format
 {
     if(filename.empty() == true)
     {
-        PmLogError("[%s, %d] Bio open fail", __FUNCTION__, __LINE__);
         return false;
     }
 
     std::unique_ptr<OpensslBioWrapper> upTempBio(new OpensslBioWrapper());
     if(upTempBio == nullptr)
     {
-        PmLogError("[%s, %d] Bio open fail", __FUNCTION__, __LINE__);
         return false;
     }
 
     if(upTempBio->open(filename, mode, format) == false)
     {
-        PmLogError("[%s, %d] Bio open fail", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -40,21 +37,18 @@ bool OpensslCertWrapper::read()
 
     if(upBio == nullptr)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     mode = upBio->getOpenMode();
     if(mode != 'r')
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     bio = upBio->getBio();
     if(bio == NULL)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -66,7 +60,6 @@ bool OpensslCertWrapper::read()
     else if(format == FORMAT_PKCS12)
     {
         // TO DO.
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
     else if(format == FORMAT_PEM)
@@ -75,13 +68,11 @@ bool OpensslCertWrapper::read()
     }
     else
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     if(x509 == NULL)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -97,27 +88,23 @@ bool OpensslCertWrapper::write(X509 *x509)
 
     if(x509 == NULL)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     if(upBio == nullptr)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     mode = upBio->getOpenMode();
     if(mode != 'w')
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     bio = upBio->getBio();
     if(bio == NULL)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -129,7 +116,6 @@ bool OpensslCertWrapper::write(X509 *x509)
     else if(format == FORMAT_PKCS12)
     {
         // TO DO.
-        PmLogError("[%s, %d] Not Supported", __FUNCTION__, __LINE__);
         return false;
     }
     else if(format == FORMAT_PEM)
@@ -139,13 +125,11 @@ bool OpensslCertWrapper::write(X509 *x509)
     }
     else
     {
-        PmLogError("[%s, %d] Not Supported", __FUNCTION__, __LINE__);
         return false;
     }
 
     if(ret == 0)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -166,5 +150,4 @@ void OpensslCertWrapper::close()
 OpensslCertWrapper::~OpensslCertWrapper()
 {
     X509_free(x509);
-    PmLogDebug("[%s, %d]", __FUNCTION__, __LINE__);
 }

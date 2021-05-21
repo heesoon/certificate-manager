@@ -48,21 +48,18 @@
 auto delRawPtrX509 = [](X509 *x509)
 {
     X509_free(x509);
-    PmLogDebug("[%s, %d] delRawPtrX509 called ..", __FUNCTION__, __LINE__);
 };
 using unique_ptr_x509_t = std::unique_ptr<X509, decltype(delRawPtrX509)>;
 
 auto delRawPtrBN = [](BIGNUM *bn)
 {
     BN_free(bn);
-    PmLogDebug("[%s, %d] delRawPtrBN called ..", __FUNCTION__, __LINE__);
 };
 using unique_ptr_bn_t = std::unique_ptr<BIGNUM, decltype(delRawPtrBN)>;
 
 auto delRawPtrX509_NAME  = [](X509_NAME *subject)
 {
     X509_NAME_free(subject);
-    PmLogDebug("[%s, %d] delRawPtrX509_NAME called ..", __FUNCTION__, __LINE__);
 };
 using unique_ptr_x509_name_t = std::unique_ptr<X509_NAME, decltype(delRawPtrX509_NAME)>;
 
@@ -75,20 +72,17 @@ bool OpensslCaWrapper::open(const std::string &filename, char mode, int format)
 {
     if(filename.empty() == true)
     {
-        PmLogError("[%s, %d] Bio open fail", __FUNCTION__, __LINE__);
         return false;
     }
 
     std::unique_ptr<OpensslBioWrapper> upTempBio(new OpensslBioWrapper());
     if(upTempBio == nullptr)
     {
-        PmLogError("[%s, %d] Bio open fail", __FUNCTION__, __LINE__);
         return false;
     }
 
     if(upTempBio->open(filename, mode, format) == false)
     {
-        PmLogError("[%s, %d] Bio open fail", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -104,21 +98,18 @@ bool OpensslCaWrapper::read()
 
     if(upBio == nullptr)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     mode = upBio->getOpenMode();
     if(mode != 'r')
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     bio = upBio->getBio();
     if(bio == NULL)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -130,7 +121,6 @@ bool OpensslCaWrapper::read()
     else if(format == FORMAT_PKCS12)
     {
         // TO DO.
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
     else if(format == FORMAT_PEM)
@@ -139,13 +129,11 @@ bool OpensslCaWrapper::read()
     }
     else
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     if(x509 == NULL)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -161,21 +149,18 @@ bool OpensslCaWrapper::write(X509 *x509)
 
     if(upBio == nullptr)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     mode = upBio->getOpenMode();
     if(mode != 'w')
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     bio = upBio->getBio();
     if(bio == NULL)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -187,7 +172,6 @@ bool OpensslCaWrapper::write(X509 *x509)
     else if(format == FORMAT_PKCS12)
     {
         // TO DO.
-        PmLogError("[%s, %d] Not Supported", __FUNCTION__, __LINE__);
         return false;
     }
     else if(format == FORMAT_PEM)
@@ -197,13 +181,11 @@ bool OpensslCaWrapper::write(X509 *x509)
     }
     else
     {
-        PmLogError("[%s, %d] Not Supported", __FUNCTION__, __LINE__);
         return false;
     }
 
     if(ret == 0)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -302,7 +284,6 @@ bool OpensslCaWrapper::setCertTimes(X509 *x509, const char *startdate, const cha
 {
     if(x509 == NULL)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -310,7 +291,6 @@ bool OpensslCaWrapper::setCertTimes(X509 *x509, const char *startdate, const cha
     {
         if(X509_gmtime_adj(X509_getm_notBefore(x509), 0) == NULL)
         {
-            PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
             return false;
         }
     } 
@@ -318,7 +298,6 @@ bool OpensslCaWrapper::setCertTimes(X509 *x509, const char *startdate, const cha
     {
         if(!ASN1_TIME_set_string_X509(X509_getm_notBefore(x509), startdate))
         {
-            PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
             return false;
         }
     }
@@ -327,13 +306,11 @@ bool OpensslCaWrapper::setCertTimes(X509 *x509, const char *startdate, const cha
     {
         if(X509_time_adj_ex(X509_getm_notAfter(x509), days, 0, NULL) == NULL)
         {
-            PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
             return false;
         }
     }
     else if(!ASN1_TIME_set_string_X509(X509_getm_notAfter(x509), enddate))
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -487,13 +464,11 @@ bool OpensslCaWrapper::generateX509(X509 *x509, X509_REQ *x509Req, X509 *x509Ca,
     mode = upBio->getOpenMode();
     if(mode != 'w')
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     if(x509 == NULL || x509Req == NULL || x509Ca == NULL || conf == NULL || caPkey == NULL || serial == NULL || policy == NULL || evpMd == NULL)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -501,7 +476,6 @@ bool OpensslCaWrapper::generateX509(X509 *x509, X509_REQ *x509Req, X509 *x509Ca,
 	x509ReqSubject = X509_REQ_get_subject_name(x509Req);
 	if(x509ReqSubject == NULL)
 	{
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
 	}
 
@@ -509,7 +483,6 @@ bool OpensslCaWrapper::generateX509(X509 *x509, X509_REQ *x509Req, X509 *x509Ca,
 	x509CaSubject = X509_NAME_dup(X509_get_subject_name(x509Ca));
 	if(x509CaSubject == NULL)
 	{
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
 	}
 
@@ -518,7 +491,6 @@ bool OpensslCaWrapper::generateX509(X509 *x509, X509_REQ *x509Req, X509 *x509Ca,
 	subject = upX509Name.get();
 	if(subject == NULL)
 	{
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
 	}
 
@@ -528,7 +500,6 @@ bool OpensslCaWrapper::generateX509(X509 *x509, X509_REQ *x509Req, X509 *x509Ca,
 		cv = sk_CONF_VALUE_value(policy, i);
 		if((j = OBJ_txt2nid(cv->name)) == NID_undef)
 		{
-            PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
             return false;
 		}
 
@@ -566,7 +537,6 @@ bool OpensslCaWrapper::generateX509(X509 *x509, X509_REQ *x509Req, X509 *x509Ca,
 			{
 				if(tne == NULL)
 				{
-                    PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
                     return false;
 				}
 				else
@@ -580,7 +550,6 @@ bool OpensslCaWrapper::generateX509(X509 *x509, X509_REQ *x509Req, X509 *x509Ca,
 
 				if(tne == NULL)
 				{
-                    PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
                     return false;
 				}
 
@@ -590,7 +559,6 @@ again2:
 				j = X509_NAME_get_index_by_OBJ(x509CaSubject, obj, last2);
 				if ((j < 0) && (last2 == -1))
 				{
-                    PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
                     return false;
 				}
 
@@ -608,13 +576,11 @@ again2:
 
 				if(j < 0)
 				{
-                    PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
                     return false;
 				}
 			}
 			else
 			{
-                PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
                 return false;
 			}
 
@@ -622,7 +588,6 @@ again2:
 			{
 				if(!X509_NAME_add_entry(subject, push, -1, 0))
 				{
-                    PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
                     return false;
 				}
 			}
@@ -637,28 +602,24 @@ again2:
     // 5. set serial number to x509
 	if(BN_to_ASN1_INTEGER(serial, X509_get_serialNumber(x509)) == NULL)
 	{
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
 	}
 
     // 5. set issuer name to x509
 	if(!X509_set_issuer_name(x509, X509_get_subject_name(x509Ca)))
 	{
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
 	}
 
     // 6. set subject name to x509
 	if(!X509_set_subject_name(x509, subject))
 	{
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
 	}
 
     // 7. set days to x509
     if(setCertTimes(x509, NULL, NULL, days) == false)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -667,7 +628,6 @@ again2:
 	i = X509_set_pubkey(x509, pkeyPublic);
 	if(i == 0)
 	{
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
 	}
 
@@ -692,7 +652,6 @@ again2:
 
         if((dn_subject = X509_NAME_dup(subject)) == NULL) 
 		{
-            PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
             return false;
         }
 
@@ -707,7 +666,6 @@ again2:
         if(!X509_set_subject_name(x509, dn_subject))
 		{
             X509_NAME_free(dn_subject);
-            PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
             return false;
         }
         X509_NAME_free(dn_subject);		
@@ -1015,7 +973,6 @@ bool OpensslCaWrapper::check(X509_STORE *ctx, const std::string &inputCertFile, 
     x509 = opensslCertWrapper.getX509();
     if(x509 == NULL)
     {
-        PmLogDebug("[%s, %d]", __FUNCTION__, __LINE__);
         goto end;
     }
 
@@ -1113,5 +1070,4 @@ X509* OpensslCaWrapper::getX509()
 OpensslCaWrapper::~OpensslCaWrapper()
 {
     X509_free(x509);
-    PmLogDebug("[%s, %d]", __FUNCTION__, __LINE__);
 }

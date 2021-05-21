@@ -6,7 +6,6 @@
 auto delRawPtrEvpPkeyCtx = [](EVP_PKEY_CTX *ctx)
 {
     EVP_PKEY_CTX_free(ctx);
-    PmLogDebug("[%s, %d] delRawPtrEvpPkeyCtx called ..", __FUNCTION__, __LINE__);
 };
 using unique_ptr_evpPkeyCtx_type_t = std::unique_ptr<EVP_PKEY_CTX, decltype(delRawPtrEvpPkeyCtx)>;
 
@@ -20,32 +19,27 @@ bool OpensslRsaKeyWrapper::createRsaPkey(int nBits)
     unique_ptr_evpPkeyCtx_type_t upEvpPkeyCtx(EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL), delRawPtrEvpPkeyCtx);
     if(upEvpPkeyCtx == nullptr)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     if(EVP_PKEY_keygen_init(upEvpPkeyCtx.get()) <= 0)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     //if(nBits <= OPENSSL_RSA_FIPS_MIN_MODULUS_BITS || nBits >= OPENSSL_RSA_MAX_MODULUS_BITS)
     if(nBits <= 1024 || nBits >= 16384)
     {
-        PmLogError("[%s, %d] Out of Valid Private Key Length (1024 ~ 16384)", __FUNCTION__, __LINE__);
         return false;
     }
 
     if(EVP_PKEY_CTX_set_rsa_keygen_bits(upEvpPkeyCtx.get(), nBits) <= 0)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     if(EVP_PKEY_keygen(upEvpPkeyCtx.get(), &pkey) <= 0)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -56,7 +50,6 @@ bool OpensslRsaKeyWrapper::open(const std::string &inputKeyFilename, char mode, 
 {
     if(inputKeyFilename.empty() == true)
     {
-        PmLogError("[%s, %d] Bio open fail", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -64,7 +57,6 @@ bool OpensslRsaKeyWrapper::open(const std::string &inputKeyFilename, char mode, 
     {
         if(createRsaPkey(nBits) == false)
         {
-            PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
             return false;
         }
     }
@@ -72,13 +64,11 @@ bool OpensslRsaKeyWrapper::open(const std::string &inputKeyFilename, char mode, 
     std::unique_ptr<OpensslBioWrapper> upTempBio(new OpensslBioWrapper());
     if(upTempBio == nullptr)
     {
-        PmLogError("[%s, %d] Bio open fail", __FUNCTION__, __LINE__);
         return false;
     }
 
     if(upTempBio->open(inputKeyFilename, mode, format) == false)
     {
-        PmLogError("[%s, %d] Bio open fail", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -90,26 +80,22 @@ bool OpensslRsaKeyWrapper::open(const std::string &inputKeyFilename, char mode, 
 {
     if(inputKeyFilename.empty() == true)
     {
-        PmLogError("[%s, %d] Bio open fail", __FUNCTION__, __LINE__);
         return false;
     }
 
     if(mode != 'r')
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     std::unique_ptr<OpensslBioWrapper> upTempBio(new OpensslBioWrapper());
     if(upTempBio == nullptr)
     {
-        PmLogError("[%s, %d] Bio open fail", __FUNCTION__, __LINE__);
         return false;
     }
 
     if(upTempBio->open(inputKeyFilename, mode, format) == false)
     {
-        PmLogError("[%s, %d] Bio open fail", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -125,21 +111,18 @@ bool OpensslRsaKeyWrapper::read(PKEY_TYPE_T pkeyType, const std::string &passwd)
 
     if(upBio == nullptr)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     mode = upBio->getOpenMode();
     if(mode != 'r')
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     bio = upBio->getBio();
     if(bio == NULL)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -191,12 +174,11 @@ bool OpensslRsaKeyWrapper::read(PKEY_TYPE_T pkeyType, const std::string &passwd)
     }
     else
     {
-        PmLogError("[%s, %d] Not Supported", __FUNCTION__, __LINE__);
+        //PmLogError("[%s, %d] Not Supported", __FUNCTION__, __LINE__);
     }
 
     if(pkey == NULL)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -213,55 +195,33 @@ bool OpensslRsaKeyWrapper::write(EVP_PKEY *pkey, PKEY_TYPE_T pkeyType, const std
 
     if(pkey == NULL)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     if(upBio == nullptr)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     mode = upBio->getOpenMode();
     if(mode != 'w')
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     bio = upBio->getBio();
     if(bio == NULL)
     {
-        PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     if( (passwd.empty() == false) && (cipherName.empty() == false) )
     {
-#if 0        
-        // keygeneration with encryption and password.
-        if(passwd.size() < 4 || passwd.size() > 8)
-        {
-            // too much short password so return.
-            PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
-            return false;
-        }
-#endif
-#if 0
-        if(std::regex_match(passwd, std::regex("(\\+|-)?[0-9]*(\\.?([0-9]+))$")))
-        {
-            // all character is number;
-            return false;
-        }
-#endif
-
         password = const_cast<char *>(passwd.c_str());
         //password = passwd.c_str();
         cipherp = EVP_get_cipherbyname(cipherName.c_str());
         if(cipherp == NULL)
         {
-            PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
             return false;
         }
 
@@ -270,7 +230,6 @@ bool OpensslRsaKeyWrapper::write(EVP_PKEY *pkey, PKEY_TYPE_T pkeyType, const std
                 EVP_CIPHER_mode(cipherp) == EVP_CIPH_XTS_MODE ||
                 EVP_CIPHER_mode(cipherp) == EVP_CIPH_OCB_MODE)
         {
-            PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
             return false;
         }
     }
@@ -284,7 +243,6 @@ bool OpensslRsaKeyWrapper::write(EVP_PKEY *pkey, PKEY_TYPE_T pkeyType, const std
         {
             if(!i2d_PrivateKey_bio(bio, pkey))
             {
-                PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
                 return false;
             }
         }
@@ -293,13 +251,11 @@ bool OpensslRsaKeyWrapper::write(EVP_PKEY *pkey, PKEY_TYPE_T pkeyType, const std
             if(!PEM_write_bio_PrivateKey(bio, pkey, cipherp, NULL, 0, NULL, (unsigned char*)password))
             //if (!PEM_write_bio_PKCS8PrivateKey(bio, pkey, cipherp, NULL, 0, 0, (unsigned char*)password))
             {
-                PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
                 return false;
             }
         }
         else
         {
-            PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
             return false;
         }
     }
@@ -309,7 +265,6 @@ bool OpensslRsaKeyWrapper::write(EVP_PKEY *pkey, PKEY_TYPE_T pkeyType, const std
         {
             if(!i2d_PUBKEY_bio(bio, pkey))
             {
-                PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
                 return false;
             }
         }
@@ -317,19 +272,17 @@ bool OpensslRsaKeyWrapper::write(EVP_PKEY *pkey, PKEY_TYPE_T pkeyType, const std
         {
             if(!PEM_write_bio_PUBKEY(bio, pkey))
             {
-                PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
                 return false;
             }
         }
         else
         {
-            PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
             return false;
         }
     }
     else
     {
-        PmLogError("[%s, %d] Not Supported", __FUNCTION__, __LINE__);
+        //PmLogError("[%s, %d] Not Supported", __FUNCTION__, __LINE__);
     }
 
     return true;
@@ -349,5 +302,4 @@ void OpensslRsaKeyWrapper::close()
 OpensslRsaKeyWrapper::~OpensslRsaKeyWrapper()
 {
     EVP_PKEY_free(pkey);
-    PmLogDebug("[%s, %d]", __FUNCTION__, __LINE__);
 }

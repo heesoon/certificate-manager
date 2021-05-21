@@ -17,14 +17,12 @@ bool OpensslConfWrapper::open(const std::string &inputConfFilename)
     OpensslBioWrapper opensslBioWrapper;
     if(opensslBioWrapper.open(inputConfFilename, 'r', FORMAT_TEXT) == false)
     {
-        PmLogError("[%s, %d] Bio Open Fail", __FUNCTION__, __LINE__);
         goto error;
     }
 
     tconf = NCONF_new(NULL);
 	if(tconf == NULL)
 	{
-        PmLogError("[%s, %d] NCONF_new Fail", __FUNCTION__, __LINE__);
         goto error;
 	}
 
@@ -32,14 +30,12 @@ bool OpensslConfWrapper::open(const std::string &inputConfFilename)
     ret = NCONF_load_bio(tconf, bio, &errorline);
     if(ret == 0)
     {
-        PmLogError("[%s, %d] NCONF_load_bio fail", __FUNCTION__, __LINE__);
         goto error;
     }
 
 	ret = CONF_modules_load(tconf, NULL, 0);
 	if(ret <= 0)
 	{
-        PmLogError("[%s, %d] CONF_modules_load fail", __FUNCTION__, __LINE__);
         goto error;
 	}
 
@@ -57,14 +53,12 @@ char* OpensslConfWrapper::lookupEntry(const std::string &section, const std::str
 
     if(conf == NULL)
     {
-		PmLogError("[%s, %d] CONF is NULL", __FUNCTION__, __LINE__);
         return NULL;
     }
 
     entry = NCONF_get_string(conf, section.c_str(), tag.c_str());
     if(entry == NULL)
     {
-		PmLogError("[%s, %d] entry is NULL", __FUNCTION__, __LINE__);
         return NULL;
     }
 
@@ -77,7 +71,6 @@ char* OpensslConfWrapper::getString(const std::string &section, const std::strin
 
     if(s == NULL)
     {
-		PmLogError("[%s, %d] NCONF_get_string is NULL", __FUNCTION__, __LINE__);
         return NULL;
     }
 
@@ -92,7 +85,6 @@ long OpensslConfWrapper::getNumber(const std::string &section, const std::string
     ret = NCONF_get_number(conf, section.c_str(), tag.c_str(), &result);
     if(ret == 0)
     {
-		PmLogError("[%s, %d] NCONF_get_number is fail", __FUNCTION__, __LINE__);
         result = 0;
         return result;
     }
@@ -119,5 +111,4 @@ void OpensslConfWrapper::close()
 OpensslConfWrapper::~OpensslConfWrapper()
 {
     NCONF_free(conf);
-    PmLogDebug("[%s,%d]", __FUNCTION__, __LINE__);
 }
