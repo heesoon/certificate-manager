@@ -1,13 +1,10 @@
 #include "CertificateManager.hpp"
 
-#define SERVICE_NAME "com.webos.service.certificateManager"
-
 int main(int argc, char **argv)
 {
 	try
 	{
-		CertificateManager certificateManager(SERVICE_NAME);
-		certificateManager.run();
+		CertificateManager certificateManager;
 	}
 	catch(LS::Error &err)
 	{

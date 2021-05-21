@@ -1,14 +1,7 @@
 #include "CertificateManager.hpp"
 
-/*
-CertificateManager::CertificateManager(const char *serviceName)
-{
-	LS::Handle(LS::registerService(serviceName));
-	upGmainLoop = std::move({ g_main_loop_new(nullptr, false), g_main_loop_unref });
-}
-*/
-
-void CertificateManager::run()
+const std::string service = "com.webos.service.certificateManager";
+CertificateManager::CertificateManager() : LS::Handle(LS::registerService(service.c_str()))
 {
 	LS_CATEGORY_BEGIN(CertificateManager, "/")
 		LS_CATEGORY_METHOD(csr)
@@ -18,6 +11,7 @@ void CertificateManager::run()
 
 	//attach to mainloop and run it
 	attachToLoop(upGmainLoop.get());
+	// run the gmainloop
 	g_main_loop_run(upGmainLoop.get());
 }
 
