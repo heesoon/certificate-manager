@@ -25,7 +25,7 @@ bool CertificateManager::generateKey(LSMessage &message)
     //LSErrorSafe lserror;
     //bool subscribed = false;
 	bool success = false;
-	char *keyOutPath = NULL;
+	std::string keyOutPath = "";
 	int nBits = 0;
 
 	auto *appid = LSMessageGetApplicationID(&message);
@@ -46,7 +46,7 @@ bool CertificateManager::generateKey(LSMessage &message)
     pbnjson::JValue request = pbnjson::Object();
     request = JUtil::parse(LSMessageGetPayload(&message), "", nullptr);
 
-	keyOutPath = request['KeyOutPath'].asString<char>();
+	keyOutPath = request['KeyOutPath'].asString();
 	nBits = request['keySize'].asNumber<int>();
 
 
