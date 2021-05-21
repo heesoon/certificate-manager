@@ -23,11 +23,12 @@ CertificateManager::CertificateManager() : LS::Handle(LS::registerService(servic
 
 bool CertificateManager::generateKey(LSMessage &message)
 {
-    //LSErrorSafe lserror;
+    LSErrorSafe lserror;
     //bool subscribed = false;
-	bool success = false;
-	std::string keyOutPath = "";
+	bool success = true;
+	std::string outputKeyFilename = "";
 	int nBits = 0;
+	EVP_PKEY *pkey = NULL;
 
 	auto *appid = LSMessageGetApplicationID(&message);
 	auto servicename = LSMessageGetSenderServiceName(&message);
@@ -47,12 +48,43 @@ bool CertificateManager::generateKey(LSMessage &message)
     pbnjson::JValue request = pbnjson::Object();
     request = JUtil::parse(LSMessageGetPayload(&message), "", nullptr);
 
-	keyOutPath = request['KeyOutPath'].asString();
-	nBits = request['keySize'].asNumber<int>();
+	outputKeyFilename = request['outputKeyFilename'].asString();
+	if(keyOutPath.empty())
+	{
+		success = false;
+		goto end;
+	}
 
+	nBits = request['keySize'].asNumber<int>();
+	if(nBits <= 1024 || nBits >= 16384)
+	{
+		success = false;
+		goto end;
+	}
+
+	OpensslRsaKeyWrapper opensslRsaKeyWrapper;
+	if(opensslRsaKeyWrapper.open(outputKeyFilename, 'w', FORMAT_PEM, nBits) == false)
+	{
+		success = false;
+		goto end;
+	}
+
+	pkey = opensslRsaKeyWrapper.getPkey();
+	if(pkey == NULL)
+	{
+		success = false;
+		goto end;
+	}
+
+	if(opensslRsaKeyWrapper.write(pkey, PKEY_TYPE_T::PKEY_PRIVATE_KEY, "", "") == false)
+	{
+		success = false;
+		goto end;
+	}
 
 	pbnjson::JValue json = pbnjson::Object();
 
+end:
 
 	return true;
 }
