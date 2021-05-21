@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "JUtil.h"
-#include "Utils.h"
+#include "JUtil.hpp"
+#include "Utils.hpp"
 
 JUtil::Error::Error()
     : m_code(Error::None)
