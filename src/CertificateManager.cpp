@@ -3,6 +3,7 @@
 #include "Log.hpp"
 #include <JUtil.hpp>
 #include <pbnjson.hpp>
+#include <string>
 
 const std::string service = "com.webos.service.certificateManager";
 CertificateManager::CertificateManager() : LS::Handle(LS::registerService(service.c_str()))
