@@ -28,11 +28,13 @@ bool CertificateManager::generateKey(LSMessage &message)
 	auto *method = LSMessageGetMethod(&message);
 	auto *category = LSMessageGetCategory(&message);
 
+/*
     LOG_INFO(MSGID_GENERATOR_KEY, 4,
         PMLOGKS("appid", appid),
         PMLOGKS("servicename", servicename),
         PMLOGKS("method", method),
         PMLOGKS("category", category), " ");
+*/
 	//if (LSMessageIsSubscription(&message))
 	//	subscribed = LSSubscriptionProcess(lshandle, &message, &subscribed, &lserror);
 
