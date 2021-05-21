@@ -25,4 +25,5 @@
 #define LOG_WARNING(...)              PmLogWarning(GetCertificateManagerPmLogContext(), ##__VA_ARGS__)
 #define LOG_ERROR(...)                PmLogError(GetCertificateManagerPmLogContext(), ##__VA_ARGS__)
 
+#define MSGID_GENERATOR_KEY "GET_KEY"
 #endif // LOG_HPP_INCLUDED

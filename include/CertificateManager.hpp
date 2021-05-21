@@ -37,6 +37,7 @@ public :
 	CertificateManager& operator =(CertificateManager const&) = delete;
 	CertificateManager& operator =(CertificateManager && ) = delete;
 
+	bool generateKey(LSMessage &message);
 	bool csr(LSMessage &message);
 	bool sign(LSMessage &message);
 	bool verify(LSMessage &message);
