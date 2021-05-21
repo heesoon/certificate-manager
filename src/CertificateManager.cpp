@@ -1,5 +1,6 @@
 #include "CertificateManager.hpp"
 #include "Log.hpp"
+#include <JUtil.h>
 #include <pbnjson.hpp>
 
 const std::string service = "com.webos.service.certificateManager";
@@ -28,17 +29,19 @@ bool CertificateManager::generateKey(LSMessage &message)
 	auto *method = LSMessageGetMethod(&message);
 	auto *category = LSMessageGetCategory(&message);
 
-/*
+
     LOG_INFO(MSGID_GENERATOR_KEY, 4,
         PMLOGKS("appid", appid),
         PMLOGKS("servicename", servicename),
         PMLOGKS("method", method),
         PMLOGKS("category", category), " ");
-*/
+
 	//if (LSMessageIsSubscription(&message))
 	//	subscribed = LSSubscriptionProcess(lshandle, &message, &subscribed, &lserror);
 
-	//pbnjson::JValue request = pbnjson::Object();
+    pbnjson::JValue request = pbnjson::Object();
+    request = JUtil::parse(LSMessageGetPayload(&message), "", nullptr);
+
 	return true;
 }
 
