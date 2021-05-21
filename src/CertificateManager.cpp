@@ -1,4 +1,5 @@
 #include "CertificateManager.hpp"
+#include "OpensslRsaKeyWrapper.hpp"
 #include "Log.hpp"
 #include <JUtil.hpp>
 #include <pbnjson.hpp>
@@ -23,6 +24,9 @@ bool CertificateManager::generateKey(LSMessage &message)
 {
     //LSErrorSafe lserror;
     //bool subscribed = false;
+	bool success = false;
+	char *keyOutPath = NULL;
+	int nBits = 0;
 
 	auto *appid = LSMessageGetApplicationID(&message);
 	auto servicename = LSMessageGetSenderServiceName(&message);
@@ -41,6 +45,13 @@ bool CertificateManager::generateKey(LSMessage &message)
 
     pbnjson::JValue request = pbnjson::Object();
     request = JUtil::parse(LSMessageGetPayload(&message), "", nullptr);
+
+	keyOutPath = request['KeyOutPath'].asString<char>();
+	nBits = request['keySize'].asNumber<int>();
+
+
+	pbnjson::JValue json = pbnjson::Object();
+
 
 	return true;
 }
