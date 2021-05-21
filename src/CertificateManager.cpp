@@ -23,13 +23,13 @@ CertificateManager::CertificateManager() : LS::Handle(LS::registerService(servic
 
 bool CertificateManager::generateKey(LSMessage &message)
 {
-    //LSErrorSafe lserror;
-    //bool subscribed = false;
 	bool success = true;
-	std::string outputKeyFilename = "";
 	int nBits = 0;
 	EVP_PKEY *pkey = NULL;
 	std::string result = "";
+	std::string outputKeyFilename = "";
+	pbnjson::JValue json;
+	pbnjson::JValue request;
 	OpensslRsaKeyWrapper opensslRsaKeyWrapper;
 	LS::Message lsResponseMsg(&message);
 
@@ -38,17 +38,13 @@ bool CertificateManager::generateKey(LSMessage &message)
 	auto *method = LSMessageGetMethod(&message);
 	auto *category = LSMessageGetCategory(&message);
 
-
     LOG_INFO(MSGID_GENERATOR_KEY, 4,
         PMLOGKS("appid", appid),
         PMLOGKS("servicename", servicename),
         PMLOGKS("method", method),
         PMLOGKS("category", category), " ");
 
-	//if (LSMessageIsSubscription(&message))
-	//	subscribed = LSSubscriptionProcess(lshandle, &message, &subscribed, &lserror);
-	pbnjson::JValue json = pbnjson::Object();
-    pbnjson::JValue request = pbnjson::Object();
+	request = pbnjson::Object();
     request = JUtil::parse(LSMessageGetPayload(&message), "", nullptr);
 
 	outputKeyFilename = request['KeyFilename'].asString();
@@ -85,6 +81,8 @@ bool CertificateManager::generateKey(LSMessage &message)
 	}
 
 end:
+	json = pbnjson::Object();
+
 	if(success = false)
 	{
         json.put("returnValue", false);
