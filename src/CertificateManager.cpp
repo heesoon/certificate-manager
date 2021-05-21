@@ -1,6 +1,6 @@
 #include "CertificateManager.hpp"
 #include "Log.hpp"
-#include <JUtil.h>
+#include <JUtil.hpp>
 #include <pbnjson.hpp>
 
 const std::string service = "com.webos.service.certificateManager";
