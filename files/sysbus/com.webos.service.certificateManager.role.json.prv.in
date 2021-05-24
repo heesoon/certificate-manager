@@ -5,7 +5,8 @@
 	"permissions" : [
 		{
 			"service" : "com.webos.service.certificateManager",
-			"outbound" : ["com.palm.db"]
+			"inbound" : ["*"]
+			"outbound" : ["*"]
 		}
 	]
 }
