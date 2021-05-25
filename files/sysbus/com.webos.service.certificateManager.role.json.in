@@ -1,5 +1,5 @@
 {
-	"exeName" : "@WEBOS_INSTALL_SBINDIR@/certificate-manager",
+	"exeName" : "@WEBOS_INSTALL_SBINDIR@/com.webos.service.certificateManager",
 	"allowedNames" : ["com.webos.service.certificateManager"],
 	"type" : "regular",
 	"trustLevel": "oem",
