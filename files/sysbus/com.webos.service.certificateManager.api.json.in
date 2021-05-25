@@ -1,0 +1,14 @@
+{
+	"certificateManager.query" : [
+		"com.web.service.certificateManager/generateKey",
+		"com.web.service.certificateManager/csr",
+		"com.web.service.certificateManager/sign",
+		"com.web.service.certificateManager/verify"
+	],
+	"certificateManager.operation" : [
+		"com.web.service.certificateManager/generateKey",
+		"com.web.service.certificateManager/csr",
+		"com.web.service.certificateManager/sign",
+		"com.web.service.certificateManager/verify"
+	]
+}

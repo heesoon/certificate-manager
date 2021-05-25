@@ -1,0 +1,5 @@
+{
+    "allowedNames": ["com.webos.service.certificateManager"],
+    "certificateManager.query": ["dev"],
+    "certificateManager.operation": ["dev"]
+}

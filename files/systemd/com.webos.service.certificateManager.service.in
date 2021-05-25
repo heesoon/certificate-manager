@@ -1,0 +1,12 @@
+[Unit]
+Description=webos - "%n"
+Requires=ls-hubd.service
+After=ls-hubd.service
+
+[Service]
+Type=simple
+OOMScoreAdjust=-500
+EnvironmentFile=-/var/systemd/system/env/com.webos.service.certificateManager.env
+Environment=CHARSET=UTF-8
+ExecStart=/usr/sbin/com.webos.service.certificateManager
+Restart=on-failure

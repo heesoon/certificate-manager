@@ -1,4 +1,0 @@
-[D-BUS service]
-Name=com.webos.service.certificateManager
-Exec=@WEBOS_INSTALL_BINDIR@/certificate-manager
-Type=dynamic

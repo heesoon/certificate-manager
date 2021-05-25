@@ -14,7 +14,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-project(certificate-manager)
+project(com.webos.service.certificateManager)
 
 include(FindPkgConfig)
 
@@ -69,9 +69,9 @@ target_link_libraries (${PROJECT_NAME}
 	${OPENSSL_LDFLAGS}
 )
 
-webos_build_program(NAME ${PROJECT_NAME})
+webos_build_program(NAME ${PROJECT_NAME} ADMIN)
 webos_build_system_bus_files()
-webos_build_db8_files()
+#webos_build_db8_files()
 
 # add bin file /usr/bin/certificate-manager
 #install (TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)

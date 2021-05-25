@@ -1,7 +1,0 @@
-{
-	"certificateManager" : [
-		"com.web.service.certificateManager/csr",
-		"com.web.service.certificateManager/sign",
-		"com.web.service.certificateManager/verify"
-	]
-}
