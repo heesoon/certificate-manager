@@ -71,6 +71,7 @@ target_link_libraries (${PROJECT_NAME}
 
 webos_build_program(NAME ${PROJECT_NAME} ADMIN)
 webos_build_system_bus_files()
+webos_build_configured_file(files/systemd/com.webos.service.certificateManager.service SYSCONFDIR systemd/system)
 #webos_build_db8_files()
 
 # add bin file /usr/bin/certificate-manager
