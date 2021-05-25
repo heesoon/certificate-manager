@@ -1,14 +1,14 @@
 {
 	"certificateManager.query" : [
-		"com.web.service.certificateManager/generateKey",
-		"com.web.service.certificateManager/csr",
-		"com.web.service.certificateManager/sign",
-		"com.web.service.certificateManager/verify"
+		"com.webos.service.certificateManager/generateKey",
+		"com.webos.service.certificateManager/csr",
+		"com.webos.service.certificateManager/sign",
+		"com.webos.service.certificateManager/verify"
 	],
 	"certificateManager.operation" : [
-		"com.web.service.certificateManager/generateKey",
-		"com.web.service.certificateManager/csr",
-		"com.web.service.certificateManager/sign",
-		"com.web.service.certificateManager/verify"
+		"com.webos.service.certificateManager/generateKey",
+		"com.webos.service.certificateManager/csr",
+		"com.webos.service.certificateManager/sign",
+		"com.webos.service.certificateManager/verify"
 	]
 }
