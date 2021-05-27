@@ -6,7 +6,7 @@ After=ls-hubd.service
 [Service]
 Type=simple
 OOMScoreAdjust=-500
-EnvironmentFile=-/var/systemd/system/env/com.webos.service.certificateManager.env
+EnvironmentFile=-/var/systemd/system/env/com.webos.service.certificatemanager.env
 Environment=CHARSET=UTF-8
-ExecStart=/usr/sbin/com.webos.service.certificateManager
+ExecStart=/usr/sbin/com.webos.service.certificatemanager
 Restart=on-failure

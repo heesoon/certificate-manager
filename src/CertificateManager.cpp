@@ -4,17 +4,22 @@
 #include <JUtil.hpp>
 #include <pbnjson.hpp>
 #include <string>
+#include <iostream>
 
-const std::string service = "com.webos.service.certificateManager";
+const std::string service = "com.webos.service.certificatemanager";
 CertificateManager::CertificateManager() : LS::Handle(LS::registerService(service.c_str()))
 {
+	std::cout << "in 1. CertificateManager ...... " << std::endl;
+
 	LS_CATEGORY_BEGIN(CertificateManager, "/")
 		LS_CATEGORY_METHOD(generateKey)
-		LS_CATEGORY_METHOD(csr)
-		LS_CATEGORY_METHOD(sign)
-		LS_CATEGORY_METHOD(verify)
+		//LS_CATEGORY_METHOD(csr)
+		//LS_CATEGORY_METHOD(sign)
+		//LS_CATEGORY_METHOD(verify)
 	LS_CATEGORY_END
 
+
+	std::cout << "in 2. CertificateManager ...... " << std::endl;
 	//attach to mainloop and run it
 	attachToLoop(upGmainLoop.get());
 	// run the gmainloop
@@ -101,6 +106,7 @@ end:
 	return success ? true : false;
 }
 
+/*
 bool CertificateManager::csr(LSMessage &message)
 {
 	 //LS::Message request(&message);
@@ -121,3 +127,4 @@ bool CertificateManager::verify(LSMessage &message)
 	 //request.respond(R"json({"bus":"public"})json");
 	 return true;
 }
+*/

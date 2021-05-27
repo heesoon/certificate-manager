@@ -1,5 +1,0 @@
-{
-    "com.webos.service.certificateManager": [
-        "physicaldevice.query"
-    ]
-}

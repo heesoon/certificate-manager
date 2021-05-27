@@ -1,0 +1,8 @@
+{
+    "com.webos.service.certificatemanager.group":[
+        "com.webos.service.certificatemanager/generateKey",
+		"com.webos.service.certificatemanager/csr",
+		"com.webos.service.certificatemanager/sign",
+		"com.webos.service.certificatemanager/verify"
+    ]
+}

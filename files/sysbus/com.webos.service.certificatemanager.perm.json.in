@@ -1,0 +1,6 @@
+{
+    "com.webos.service.certificatemanager":[
+        "time.query"
+    ]
+}
+
