@@ -9,6 +9,7 @@ const std::string serviceName = "com.webos.service.certificatemanager";
 
 static bool generateKey(LSHandle *sh, LSMessage* message, void* ctx)
 {
+#if 0	
     //PmLogInfo(getPmLogContext(), "HANDLE_HELLO", 0, "hello method called");
 
     pbnjson::JValue reply = pbnjson::Object();
@@ -29,6 +30,12 @@ static bool generateKey(LSHandle *sh, LSMessage* message, void* ctx)
         return false;
     }
     return true;
+#endif
+	bool success = true;
+	unsigned int keySize = 0;
+	std::string outputKeyFilename = "";
+	CertificateManager certificateManager;
+	pbnjson::JValue request;
 }
 
 static bool csr(LSHandle *sh, LSMessage* message, void* ctx)

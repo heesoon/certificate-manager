@@ -20,15 +20,9 @@
 /*-----------------------------------------------------------------------------
  (File Inclusions)
  ------------------------------------------------------------------------------*/
-#include <memory>
-#include <luna-service2/lunaservice.hpp>
-#include <pbnjson.hpp>
-
-class CertificateManager : public LS::Handle
+class CertificateManager
 {
 private :
-	using unique_ptr_mainLoop_t = std::unique_ptr<GMainLoop, void (*)(GMainLoop *)>;
-	unique_ptr_mainLoop_t upGmainLoop = {g_main_loop_new(nullptr, false), g_main_loop_unref};
 
 public :
 	CertificateManager();
@@ -37,10 +31,10 @@ public :
 	CertificateManager& operator =(CertificateManager const&) = delete;
 	CertificateManager& operator =(CertificateManager && ) = delete;
 
-	bool generateKey(LSMessage &message);
-	bool csr(LSMessage &message);
-	bool sign(LSMessage &message);
-	bool verify(LSMessage &message);
+	bool generateKey(std::string outputKeyFilename, unsigned int keySize);
+	bool csr();
+	bool sign();
+	bool verify();
 };
 
 #endif /*CERTIFICATE_MANAGER_SERVICE_H_*/
