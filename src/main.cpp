@@ -9,7 +9,7 @@ const std::string serviceName = "com.webos.service.certificatemanager";
 
 static bool generateKey(LSHandle *sh, LSMessage* message, void* ctx)
 {
-	unsigned int keySize = 0;
+	int keySize = 0;
 	std::string outputKeyFilename = "";
     std::string errorText = "";
 	pbnjson::JValue request;
@@ -17,6 +17,8 @@ static bool generateKey(LSHandle *sh, LSMessage* message, void* ctx)
     pbnjson::JDomParser parser(NULL);
     pbnjson::JSchemaFragment schema("{}");
     CertificateManager certificateManager;
+	LSError lserror;
+	LSErrorInit(&lserror);
     
     const char *payload = LSMessageGetPayload(message);
     if(!parser.parse(payload, schema))
@@ -35,7 +37,7 @@ static bool generateKey(LSHandle *sh, LSMessage* message, void* ctx)
 	keySize = request['keySize'].asNumber<int>();
 	if(keySize <= 1024 || keySize >= 16384)
 	{
-        errorText = "keysize out of range(1024 ~ 16384");
+        errorText = "keysize out of range(1024 ~ 16384";
 		goto error;
 	}
 
@@ -54,6 +56,9 @@ error:
     reply.put("returnValue", false);
     reply.put("errorText", errorText.c_str());
     return false;
+
+    if (!LSMessageReply(lshandle, msg, channeltypelist.stringify().c_str(), lserror))
+          return false;
 }
 
 static bool csr(LSHandle *sh, LSMessage* message, void* ctx)

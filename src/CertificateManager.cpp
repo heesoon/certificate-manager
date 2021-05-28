@@ -55,4 +55,3 @@ bool CertificateManager::verify()
 {
 	 return true;
 }
-*/
