@@ -31,7 +31,7 @@ public :
 	CertificateManager& operator =(CertificateManager const&) = delete;
 	CertificateManager& operator =(CertificateManager && ) = delete;
 
-	bool generateKey(std::string outputKeyFilename, unsigned int keySize);
+	bool generateKey(std::string outputKeyFilename, int keySize);
 	bool csr();
 	bool sign();
 	bool verify();

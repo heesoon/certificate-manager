@@ -53,9 +53,6 @@ set(SOURCES
 	"OpensslCsrWrapper.cpp"
 	"OpensslCaWrapper.cpp"
 	"CertificateManager.cpp"
-	"JUtil.cpp"
-	"Utils.cpp"
-	"Singleton.cpp"
 	"main.cpp"
 )
 
