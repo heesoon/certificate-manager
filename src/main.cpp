@@ -9,6 +9,7 @@ const std::string serviceName = "com.webos.service.certificatemanager";
 
 static bool generateKey(LSHandle *sh, LSMessage* message, void* ctx)
 {
+    bool success = true;
 	int keySize = 0;
 	std::string outputKeyFilename = "";
     std::string errorText = "";
@@ -23,42 +24,61 @@ static bool generateKey(LSHandle *sh, LSMessage* message, void* ctx)
     const char *payload = LSMessageGetPayload(message);
     if(!parser.parse(payload, schema))
     {
-		goto error;
+        success = false;
+        errorText = "schema parsing error";
+		goto end;
     }
 
     request = parser.getDom();
     outputKeyFilename = request['KeyFilename'].asString();
 	if(outputKeyFilename.empty())
 	{
+        success = false;
         errorText = "wrong keyfile name or path";
-		goto error;
+		goto end;
 	}
 
 	keySize = request['keySize'].asNumber<int>();
 	if(keySize <= 1024 || keySize >= 16384)
 	{
+        success = false;
         errorText = "keysize out of range(1024 ~ 16384";
-		goto error;
+		goto end;
 	}
 
     if(certificateManager.generateKey(outputKeyFilename, keySize) == false)
     {
-		goto error;        
+        success = false;
+        errorText = "certificateManager function error";
+		goto end;
     }
 
-    reply.put("KeyFilename", outputKeyFilename.c_str());
-    reply.put("keySize", keySize);
-    reply.put("returnValue", true);
+end:
+
+    if(success == true)
+    {
+        reply.put("KeyFilename", outputKeyFilename.c_str());
+        reply.put("keySize", keySize);
+        reply.put("returnValue", true);
+    }
+    else
+    {
+        reply.put("returnValue", false);
+        reply.put("errorText", errorText.c_str());
+    }
+
+    if(!LSMessageReply(sh, message, reply.stringify().c_str(), &lserror))
+    {
+        LSErrorPrint(&lserror, stderr);
+        return false;
+    }
+
+    if (LSErrorIsSet(&lserror))
+    {
+        LSErrorFree(&lserror);
+    }
+
     return true;
-
-error:
-
-    reply.put("returnValue", false);
-    reply.put("errorText", errorText.c_str());
-    return false;
-
-    if (!LSMessageReply(lshandle, msg, channeltypelist.stringify().c_str(), lserror))
-          return false;
 }
 
 static bool csr(LSHandle *sh, LSMessage* message, void* ctx)
