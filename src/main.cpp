@@ -4,6 +4,7 @@
 #include <PmLog.h>
 #include <pbnjson.hpp>
 #include "CertificateManager.hpp"
+#include <iostream>
 
 const std::string serviceName = "com.webos.service.certificatemanager";
 
@@ -30,7 +31,7 @@ static bool generateKey(LSHandle *sh, LSMessage* message, void* ctx)
     }
 
     request = parser.getDom();
-    outputKeyFilename = request['KeyFilename'].asString();
+    outputKeyFilename = request["KeyFilename"].asString();
 	if(outputKeyFilename.empty())
 	{
         success = false;
@@ -38,7 +39,7 @@ static bool generateKey(LSHandle *sh, LSMessage* message, void* ctx)
 		goto end;
 	}
 
-	keySize = request['keySize'].asNumber<int>();
+	keySize = request["keySize"].asNumber<int>();
 	if(keySize <= 1024 || keySize >= 16384)
 	{
         success = false;
@@ -78,7 +79,7 @@ end:
         LSErrorFree(&lserror);
     }
 
-    return true;
+    return success ? true : false;
 }
 
 static bool csr(LSHandle *sh, LSMessage* message, void* ctx)
