@@ -18,11 +18,75 @@ cmake_minimum_required(VERSION 2.8.7)
 project(com.webos.service.certificatemanager)
 
 include(webOS/webOS)
-
 webos_modules_init(1 0 0)
 webos_component(1 0 0)
+
+include(FindPkgConfig)
+
+pkg_check_modules(GLIB2 REQUIRED glib-2.0)
+webos_add_compiler_flags(ALL ${GLIB2_CFLAGS})
+
+pkg_check_modules(LUNASERVICE2 REQUIRED luna-service2)
+webos_add_compiler_flags(ALL ${LUNASERVICE2_CFLAGS})
+
+pkg_check_modules(PMLOG REQUIRED PmLogLib)
+include_directories(${PMLOG_INCLUDE_DIRS})
+webos_add_compiler_flags(ALL ${PMLOG_CFLAGS_OTHER})
+
+pkg_check_modules(PBNJSON_CPP REQUIRED pbnjson_cpp)
+include_directories(${PBNJSON_CPP_INCLUDE_DIRS})
+webos_add_compiler_flags(ALL ${PBNJSON_CPP_CFLAGS_OTHER})
+
+pkg_check_modules(DB8 REQUIRED db8)
+include_directories(${DB8_INCLUDE_DIRS})
+webos_add_compiler_flags(ALL ${DB8_CFLAGS_OTHER})
+
+pkg_check_modules(OPENSSL REQUIRED openssl)
+include_directories(${OPENSSL_INCLUDE_DIRS})
+webos_add_compiler_flags(ALL ${OPENSSL_CFLAGS_OTHER})
+
+include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
 #webos_add_compiler_flags(ALL -DMOJ_LINUX -std=c++11 -fno-exceptions -Wall -Werror)
 webos_add_compiler_flags(ALL -std=c++11 -Wall)
 
-add_subdirectory(src)
+set(SOURCES
+	"src/Log.cpp"
+	"src/OpensslBioWrapper.cpp"
+	"src/OpensslConfWrapper.cpp"
+	"src/OpensslRsaKeyWrapper.cpp"
+	"src/OpensslCertWrapper.cpp"
+	"src/OpensslCsrWrapper.cpp"
+	"src/OpensslCaWrapper.cpp"
+	"src/CertificateManager.cpp"
+	"src/main.cpp"
+)
+
+add_executable(${PROJECT_NAME} ${SOURCES})
+target_link_libraries (${PROJECT_NAME}
+	${GLIB2_LDFLAGS}
+	${LUNASERVICE2_LDFLAGS}
+	${PMLOG_LDFLAGS}	
+	${PBNJSON_CPP_LDFLAGS}
+	${DB8_LDFLAGS}
+	${OPENSSL_LDFLAGS}
+)
+
+#webos_build_program(NAME ${PROJECT_NAME} ADMIN)
+install(TARGETS ${PROJECT_NAME} DESTINATION ${WEBOS_INSTALL_SBINDIR})
+webos_build_system_bus_files()
+webos_build_configured_file(files/systemd/com.webos.service.certificatemanager.service SYSCONFDIR systemd/system)
+#webos_build_db8_files()
+
+# add bin file /usr/bin/certificate-manager
+#install (TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+
+# for pmlog
+#webos_build_configured_file(files/conf/pmlog/certificate-manager.conf SYSCONFDIR pmlog.d)
+
+# add dbus and lunaservice2 from  files/sysbus/*
+#install(FILES ../files/sysbus/certificate-manager.json DESTINATION share/ls2/roles/pub)
+#install(FILES ../files/sysbus/certificate-manager.json DESTINATION share/ls2/roles/prv)
+#install(FILES ../files/sysbus/certificate-manager.service DESTINATION share/dbus-1/services)
+#install(FILES ../files/sysbus/certificate-manager.service DESTINATION share/dbus-1/system-services)
