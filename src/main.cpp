@@ -83,26 +83,85 @@ end:
 
 static bool csr(LSHandle *sh, LSMessage* message, void* ctx)
 {
-    //PmLogInfo(getPmLogContext(), "HANDLE_HELLO", 0, "hello method called");
-
-    pbnjson::JValue reply = pbnjson::Object();
-    if (reply.isNull())
-        return false;
-
-    reply.put("returnValue", true);
-    reply.put("answer", "Hello, Native Service!!");
-
-    LSError lserror;
-    LSErrorInit(&lserror);
-
-    if (!LSMessageReply(sh, message, reply.stringify().c_str(), &lserror))
+    bool success = true;
+	int keySize = 0;
+	std::string outputCsrFilename = "";
+	std::string inputPrivateKey = "";
+	std::string commonName = "";
+    std::string errorText = "";
+	pbnjson::JValue request;
+    pbnjson::JValue reply = pbnjson::Object();;
+    pbnjson::JDomParser parser(NULL);
+    pbnjson::JSchemaFragment schema("{}");
+    CertificateManager certificateManager;
+	LSError lserror;
+	LSErrorInit(&lserror);
+    
+    const char *payload = LSMessageGetPayload(message);
+    if(!parser.parse(payload, schema))
     {
-        //PmLogError(getPmLogContext(), "HANDLE_HELLO", 0, "Message reply error!!");
-        LSErrorPrint(&lserror, stdout);
+        success = false;
+        errorText = "schema parsing error";
+		goto end;
+    }
 
+    request = parser.getDom();
+    outputCsrFilename = request["csrFilename"].asString();
+	if(outputCsrFilename.empty())
+	{
+        success = false;
+        errorText = "empty csr file or path";
+		goto end;
+	}
+
+    inputPrivateKey = request["privateKey"].asString();
+	if(inputPrivateKey.empty())
+	{
+        success = false;
+        errorText = "empty private key file or path";
+		goto end;
+	}
+
+    commonName = request["commonName"].asString();
+	if(commonName.empty())
+	{
+        success = false;
+        errorText = "empty common name";
+		goto end;
+	}
+
+    if(certificateManager.csr(outputCsrFilename, inputPrivateKey, commonName) == false)
+    {
+        success = false;
+        errorText = "certificateManager csr function error";
+		goto end;
+    }
+
+end:
+
+    if(success == true)
+    {
+        reply.put("outputCsrFilename", outputCsrFilename.c_str());
+        reply.put("returnValue", true);
+    }
+    else
+    {
+        reply.put("returnValue", false);
+        reply.put("errorText", errorText.c_str());
+    }
+
+    if(!LSMessageReply(sh, message, reply.stringify().c_str(), &lserror))
+    {
+        LSErrorPrint(&lserror, stderr);
         return false;
     }
-    return true;
+
+    if (LSErrorIsSet(&lserror))
+    {
+        LSErrorFree(&lserror);
+    }
+
+    return success ? true : false;
 }
 
 static bool sign(LSHandle *sh, LSMessage* message, void* ctx)

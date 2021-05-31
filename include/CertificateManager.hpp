@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef CERTIFICATE_MANAGER_SERVICE_H_
-#define CERTIFICATE_MANAGER_SERVICE_H_
+#ifndef CERTIFICATE_MANAGER_SERVICE_HPP_
+#define CERTIFICATE_MANAGER_SERVICE_HPP_
 
 /*-----------------------------------------------------------------------------
  (File Inclusions)
@@ -33,10 +33,10 @@ public :
 	CertificateManager& operator =(CertificateManager const&) = delete;
 	CertificateManager& operator =(CertificateManager && ) = delete;
 
-	bool generateKey(std::string outputKeyFilename, int keySize);
-	bool csr();
+	bool generateKey(const std::string &outputKeyFilename, int keySize);
+	bool csr(const std::string &outputCsrFilename, const std::string &inputPrivateKey, const std::string &commonName);
 	bool sign();
 	bool verify();
 };
 
-#endif /*CERTIFICATE_MANAGER_SERVICE_H_*/
+#endif /*CERTIFICATE_MANAGER_SERVICE_HPP_*/
