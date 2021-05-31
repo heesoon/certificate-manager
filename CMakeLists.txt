@@ -15,7 +15,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 2.8.7)
-project(com.webos.service.certificatemanager)
+project(com.webos.service.certificatemanager CXX C)
 
 include(webOS/webOS)
 webos_modules_init(1 0 0)
@@ -79,14 +79,8 @@ webos_build_system_bus_files()
 webos_build_configured_file(files/systemd/com.webos.service.certificatemanager.service SYSCONFDIR systemd/system)
 #webos_build_db8_files()
 
-# add bin file /usr/bin/certificate-manager
-#install (TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+file(GLOB_RECURSE SCHEMAS files/schema/*.schema)
+install(FILES ${SCHEMAS} DESTINATION ${WEBOS_INSTALL_WEBOS_SYSCONFDIR}/schemas/com.web.service.certificatemanager)
 
-# for pmlog
-#webos_build_configured_file(files/conf/pmlog/certificate-manager.conf SYSCONFDIR pmlog.d)
-
-# add dbus and lunaservice2 from  files/sysbus/*
-#install(FILES ../files/sysbus/certificate-manager.json DESTINATION share/ls2/roles/pub)
-#install(FILES ../files/sysbus/certificate-manager.json DESTINATION share/ls2/roles/prv)
-#install(FILES ../files/sysbus/certificate-manager.service DESTINATION share/dbus-1/services)
-#install(FILES ../files/sysbus/certificate-manager.service DESTINATION share/dbus-1/system-services)
+#file(GLOB_RECURSE SCRIPTS files/scripts/*)
+#install(FILES ${SCRIPTS} DESTINATION ${WEBOS_INSTALL_WEBOS_SERVICESDIR}/scripts/com.web.service.certificatemanager)

@@ -21,8 +21,15 @@ inherit webos_daemon
 #SRC_URI = "${WEBOS_PRO_GIT_REPO_COMPLETE}"
 S = "${WORKDIR}/git"
 
+SERVICEDIR = "${D}${webos_servicesdir}/${BPN}"
+
 do_install_append() {
-    install -d "${D}${webos_servicesdir}/${BPN}"
+    install -d ${SERVICEDIR}
+	install -d ${SERVICEDIR}/scripts
+	
+	#install scripts files
+	#cp -R --no-dereference --preserve=mode,links -v ${S}/files/scripts/* ${SERVICEDIR}/scripts/
+	install -m 0644 ${S}/files/scripts/* ${SERVICEDIR}/scripts/
 }
 
 FILES_${PN} += "${webos_servicesdir}"

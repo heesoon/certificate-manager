@@ -1,0 +1,11 @@
+{
+    "id"    : "CertificateManager.csr",
+    "type"  : "object",
+    "properties" : {
+        "value" : {
+            "type"     : "boolean",
+            "description" : "should allow 1x"
+        }
+    },
+    "required" : [ "value" ]
+}
