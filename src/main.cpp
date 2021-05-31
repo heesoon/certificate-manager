@@ -1,10 +1,9 @@
 #include <glib.h>
 #include <string>
-#include <luna-service2/lunaservice.h>
 #include <PmLog.h>
 #include <pbnjson.hpp>
+#include <luna-service2/lunaservice.h>
 #include "CertificateManager.hpp"
-#include <iostream>
 
 const std::string serviceName = "com.webos.service.certificatemanager";
 

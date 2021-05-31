@@ -17,7 +17,6 @@ inherit webos_enhanced_submissions
 inherit webos_cmake
 inherit webos_system_bus
 inherit webos_daemon
-inherit webos_machine_impl_dep
 
 #SRC_URI = "${WEBOS_PRO_GIT_REPO_COMPLETE}"
 S = "${WORKDIR}/git"
