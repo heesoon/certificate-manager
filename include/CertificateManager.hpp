@@ -35,8 +35,8 @@ public :
 
 	bool generateKey(const std::string &outputKeyFilename, int keySize);
 	bool csr(const std::string &outputCsrFilename, const std::string &inputPrivateKey, const std::string &commonName);
-	bool sign();
-	bool verify();
+	bool sign(const std::string &outputCertFile, const std::string &inputCsrFile);
+	bool verify(const std::string &inputCertFile);
 };
 
 #endif /*CERTIFICATE_MANAGER_SERVICE_HPP_*/

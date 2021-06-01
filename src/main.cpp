@@ -84,7 +84,6 @@ end:
 static bool csr(LSHandle *sh, LSMessage* message, void* ctx)
 {
     bool success = true;
-	int keySize = 0;
 	std::string outputCsrFilename = "";
 	std::string inputPrivateKey = "";
 	std::string commonName = "";
@@ -166,50 +165,141 @@ end:
 
 static bool sign(LSHandle *sh, LSMessage* message, void* ctx)
 {
-    //PmLogInfo(getPmLogContext(), "HANDLE_HELLO", 0, "hello method called");
+    bool success = true;
+	std::string outputCertFilename = "";
+	std::string inputCsrFilename = "";
 
-    pbnjson::JValue reply = pbnjson::Object();
-    if (reply.isNull())
-        return false;
-
-    reply.put("returnValue", true);
-    reply.put("answer", "Hello, Native Service!!");
-
-    LSError lserror;
-    LSErrorInit(&lserror);
-
-    if (!LSMessageReply(sh, message, reply.stringify().c_str(), &lserror))
+    std::string errorText = "";
+	pbnjson::JValue request;
+    pbnjson::JValue reply = pbnjson::Object();;
+    pbnjson::JDomParser parser(NULL);
+    pbnjson::JSchemaFragment schema("{}");
+    CertificateManager certificateManager;
+	LSError lserror;
+	LSErrorInit(&lserror);
+    
+    const char *payload = LSMessageGetPayload(message);
+    if(!parser.parse(payload, schema))
     {
-        //PmLogError(getPmLogContext(), "HANDLE_HELLO", 0, "Message reply error!!");
-        LSErrorPrint(&lserror, stdout);
+        success = false;
+        errorText = "schema parsing error";
+		goto end;
+    }
 
+    request = parser.getDom();
+    outputCertFilename = request["certFilename"].asString();
+	if(outputCertFilename.empty())
+	{
+        success = false;
+        errorText = "empty certification file or path";
+		goto end;
+	}
+
+    inputCsrFilename = request["csrFilename"].asString();
+	if(inputCsrFilename.empty())
+	{
+        success = false;
+        errorText = "empty csr file or path";
+		goto end;
+	}
+
+    if(certificateManager.sign(outputCertFilename, inputCsrFilename) == false)
+    {
+        success = false;
+        errorText = "certificateManager sign function error";
+		goto end;
+    }
+
+end:
+
+    if(success == true)
+    {
+        reply.put("outputCertFilename", outputCertFilename.c_str());
+        reply.put("returnValue", true);
+    }
+    else
+    {
+        reply.put("returnValue", false);
+        reply.put("errorText", errorText.c_str());
+    }
+
+    if(!LSMessageReply(sh, message, reply.stringify().c_str(), &lserror))
+    {
+        LSErrorPrint(&lserror, stderr);
         return false;
     }
-    return true;
+
+    if (LSErrorIsSet(&lserror))
+    {
+        LSErrorFree(&lserror);
+    }
+
+    return success ? true : false;
 }
 
 static bool verify(LSHandle *sh, LSMessage* message, void* ctx)
 {
-    //PmLogInfo(getPmLogContext(), "HANDLE_HELLO", 0, "hello method called");
+    bool success = true;
+	std::string inputCertFile = "";
 
-    pbnjson::JValue reply = pbnjson::Object();
-    if (reply.isNull())
-        return false;
-
-    reply.put("returnValue", true);
-    reply.put("answer", "Hello, Native Service!!");
-
-    LSError lserror;
-    LSErrorInit(&lserror);
-
-    if (!LSMessageReply(sh, message, reply.stringify().c_str(), &lserror))
+    std::string errorText = "";
+	pbnjson::JValue request;
+    pbnjson::JValue reply = pbnjson::Object();;
+    pbnjson::JDomParser parser(NULL);
+    pbnjson::JSchemaFragment schema("{}");
+    CertificateManager certificateManager;
+	LSError lserror;
+	LSErrorInit(&lserror);
+    
+    const char *payload = LSMessageGetPayload(message);
+    if(!parser.parse(payload, schema))
     {
-        //PmLogError(getPmLogContext(), "HANDLE_HELLO", 0, "Message reply error!!");
-        LSErrorPrint(&lserror, stdout);
+        success = false;
+        errorText = "schema parsing error";
+		goto end;
+    }
 
+    request = parser.getDom();
+    inputCertFile = request["certFilename"].asString();
+	if(inputCertFile.empty())
+	{
+        success = false;
+        errorText = "empty certification file or path";
+		goto end;
+	}
+
+    if(certificateManager.verify(inputCertFile) == false)
+    {
+        success = false;
+        errorText = "certificateManager sign function error";
+		goto end;
+    }
+
+end:
+
+    if(success == true)
+    {
+        reply.put("inputCertFile", inputCertFile.c_str());
+        reply.put("returnValue", true);
+    }
+    else
+    {
+        reply.put("returnValue", false);
+        reply.put("errorText", errorText.c_str());
+    }
+
+    if(!LSMessageReply(sh, message, reply.stringify().c_str(), &lserror))
+    {
+        LSErrorPrint(&lserror, stderr);
         return false;
     }
-    return true;
+
+    if (LSErrorIsSet(&lserror))
+    {
+        LSErrorFree(&lserror);
+    }
+
+    return success ? true : false;
 }
 
 static LSMethod serviceMethods[] = {

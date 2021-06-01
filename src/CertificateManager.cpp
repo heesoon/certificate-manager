@@ -1,6 +1,7 @@
 #include "CertificateManager.hpp"
 #include "OpensslRsaKeyWrapper.hpp"
 #include "OpensslCsrWrapper.hpp"
+#include "OpensslCaWrapper.hpp"
 #include "Log.hpp"
 #include <memory>
 
@@ -88,12 +89,45 @@ bool CertificateManager::csr(const std::string &outputCsrFilename, const std::st
 	return true;
 }
 
-bool CertificateManager::sign()
+bool CertificateManager::sign(const std::string &outputCertFile, const std::string &inputCsrFile)
 {
+	X509 *x509 = NULL;
+	const std::string inputConfigFile = "/usr/palm/services/com.webos.service.certificatemanager/scripts/customer_openssl.cnf";
+
+	std::unique_ptr<OpensslCaWrapper> upOpenCa(new OpensslCaWrapper());
+	if(upOpenCa->open(outputCertFile, 'w', FORMAT_PEM) == false)
+	{
+		return false;
+	}
+
+	if(upOpenCa->generateCertSignedByCa(inputConfigFile, inputCsrFile) == false)
+	{
+		return false;
+	}
+
+	x509 = upOpenCa->getX509();
+	if(x509 == NULL)
+	{
+		return false;
+	}
+
+	if(upOpenCa->write(x509) == false)
+	{
+		return false;
+	}
+
 	return true;
 }
 
-bool CertificateManager::verify()
+bool CertificateManager::verify(const std::string &inputCertFile)
 {
+	const std::string inputCaChainFile = "/usr/palm/services/com.webos.service.certificatemanager/scripts/ca-chain.cert.pem";
+	std::unique_ptr<OpensslCaWrapper> upOpenCa(new OpensslCaWrapper());
+
+	if(upOpenCa->verifyByCa(inputCaChainFile, inputCertFile) == false)
+	{
+		return false;
+	}
+
 	return true;
 }
