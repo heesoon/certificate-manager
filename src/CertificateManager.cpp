@@ -74,7 +74,8 @@ bool CertificateManager::csr(const std::string &outputCsrFilename, const std::st
 		return false;
 	}
 
-	if(upOpenCsr->getX509Req() == NULL)
+	x509Req = upOpenCsr->getX509Req();
+	if(x509Req == NULL)
 	{
 		return false;
 	}
