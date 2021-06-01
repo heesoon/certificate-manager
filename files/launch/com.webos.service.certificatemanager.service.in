@@ -1,0 +1,24 @@
+@@@LICENSE
+#
+# Copyright (c) 2019 LG Electronics, Inc.
+#
+# Confidential computer software. Valid license from LG required for
+# possession, use or copying. Consistent with FAR 12.211 and 12.212,
+# Commercial Computer Software, Computer Software Documentation, and
+# Technical Data for Commercial Items are licensed to the U.S. Government
+# under vendor's standard commercial license.
+#
+# LICENSE@@@
+
+# SAMPLE service
+
+[Unit]
+Description=default - "%n"
+Requires=ls-hubd.service
+After=ls-hubd.service
+
+[Service]
+Type=simple
+EnvironmentFile=-/var/systemd/system/env/certificate-manager.env
+ExecStart=@WEBOS_INSTALL_SBINDIR@/certificate-manager
+Restart=on-failure

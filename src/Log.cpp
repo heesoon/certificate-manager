@@ -16,12 +16,11 @@
 
 #include "Log.hpp"
 
-extern PmLogContext GetCertificateManagerPmLogContext()
+PmLogContext getPmLogContext()
 {
-    static PmLogContext certificateManagerLogContext = 0;
-    if (0 == certificateManagerLogContext)
-    {
-        PmLogGetContext("CERTIFICATE_MANAGER", &certificateManagerLogContext);
+    static PmLogContext logContext = 0;
+    if (0 == logContext) {
+        PmLogGetContext("certificateManager", &logContext);
     }
-    return certificateManagerLogContext;
+    return logContext;
 }

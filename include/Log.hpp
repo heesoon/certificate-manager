@@ -14,18 +14,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef LOG_HPP_INCLUDED
-#define LOG_HPP_INCLUDED
+#ifndef LOG_HPP
+#define LOG_HPP
 
-#include "PmLogLib.h"
+#include <PmLogLib.h>
 
-#define LOG_INFO(...)                 PmLogInfo(GetCertificateManagerPmLogContext(), ##__VA_ARGS__)
-#define LOG_INFO_WITH_CLOCK(...)      PmLogInfoWithClock(GetCertificateManagerPmLogContext(), ##__VA_ARGS__)
-#define LOG_DEBUG(...)                PmLogDebug(GetCertificateManagerPmLogContext(), ##__VA_ARGS__)
-#define LOG_WARNING(...)              PmLogWarning(GetCertificateManagerPmLogContext(), ##__VA_ARGS__)
-#define LOG_ERROR(...)                PmLogError(GetCertificateManagerPmLogContext(), ##__VA_ARGS__)
+extern PmLogContext getPmLogContext();
 
-PmLogContext GetCertificateManagerPmLogContext();
+#define LOG_CRITICAL(msgid, kvcount, ...) PmLogCritical(getPmgetPmLogContext()(), msgid, kvcount, ##__VA_ARGS__)
+#define LOG_ERROR(msgid, kvcount, ...) PmLogError(getPmLogContext(), msgid, kvcount, ##__VA_ARGS__)
+#define LOG_WARNING(msgid, kvcount, ...) PmLogWarning(getPmLogContext(), msgid, kvcount, ##__VA_ARGS__)
+#define LOG_INFO(msgid, kvcount, ...) PmLogInfo(getPmLogContext(), msgid, kvcount, ##__VA_ARGS__)
+#define NORMAL_LOG(msgid, kvcount, ...) PmLogInfo(getNormalLogContext(), msgid, kvcount, ##__VA_ARGS__)
+#define LOG_DEBUG(fmt, ...) PmLogDebug(getPmLogContext(), "%s:%s() " fmt, __FILE__, __FUNCTION__, ##__VA_ARGS__)
 
-#define MSGID_GENERATOR_KEY "GET_KEY"
-#endif // LOG_HPP_INCLUDED
+#endif // LOG_HPP

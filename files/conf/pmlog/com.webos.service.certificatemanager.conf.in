@@ -1,0 +1,22 @@
+{
+	"contexts" : [
+		{
+			"name": "certificateManager",
+			"level": "info",
+			"logProcessIds": true,
+			"logThreadIds": true,
+			"logToConsole": false,
+			"rules": [
+					{"filter": "*.*", "output": "certificateManager-log"}
+			]
+		}
+	],
+	"outputs" : [
+		{
+			"name" : "certificateManager-log",
+			"file" : "@WEBOS_INSTALL_LOGDIR@/certificateManager.log",
+			"maxSize" : 10000,
+			"rotations" : 5
+		}
+	]
+}

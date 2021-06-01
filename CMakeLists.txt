@@ -77,6 +77,8 @@ target_link_libraries (${PROJECT_NAME}
 install(TARGETS ${PROJECT_NAME} DESTINATION ${WEBOS_INSTALL_SBINDIR})
 webos_build_system_bus_files()
 webos_build_configured_file(files/systemd/com.webos.service.certificatemanager.service SYSCONFDIR systemd/system)
+# for pmlog
+webos_build_configured_file(files/conf/pmlog/com.webos.service.certificatemanager.conf SYSCONFDIR pmlog.d)
 #webos_build_db8_files()
 
 file(GLOB_RECURSE SCHEMAS files/schema/*.schema)
