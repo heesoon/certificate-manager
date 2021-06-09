@@ -77,7 +77,7 @@ char* OpensslConfWrapper::getString(const std::string &section, const std::strin
 
     if(s == NULL)
     {
-		PmLogError("[%s, %d] NCONF_get_string is NULL", __FUNCTION__, __LINE__);
+		PmLogError("[%s, %d] %s is NULL", __FUNCTION__, __LINE__, tag.c_str());
         return NULL;
     }
 

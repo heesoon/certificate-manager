@@ -1,32 +1,46 @@
 #include <string>
 #include <memory>
+#include <cstdlib>
+#include "gtest/gtest.h"
 #include "Log.hpp"
 #include "OpensslBioWrapper.hpp"
 #include "OpensslCertWrapper.hpp"
 
-void testCert()
+bool TC_CertReadTest()
 {
-	bool ret = false;
-	const std::string filename = "cert.pem";
-	std::unique_ptr<OpensslCertWrapper> upOpenCert(new OpensslCertWrapper());
+	std::string filename = "";
+	std::string homeDir = getenv("HOME");
+	if(homeDir.empty())
+	{
+		return false;
+	}
 	
-	ret = upOpenCert->open(filename, 'r', FORMAT_PEM);
-	if(ret == false)
+	filename = homeDir + "/ca/root/certs/ca.cert.pem";
+
+	std::unique_ptr<OpensslCertWrapper> upOpenCert(new OpensslCertWrapper());
+
+	if(upOpenCert->open(filename, 'r', FORMAT_PEM) == false)
 	{
-		return;
+		return false;
 	}
 
-	ret = upOpenCert->read();
-	if(ret == false)
+	if(upOpenCert->read() == false)
 	{
-		return;
+		return false;
 	}
 
-	PmLogDebug("[%s, %d] Success", __FUNCTION__, __LINE__);
+	//PmLogDebug("[%s, %d] Success", __FUNCTION__, __LINE__);
+	return true;
 }
 
-int main()
+
+TEST(TCS_OpensslCertWrapper, test_case_1)
 {
-	testCert();
-	return 0;
+	EXPECT_EQ(true, TC_CertReadTest());
+}
+
+int main(int argc, char **argv)
+{
+	::testing::InitGoogleTest(&argc, argv);
+	return RUN_ALL_TESTS();
 }

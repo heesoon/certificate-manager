@@ -1,50 +1,36 @@
-#include <iostream>
 #include <string>
+#include <cstdlib>
 #include <memory>
-#include "Log.hpp"
+#include "gtest/gtest.h"
 #include "OpensslBioWrapper.hpp"
 
-void test_OpensslBioWrapper_text()
+bool TC_OpenBioFile()
 {
-	bool ret = false;
+	std::string inputConfigFile = "";
+	std::string homeDir = getenv("HOME");
+	if(homeDir.empty())
+	{
+		return false;
+	}
 
-	// configuration file open based on text
-	std::string inputConfigFile = "../scripts/root_openssl.cnf";
+	inputConfigFile = homeDir + "/ca/root/openssl.cnf";
 	std::unique_ptr<OpensslBioWrapper> bioWrapperCnf(new OpensslBioWrapper);
 
-	ret = bioWrapperCnf->open(inputConfigFile.c_str(), 'r', FORMAT_TEXT);
-	if(ret == false)
+	if(bioWrapperCnf->open(inputConfigFile.c_str(), 'r', FORMAT_TEXT) == false)
 	{
-		PmLogError("[%s,%d]", __FUNCTION__, __LINE__);
-		return;
+		return false;
 	}
 
-	PmLogDebug("[%s,%d] Success", __FUNCTION__, __LINE__);
+	return true;
 }
 
-#if 0
-void test_OpensslBioWrapper_pem()
+TEST(TCS_OpensslBioWrapper, test_case_1)
 {
-	bool ret = false;
-
-	// pivate key file open based on pem format
-	std::string input_key_filename = "/home/hskim/certificates/customer/csr/customer.csr.pem";
-	std::unique_ptr<OpensslBioWrapper> bioWrapperKey(new OpensslBioWrapper);
-
-	ret = bioWrapperKey->open(input_key_filename.c_str(), 'r', FORMAT_PEM);
-	if(ret == false)
-	{
-		PmLogError("[%s,%d]", __FUNCTION__, __LINE__);
-		return;
-	}
-
-	PmLogDebug("[%s,%d] Success", __FUNCTION__, __LINE__);
+	EXPECT_EQ(true, TC_OpenBioFile());
 }
-#endif
 
-int main()
+int main(int argc, char **argv)
 {
-	test_OpensslBioWrapper_text();
-	//test_OpensslBioWrapper_pem();
-	return 0;
+	::testing::InitGoogleTest(&argc, argv);
+	return RUN_ALL_TESTS();
 }

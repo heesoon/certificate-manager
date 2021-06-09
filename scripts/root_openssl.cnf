@@ -1,8 +1,8 @@
 # https://jamielinux.com/docs/openssl-certificate-authority/create-the-root-pair.html
 
 HOME			  = /home/hskim
-CERT_HOME		  = $HOME/certificates
-ROOTCA_HOME		  = $CERT_HOME/rootca
+DATA_HOME		  = $HOME/ca
+ROOTCA_HOME		  = $DATA_HOME/root
 dir               = $ROOTCA_HOME
 
 [ ca ]
@@ -29,7 +29,7 @@ crl_extensions    = crl_ext
 default_crl_days  = 30
 
 # SHA-1 is deprecated, so use SHA-2 instead.
-default_md        = sha256
+default_md        = sha512
 
 name_opt          = ca_default
 cert_opt          = ca_default
@@ -65,7 +65,7 @@ distinguished_name  = req_distinguished_name
 string_mask         = utf8only
 
 # SHA-1 is deprecated, so use SHA-2 instead.
-default_md          = sha256
+default_md          = sha512
 
 # Extension to add when the -x509 option is used.
 x509_extensions     = v3_ca

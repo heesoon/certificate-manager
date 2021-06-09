@@ -1,100 +1,106 @@
 #include <string>
 #include <memory>
 #include "Log.hpp"
+#include "gtest/gtest.h"
 #include "OpensslBioWrapper.hpp"
 #include "OpensslRsaKeyWrapper.hpp"
 
-void testCreatePlainTextPrivateKey()
+bool TC_CreateKeyWithoutPassword()
 {
-	bool ret = false;
 	EVP_PKEY *pkey = NULL;
 
-	const std::string outputKeyFilename = "plainTextPrivatekey.pem";
+	const std::string outputKeyFilename = "keyWithoutPassword.pem";
 	std::unique_ptr<OpensslRsaKeyWrapper> upOpenRsaPrivateKey(new OpensslRsaKeyWrapper());
-	
-	ret = upOpenRsaPrivateKey->open(outputKeyFilename, 'w', FORMAT_PEM, 2048);
-	if(ret == false)
+
+	if(upOpenRsaPrivateKey->open(outputKeyFilename, 'w', FORMAT_PEM, 2048) == false)
 	{
 		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
-		return;
+		return false;
 	}
 
 	pkey = upOpenRsaPrivateKey->getPkey();
 	if(pkey == NULL)
 	{
 		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
-		return;
+		return false;
 	}
 
-	ret = upOpenRsaPrivateKey->write(pkey, PKEY_TYPE_T::PKEY_PRIVATE_KEY, "", "");
-	if(ret == false)
+	if(upOpenRsaPrivateKey->write(pkey, PKEY_TYPE_T::PKEY_PRIVATE_KEY, "", "") == false)
 	{
-		return;
+		return false;
 	}
 
 	PmLogDebug("[%s, %d] Success", __FUNCTION__, __LINE__);
+	return true;
 }
 
-void testCreateEncryptedPrivateKey()
+bool TC_CreateKeyWithPassword()
 {
-	bool ret = false;
 	EVP_PKEY *pkey = NULL;
 
-	const std::string outputKeyFilename = "encryptedPrivatekey.pem";
+	const std::string outputKeyFilename = "keyWithPassword.pem";
 	std::unique_ptr<OpensslRsaKeyWrapper> upOpenRsaPrivateKey(new OpensslRsaKeyWrapper());
-	
-	ret = upOpenRsaPrivateKey->open(outputKeyFilename, 'w', FORMAT_PEM, 2048);
-	if(ret == false)
+
+	if(upOpenRsaPrivateKey->open(outputKeyFilename, 'w', FORMAT_PEM, 2048) == false)
 	{
-		return;
+		return false;
 	}
 
 	pkey = upOpenRsaPrivateKey->getPkey();
 	if(pkey == NULL)
 	{
 		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
-		return;
+		return false;
 	}	
 
 	//ret = upOpenRsaPrivateKey->write(pkey, PKEY_TYPE_T::PKEY_PRIVATE_KEY, "123456789", "AES-256-CBC");
-	ret = upOpenRsaPrivateKey->write(pkey, PKEY_TYPE_T::PKEY_PRIVATE_KEY, "123456789123456789", "AES-256-CBC");
-	if(ret == false)
+	if(upOpenRsaPrivateKey->write(pkey, PKEY_TYPE_T::PKEY_PRIVATE_KEY, "123456789123456789", "AES-256-CBC") == false)
 	{
-		return;
+		return false;
 	}
 
 	PmLogDebug("[%s, %d] Success", __FUNCTION__, __LINE__);
+	return true;
 }
 
-void testDecryptPrivateKey()
+bool TC_DecryptKey()
 {
-	bool ret = false;
-	EVP_PKEY *pkey = NULL;
-
-	const std::string inputKeyFilename = "encryptedPrivatekey.pem";
+	const std::string inputKeyFilename = "keyWithPassword.pem";
 	std::unique_ptr<OpensslRsaKeyWrapper> upOpenRsaPrivateKey(new OpensslRsaKeyWrapper());
-	
-	ret = upOpenRsaPrivateKey->open(inputKeyFilename, 'r', FORMAT_PEM);
-	if(ret == false)
+
+	if(upOpenRsaPrivateKey->open(inputKeyFilename, 'r', FORMAT_PEM) == false)
 	{
 		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
-		return;
+		return false;
 	}
 
-	ret = upOpenRsaPrivateKey->read(PKEY_TYPE_T::PKEY_PRIVATE_KEY, "123456789123456789");
-	if(ret == false)
+	if(upOpenRsaPrivateKey->read(PKEY_TYPE_T::PKEY_PRIVATE_KEY, "123456789123456789") == false)
 	{
 		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
-		return;
+		return false;
 	}
 
 	PmLogDebug("[%s, %d] Success", __FUNCTION__, __LINE__);
+	return true;
 }
 
-int main()
+TEST(TCS_OpensslRasKeyWrapper, test_case_1)
 {
-	testCreatePlainTextPrivateKey();
-	testCreateEncryptedPrivateKey();
-	testDecryptPrivateKey();
-	return 0;
+	EXPECT_EQ(true, TC_CreateKeyWithoutPassword());
+}
+
+TEST(TCS_OpensslRasKeyWrapper, test_case_2)
+{
+	EXPECT_EQ(true, TC_CreateKeyWithPassword());
+}
+
+TEST(TCS_OpensslRasKeyWrapper, test_case_3)
+{
+	EXPECT_EQ(true, TC_DecryptKey());
+}
+
+int main(int argc, char **argv)
+{
+	::testing::InitGoogleTest(&argc, argv);
+	return RUN_ALL_TESTS();
 }

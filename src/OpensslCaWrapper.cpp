@@ -217,16 +217,19 @@ bool OpensslCaWrapper::randSerial(BIGNUM *b, ASN1_INTEGER *ai)
     btmp = b == NULL ? BN_new() : b;
     if(btmp == NULL)
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     if(!BN_rand(btmp, SERIAL_RAND_BITS, BN_RAND_TOP_ANY, BN_RAND_BOTTOM_ANY))
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         goto error;
     }
 
     if(ai && !BN_to_ASN1_INTEGER(btmp, ai))
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         goto error; 
     }
 
@@ -252,6 +255,7 @@ BIGNUM* OpensslCaWrapper::loadSerial(const char *serialfile, int create, ASN1_IN
     ai = ASN1_INTEGER_new();
     if(ai == NULL)
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         goto err;
     }
 
@@ -260,6 +264,7 @@ BIGNUM* OpensslCaWrapper::loadSerial(const char *serialfile, int create, ASN1_IN
     {
         if(!create) 
         {
+			PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
             goto err;
         }
 
@@ -273,6 +278,7 @@ BIGNUM* OpensslCaWrapper::loadSerial(const char *serialfile, int create, ASN1_IN
     {
         if(!a2i_ASN1_INTEGER(in, ai, buf, 1024))
         {
+			PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
             goto err;
         }
         
@@ -280,6 +286,7 @@ BIGNUM* OpensslCaWrapper::loadSerial(const char *serialfile, int create, ASN1_IN
         
         if(ret == NULL) 
         {
+			PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
             goto err;
         }
     }
@@ -349,7 +356,10 @@ int OpensslCaWrapper::pkey_ctrl_string(EVP_PKEY_CTX *ctx, const char *value)
         return -1;
     vtmp = strchr(stmp, ':');
     if (vtmp == NULL)
+	{
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         goto err;
+	}
 
     *vtmp = 0;
     vtmp++;
@@ -476,7 +486,8 @@ bool OpensslCaWrapper::generateX509(X509 *x509, X509_REQ *x509Req, X509 *x509Ca,
 	const X509_NAME *x509ReqSubject = NULL;
     const X509_NAME *x509CaSubject = NULL; 
 	X509_NAME *subject = NULL;
-	X509_NAME_ENTRY *ne, *tne;
+	//X509_NAME_ENTRY *ne, *tne;
+	X509_NAME_ENTRY *tne = NULL;
 	ASN1_STRING *str, *str2;
     EVP_PKEY *pkeyPublic;
 	CONF_VALUE *cv;
@@ -743,12 +754,12 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
     long days = 0;
     int emailDn = 1;
     unsigned long chtype = MBSTRING_ASC;
-    EVP_PKEY *pkey = NULL;
+    //EVP_PKEY *pkey = NULL;
     X509_REQ *x509Req = NULL;
     X509 *x509Ca = NULL;
     EVP_PKEY *caPkey;
     char *extensions = NULL;
-    CONF *conf = NULL;
+    //CONF *conf = NULL;
     const EVP_MD *evpMd = NULL;
     STACK_OF(CONF_VALUE) *policy = NULL;
     char *entry = NULL, *cnfData = NULL, *caPrivateKeyFile = NULL, *caCertificateFile = NULL;
@@ -760,23 +771,27 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
     unique_ptr_x509_t upX509(X509_new(), delRawPtrX509);
     if(upX509 == nullptr)
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     if(inputConfigFile.empty() == true || inputCsrFile.empty() == true)
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     ret = opensslConfWrapper.open(inputConfigFile);
     if(ret == false)
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     entry = opensslConfWrapper.lookupEntry(BASE_SECTION, ENV_DEFAULT_CA);
     if(entry == NULL)
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -785,6 +800,7 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
     unique_ptr_bn_t upBnSerial(loadSerial(cnfData, 1, NULL), delRawPtrBN);
     if(upBnSerial == nullptr)
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -792,11 +808,13 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
     cnfData = opensslConfWrapper.getString(entry, STRING_MASK);
 	if(cnfData == NULL)
 	{
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		return false;
 	}
 
 	if(ASN1_STRING_set_default_mask_asc(cnfData) == 0)
 	{
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		return false;
 	}
 
@@ -804,6 +822,7 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
     cnfData = opensslConfWrapper.getString(entry, UTF8_IN);
     if(cnfData == NULL)
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -823,6 +842,7 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
         X509V3_set_nconf(&ctx, conf);
         if(!X509V3_EXT_add_nconf(conf, &ctx, extensions, NULL))
         {
+			PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
             return false;
         }
     }
@@ -831,12 +851,14 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
     cnfData = opensslConfWrapper.getString(entry, ENV_DEFAULT_MD);
     if(cnfData == NULL)
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
 	evpMd = EVP_get_digestbyname(cnfData);
 	if(evpMd == NULL)
 	{
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		return false;
 	}
 
@@ -844,6 +866,7 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
     caPrivateKeyFile = opensslConfWrapper.getString(entry, ENV_PRIVATE_KEY);
     if(caPrivateKeyFile == NULL)
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -851,6 +874,7 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
     caCertificateFile = opensslConfWrapper.getString(entry, ENV_CERTIFICATE);
     if(caCertificateFile == NULL)
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -858,6 +882,7 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
 	cnfData = opensslConfWrapper.getString(entry, ENV_DEFAULT_EMAIL_DN);
 	if(cnfData == NULL)
 	{
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		return false;
 	}
 
@@ -870,6 +895,7 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
 	days = opensslConfWrapper.getNumber(entry, ENV_DEFAULT_DAYS);
 	if(days < 3600)
 	{
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		return false;
 	}
 
@@ -877,12 +903,14 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
 	cnfData = opensslConfWrapper.getString(entry, ENV_POLICY);
 	if(cnfData == NULL)
 	{
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		return false;
 	}
 
     policy = opensslConfWrapper.getSection(opensslConfWrapper.getConf(), cnfData);
 	if(policy == NULL)
 	{
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		return false;
 	}
 
@@ -890,12 +918,14 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
     ret = opensslRsaKeyWrapper.open(caPrivateKeyFile, 'r', FORMAT_PEM, 0);
     if(ret == false)
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     ret = opensslRsaKeyWrapper.read(PKEY_TYPE_T::PKEY_PRIVATE_KEY, "");
     if(ret == false)
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -903,18 +933,21 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
     ret = opensslCertWrapper.open(caCertificateFile, 'r', FORMAT_PEM);
     if(ret == false)
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     ret = opensslCertWrapper.read();
     if(ret == false)
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }    
 
     // check CA private key and CA certificate
     if(!X509_check_private_key(opensslCertWrapper.getX509(), opensslRsaKeyWrapper.getPkey()))
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -922,12 +955,14 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
     ret = opensslCsrWrapper.open(inputCsrFile, 'r', FORMAT_PEM);
     if(ret == false)
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     ret = opensslCsrWrapper.read();
     if(ret == false)
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -935,24 +970,28 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
     x509Req = opensslCsrWrapper.getX509Req();
     if(x509Req == NULL)
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     x509Ca = opensslCertWrapper.getX509();
     if(x509Ca == NULL)
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     caPkey = opensslRsaKeyWrapper.getPkey();
     if(caPkey == NULL)
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
     // 14. generated signed certificate by CA based on certificate signed request
     if(generateX509(upX509.get(), x509Req, x509Ca, opensslConfWrapper.getConf(), extensions, caPkey, upBnSerial.get(), days, emailDn, policy, evpMd) == false)
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -967,23 +1006,27 @@ X509_STORE* OpensslCaWrapper::setup_verify(const std::string &inputCaFile)
 
     if(inputCaFile.empty() == true)
     {
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
         goto end;
     }
 
 	store = X509_STORE_new();
 	if(store == NULL)
 	{
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		goto end;
 	}
 
 	lookup = X509_STORE_add_lookup(store, X509_LOOKUP_file());
 	if(lookup == NULL)
 	{
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		goto end;
 	}
 
 	if (!X509_LOOKUP_load_file_ex(lookup, inputCaFile.c_str(), X509_FILETYPE_PEM, NULL, NULL))
 	{
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		goto end;		
 	}
 
@@ -1020,6 +1063,7 @@ bool OpensslCaWrapper::check(X509_STORE *ctx, const std::string &inputCertFile, 
 	csc = X509_STORE_CTX_new();
 	if(csc == NULL)
 	{
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		goto end;
 	}
 
@@ -1027,6 +1071,7 @@ bool OpensslCaWrapper::check(X509_STORE *ctx, const std::string &inputCertFile, 
 
 	if(!X509_STORE_CTX_init(csc, ctx, x509, NULL))
 	{
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		 X509_STORE_CTX_free(csc);
 		goto end;
 	}
@@ -1076,12 +1121,14 @@ bool OpensslCaWrapper::verifyByCa(const std::string &inputCaChainFile, const std
 
 	if(inputCaChainFile.empty() == true || inputCertFile.empty() == true)
 	{
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		goto end;
 	}
 
 	store = setup_verify(inputCaChainFile);
 	if(store == NULL)
 	{
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		goto end;		
 	}
 
@@ -1089,6 +1136,7 @@ bool OpensslCaWrapper::verifyByCa(const std::string &inputCaChainFile, const std
 
 	if(check(store, inputCertFile, true) == false)
 	{
+		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
 		goto end;
 	}
 

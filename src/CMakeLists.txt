@@ -1,5 +1,5 @@
-project(certificate-manager)
 cmake_minimum_required(VERSION 3.10)
+project(CertificateManager)
 
 set(SRCS
 	"Log.cpp"

@@ -1,5 +1,5 @@
-project(logTest)
 cmake_minimum_required(VERSION 3.10)
+project(logTest)
 
 set(SRCS
 	${CMAKE_SOURCE_DIR}/src/Log.cpp

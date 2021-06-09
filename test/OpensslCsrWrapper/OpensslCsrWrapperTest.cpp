@@ -1,17 +1,29 @@
 #include <string>
 #include <memory>
+#include <cstdlib>
+#include "gtest/gtest.h"
 #include "Log.hpp"
 #include "OpensslCsrWrapper.hpp"
 
-void testMakeCsr()
+bool TC_MakeCsr()
 {
-	bool ret = false;
 	X509_REQ *x509Req = NULL;
-	const std::string outputFileName = "csr.pem";
-	const std::string inputConfFileName = "../scripts/customer_openssl.cnf";
-	const std::string inputPrivateKey = "../test/OpensslCsrWrapper/privatekey.pem";
-
+	std::string outputFileName = "";
+	std::string inputConfFileName = "";
+	std::string inputPrivateKey = "";
 	subject_t subject;
+
+
+	std::string homeDir = getenv("HOME");
+	if(homeDir.empty())
+	{
+		return false;
+	}
+	
+	outputFileName = homeDir + "/ca/test/csr.pem";
+	inputConfFileName = homeDir + "/ca/customer/openssl.cnf";
+	inputPrivateKey = homeDir + "/ca/test/privatekey.pem";
+
 	subject.commonName = "Customer Inc";
 	subject.countryName = "KR";
 	subject.stateOrProvinceName = "Seoul";
@@ -23,44 +35,47 @@ void testMakeCsr()
 	if(upOpenCsr == nullptr)
 	{
 		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
-		return;
+		return false;
 	}
 
-	ret = upOpenCsr->open(outputFileName, 'w', FORMAT_PEM);
-	if(ret == false)
+	if(upOpenCsr->open(outputFileName, 'w', FORMAT_PEM) == false)
 	{
 		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
-		return;
+		return false;
 	}
 
-	ret = upOpenCsr->makeCsr(inputConfFileName, inputPrivateKey, subject);
-	if(ret == false)
+	if(upOpenCsr->makeCsr(inputConfFileName, inputPrivateKey, subject) == false)
 	{
 		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
-		return;
+		return false;
 	}
 
 	x509Req = upOpenCsr->getX509Req();
 	if(x509Req == NULL)
 	{
 		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
-		return;
+		return false;
 	}
 
-	ret = upOpenCsr->write(x509Req);
-	if(ret == false)
+	if(upOpenCsr->write(x509Req) == false)
 	{
 		PmLogError("[%s, %d]", __FUNCTION__, __LINE__);
-		return;
+		return false;
 	}
 
 	PmLogDebug("[%s, %d] Success", __FUNCTION__, __LINE__);
 
 	//openssl req -noout -text -in csr.pem
+	return true;
 }
 
-int main()
+TEST(TCS_OpensslCsrWrapper, test_case_1)
 {
-	testMakeCsr();
-	return 0;
+	EXPECT_EQ(true, TC_MakeCsr());
+}
+
+int main(int argc, char **argv)
+{
+	::testing::InitGoogleTest(&argc, argv);
+	return RUN_ALL_TESTS();
 }
