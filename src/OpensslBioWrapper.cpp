@@ -1,6 +1,8 @@
 #include <iostream>
 #include <cassert>
-#include "Log.hpp"
+//#include "Log.hpp"
+#include "logging.h"
+
 #include "OpensslBioWrapper.hpp"
 
 

@@ -1,15 +1,15 @@
 #!/bin/bash
 
-CERT_HOME=$HOME/certificates
-ROOTCA_HOME=$CERT_HOME/rootca
+CERT_HOME=$HOME/ca
+ROOTCA_HOME=$CERT_HOME/root
 INTERMEDIATE_HOME=$CERT_HOME/intermediate
 
-# make /home/hskim/certificate directory
-if [! -d "$CERT_HOME" ]; then
+# make /home/hskim/ca directory
+if [ ! -d "$CERT_HOME" ]; then
 	mkdir $CERT_HOME
 fi
 
-# make /home/hskim/certificate/rootca directory
+# make /home/hskim/ca/intermediate directory
 if [ -d "$INTERMEDIATE_HOME" ]; then
 	rm -rf $INTERMEDIATE_HOME
 fi

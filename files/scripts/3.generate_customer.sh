@@ -1,12 +1,12 @@
 #!/bin/bash
 
-CERT_HOME=$HOME/certificates
-ROOTCA_HOME=$CERT_HOME/rootca
+CERT_HOME=$HOME/ca
+ROOTCA_HOME=$CERT_HOME/root
 INTERMEDIATE_HOME=$CERT_HOME/intermediate
 CUSTOMER_HOME=$CERT_HOME/customer
 
 # make /home/hskim/certificate directory
-if [! -d "$CERT_HOME" ]; then
+if [ ! -d "$CERT_HOME" ]; then
 	mkdir $CERT_HOME
 fi
 

@@ -1,7 +1,7 @@
 HOME			  = /home/hskim
-CERT_HOME		  = $HOME/certificates
-ROOTCA_HOME		  = $CERT_HOME/rootca
-INTERMEDIATE_HOME = $CERT_HOME/intermediate
+DATA_HOME		  = $HOME/ca
+ROOTCA_HOME		  = $DATA_HOME/root
+INTERMEDIATE_HOME = $DATA_HOME/intermediate
 dir               = $INTERMEDIATE_HOME
 
 [ ca ]
@@ -18,9 +18,7 @@ serial            = $dir/serial
 RANDFILE          = $dir/private/.rand
 
 # The root key and root certificate.
-#private_key       = $dir/private/intermediate.key.pem
 private_key		   = $ROOTCA_HOME/private/ca.key.pem
-#certificate       = $dir/certs/intermediate.cert.pem
 certificate        = $ROOTCA_HOME/certs/ca.cert.pem
 
 # For certificate revocation lists.
@@ -30,7 +28,7 @@ crl_extensions    = crl_ext
 default_crl_days  = 30
 
 # SHA-1 is deprecated, so use SHA-2 instead.
-default_md        = sha256
+default_md        = sha512
 
 name_opt          = ca_default
 cert_opt          = ca_default
@@ -66,7 +64,7 @@ distinguished_name  = req_distinguished_name
 string_mask         = utf8only
 
 # SHA-1 is deprecated, so use SHA-2 instead.
-default_md          = sha256
+default_md          = sha512
 
 # Extension to add when the -x509 option is used.
 x509_extensions     = v3_ca

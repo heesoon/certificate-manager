@@ -24,18 +24,24 @@ webos_component(1 0 0)
 include(FindPkgConfig)
 
 pkg_check_modules(GLIB2 REQUIRED glib-2.0)
-webos_add_compiler_flags(ALL ${GLIB2_CFLAGS})
+include_directories(${GLIB2_INCLUDE_DIRS})
+webos_add_compiler_flags(ALL ${GLIB2_CFLAGS_OTHER})
 
-pkg_check_modules(LUNASERVICE2 REQUIRED luna-service2)
-webos_add_compiler_flags(ALL ${LUNASERVICE2_CFLAGS})
+pkg_check_modules(GTHREAD2 REQUIRED gthread-2.0)
+include_directories(${GTHREAD2_INCLUDE_DIRS})
+webos_add_compiler_flags(ALL ${GTHREAD2_CFLAGS_OTHER})
 
-pkg_check_modules(PMLOG REQUIRED PmLogLib)
-include_directories(${PMLOG_INCLUDE_DIRS})
-webos_add_compiler_flags(ALL ${PMLOG_CFLAGS_OTHER})
+pkg_check_modules(LS2 REQUIRED luna-service2)
+include_directories(${LS2_INCLUDE_DIRS})
+webos_add_compiler_flags(ALL ${LS2_CFLAGS_OTHER})
 
 pkg_check_modules(PBNJSON_CPP REQUIRED pbnjson_cpp)
 include_directories(${PBNJSON_CPP_INCLUDE_DIRS})
 webos_add_compiler_flags(ALL ${PBNJSON_CPP_CFLAGS_OTHER})
+
+pkg_check_modules(PMLOG REQUIRED PmLogLib)
+include_directories(${PMLOG_INCLUDE_DIRS})
+webos_add_compiler_flags(ALL ${PMLOG_CFLAGS_OTHER})
 
 pkg_check_modules(DB8 REQUIRED db8)
 include_directories(${DB8_INCLUDE_DIRS})
@@ -45,32 +51,46 @@ pkg_check_modules(OPENSSL REQUIRED openssl)
 include_directories(${OPENSSL_INCLUDE_DIRS})
 webos_add_compiler_flags(ALL ${OPENSSL_CFLAGS_OTHER})
 
-include_directories(${CMAKE_SOURCE_DIR})
-include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(
+	${CMAKE_SOURCE_DIR}
+	${CMAKE_SOURCE_DIR}/include
+	${CMAKE_SOURCE_DIR}/include/Utils
+	${CMAKE_SOURCE_DIR}/xplatform/webos
+)
 
 #webos_add_compiler_flags(ALL -DMOJ_LINUX -std=c++11 -fno-exceptions -Wall -Werror)
 webos_add_compiler_flags(ALL -std=c++11 -Wall)
 
 set(SOURCES
-	"src/Log.cpp"
-	"src/OpensslBioWrapper.cpp"
-	"src/OpensslConfWrapper.cpp"
-	"src/OpensslRsaKeyWrapper.cpp"
-	"src/OpensslCertWrapper.cpp"
-	"src/OpensslCsrWrapper.cpp"
-	"src/OpensslCaWrapper.cpp"
-	"src/CertificateManager.cpp"
-	"src/main.cpp"
+	${CMAKE_SOURCE_DIR}/src/OpensslBioWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/OpensslConfWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/OpensslRsaKeyWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/OpensslCertWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/OpensslCsrWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/OpensslCaWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/CertificateManager.cpp
+	${CMAKE_SOURCE_DIR}/src/main.cpp
+	${CMAKE_SOURCE_DIR}/src/Singleton.cpp	
+	${CMAKE_SOURCE_DIR}/src/JUtil.cpp
+	${CMAKE_SOURCE_DIR}/src/Utils.cpp
+	${CMAKE_SOURCE_DIR}/src/Utils/errors.cpp
+	${CMAKE_SOURCE_DIR}/src/Utils/jsonutils.cpp
+	${CMAKE_SOURCE_DIR}/src/Utils/logging.cpp
+	${CMAKE_SOURCE_DIR}/src/Utils/lunaservice_client.cpp
+	${CMAKE_SOURCE_DIR}/src/Utils/lunaservice_utils.cpp
+	${CMAKE_SOURCE_DIR}/src/Utils/lunasubscription.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_libraries (${PROJECT_NAME}
 	${GLIB2_LDFLAGS}
-	${LUNASERVICE2_LDFLAGS}
-	${PMLOG_LDFLAGS}	
+	${GTHREAD2_LDFLAGS}
+	${LS2_LDFLAGS}
+	${PMLOG_LDFLAGS}
 	${PBNJSON_CPP_LDFLAGS}
 	${DB8_LDFLAGS}
 	${OPENSSL_LDFLAGS}
+	pthread
 )
 
 #webos_build_program(NAME ${PROJECT_NAME} ADMIN)

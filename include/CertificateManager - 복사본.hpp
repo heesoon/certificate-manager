@@ -20,24 +20,23 @@
 /*-----------------------------------------------------------------------------
  (File Inclusions)
  ------------------------------------------------------------------------------*/
-#include <memory>
-#include <pbnjson.hpp>
+#include <string>
 
-#include "lunaservice_utils.h"
-
-class CertificateManager{
+class CertificateManager
+{
+private :
 
 public :
-	CertificateManager(LSUtils::LunaService &service);
+	CertificateManager();
 	CertificateManager(CertificateManager const&) = delete;
 	CertificateManager(CertificateManager &&) = delete;
 	CertificateManager& operator =(CertificateManager const&) = delete;
 	CertificateManager& operator =(CertificateManager && ) = delete;
 
-	pbnjson::JValue generateKey(LSUtils::LunaRequest &request);
-	pbnjson::JValue csr(LSUtils::LunaRequest &request);
-	pbnjson::JValue sign(LSUtils::LunaRequest &request);
-	pbnjson::JValue verify(LSUtils::LunaRequest &request);
+	bool generateKey(const std::string &outputKeyFilename, int keySize);
+	bool csr(const std::string &outputCsrFilename, const std::string &inputPrivateKey, const std::string &commonName);
+	bool sign(const std::string &outputCertFile, const std::string &inputCsrFile);
+	bool verify(const std::string &inputCertFile);
 };
 
 #endif /*CERTIFICATE_MANAGER_SERVICE_HPP_*/

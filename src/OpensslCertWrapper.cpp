@@ -1,4 +1,5 @@
-#include "Log.hpp"
+//#include "Log.hpp"
+#include "logging.h"
 #include "OpensslBioWrapper.hpp"
 #include "OpensslCertWrapper.hpp"
 

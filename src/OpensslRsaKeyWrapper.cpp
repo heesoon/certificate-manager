@@ -1,5 +1,6 @@
 #include <iostream>
-#include "Log.hpp"
+//#include "Log.hpp"
+#include "logging.h"
 #include "OpensslRsaKeyWrapper.hpp"
 #include <openssl/pem.h>
 
