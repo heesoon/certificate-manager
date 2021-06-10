@@ -20,7 +20,6 @@ Electronics Inc. and discontinue all use of the Software.
 #include <PmLogLib.h>
 
 extern PmLogContext getPmLogContext();
-extern PmLogContext getNormalLogContext();
 
 #define LOG_CRITICAL(msgid, kvcount, ...) PmLogCritical(getPmgetPmLogContext()(), msgid, kvcount, ##__VA_ARGS__)
 
@@ -29,8 +28,6 @@ extern PmLogContext getNormalLogContext();
 #define LOG_WARNING(msgid, kvcount, ...) PmLogWarning(getPmLogContext(), msgid, kvcount, ##__VA_ARGS__)
 
 #define LOG_INFO(msgid, kvcount, ...) PmLogInfo(getPmLogContext(), msgid, kvcount, ##__VA_ARGS__)
-
-#define NORMAL_LOG(msgid, kvcount, ...) PmLogInfo(getNormalLogContext(), msgid, kvcount, ##__VA_ARGS__)
 
 #define LOG_DEBUG(fmt, ...) PmLogDebug(getPmLogContext(), "%s:%s() " fmt, __FILE__, __FUNCTION__, ##__VA_ARGS__)
 
@@ -44,8 +41,7 @@ extern PmLogContext getNormalLogContext();
         g_free(escaped_errtext);                                                                                       \
     } while (0)
 
-#define MSGID_MAINAPP "MAINAPP"
-#define MSGID_CERTIFY_SERVICE "CERTIFY_MANAGER"
+#define MSGID_MAINAPP "CertificateManager"
 
 #define MSGID_TRACE "SEBRO_TRACE"
 

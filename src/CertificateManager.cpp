@@ -8,7 +8,7 @@
 const std::string service = "com.webos.service.certificatemanager";
 CertificateManager::CertificateManager(LSUtils::LunaService &service)
 {
-	LOG_INFO(MSGID_CERTIFY_SERVICE, 0, "Cervice start");
+	LOG_INFO(MSGID_MAINAPP, 0, "CertificateManager start");
 
 	service.registerMethod("/", "generateKey", 	this, &CertificateManager::generateKey);
 	service.registerMethod("/", "csr", 			this, &CertificateManager::csr);
@@ -30,7 +30,7 @@ pbnjson::JValue CertificateManager::generateKey(LSUtils::LunaRequest &message)
 	request = pbnjson::Object();
 	request = message.getJson();
 
-	LOG_INFO(MSGID_CERTIFY_SERVICE, 0, "[%s][%d]message (%s)", __func__, __LINE__,request.stringify().c_str());
+	LOG_INFO(MSGID_MAINAPP, 0, "[%s][%d]message (%s)", __func__, __LINE__,request.stringify().c_str());
 
 	outputKeyFilename = request['KeyFilename'].asString();
 	if(outputKeyFilename.empty())
@@ -98,7 +98,7 @@ pbnjson::JValue CertificateManager::sign(LSUtils::LunaRequest &message)
 	bool ret = true;
 	 //LS::Message request(&message);
 	 //request.respond(R"json({"bus":"public"})json");
-	 LOG_INFO(MSGID_CERTIFY_SERVICE, 0, "<%s>[%s:%d]", __FILE__,__func__, __LINE__);
+	 LOG_INFO(MSGID_MAINAPP, 0, "<%s>[%s:%d]", __FILE__,__func__, __LINE__);
 	 return pbnjson::JObject{
         {"returnValue", ret}
     };
@@ -109,7 +109,7 @@ pbnjson::JValue CertificateManager::verify(LSUtils::LunaRequest &message)
 	bool ret = true;
 	 //LS::Message request(&message);
 	 //request.respond(R"json({"bus":"public"})json");
-	LOG_INFO(MSGID_CERTIFY_SERVICE, 0, "[%s][%d]", __func__, __LINE__);
+	LOG_INFO(MSGID_MAINAPP, 0, "[%s][%d]", __func__, __LINE__);
 	return pbnjson::JObject{
         {"returnValue", ret}
     };

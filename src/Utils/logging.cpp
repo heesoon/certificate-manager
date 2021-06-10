@@ -24,12 +24,3 @@ PmLogContext getPmLogContext()
     }
     return logContext;
 }
-
-PmLogContext getNormalLogContext()
-{
-    static PmLogContext logContext = 0;
-    if (0 == logContext) {
-        PmLogGetContext("certificateManager", &logContext);
-    }
-    return logContext;
-}

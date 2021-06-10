@@ -25,7 +25,6 @@ extern PmLogContext getPmLogContext();
 #define LOG_ERROR(msgid, kvcount, ...) PmLogError(getPmLogContext(), msgid, kvcount, ##__VA_ARGS__)
 #define LOG_WARNING(msgid, kvcount, ...) PmLogWarning(getPmLogContext(), msgid, kvcount, ##__VA_ARGS__)
 #define LOG_INFO(msgid, kvcount, ...) PmLogInfo(getPmLogContext(), msgid, kvcount, ##__VA_ARGS__)
-#define NORMAL_LOG(msgid, kvcount, ...) PmLogInfo(getNormalLogContext(), msgid, kvcount, ##__VA_ARGS__)
 #define LOG_DEBUG(fmt, ...) PmLogDebug(getPmLogContext(), "%s:%s() " fmt, __FILE__, __FUNCTION__, ##__VA_ARGS__)
 
 #endif // LOG_HPP
