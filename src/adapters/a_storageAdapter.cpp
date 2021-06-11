@@ -36,7 +36,7 @@ void StorageAdapter::getStorageDevicePathSubscriptionCb(LSUtils::LunaResponse &r
 
     pbnjson::JValue json = response.getJson();
 
-    if(!res.hasKey("returnValue") || res["returnValue"].asBool() == false)
+    if(!json.hasKey("returnValue") || json["returnValue"].asBool() == false)
     {
         return;
     }
