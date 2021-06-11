@@ -18,13 +18,8 @@ StorageAdapter::StorageAdapter(LS::Handle *handle, std::string serviceName) :
     m_getStorageDevicePathSubscription.subscribe(
         URI_STORAGE_GET_LISTDEVICES, //
         sendObj, this,
-        &StorageAdapter::getStorageDevicePathSubscriptionCb);
+        &StorageAdapter::getStorageDevicePathSubscriptionCb
     );
-}
-
-StorageAdapter::~StorageAdapter()
-{
-    m_getStorageDevicePathSubscription.cancel();
 }
 
 void StorageAdapter::getStorageDevicePathSubscriptionCb(LSUtils::LunaResponse &response)
