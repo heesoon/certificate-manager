@@ -22,6 +22,16 @@ StorageAdapter::StorageAdapter(LS::Handle *handle, std::string serviceName) :
     );
 }
 
+StorageAdapter* StorageAdapter::getInstance()
+{
+    if(_instance == nullptr)
+    {
+        return nullptr;
+    }
+
+    return _instance;
+}
+
 void StorageAdapter::getStorageDevicePathSubscriptionCb(LSUtils::LunaResponse &response)
 {
     if(!response.isSuccess())
