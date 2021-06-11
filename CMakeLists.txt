@@ -55,6 +55,7 @@ include_directories(
 	${CMAKE_SOURCE_DIR}
 	${CMAKE_SOURCE_DIR}/include
 	${CMAKE_SOURCE_DIR}/include/Utils
+	${CMAKE_SOURCE_DIR}/include/adapters
 )
 
 #webos_add_compiler_flags(ALL -DMOJ_LINUX -std=c++11 -fno-exceptions -Wall -Werror)
@@ -78,6 +79,7 @@ set(SOURCES
 	${CMAKE_SOURCE_DIR}/src/Utils/lunaservice_client.cpp
 	${CMAKE_SOURCE_DIR}/src/Utils/lunaservice_utils.cpp
 	${CMAKE_SOURCE_DIR}/src/Utils/lunasubscription.cpp
+	${CMAKE_SOURCE_DIR}/src/adapters/a_storageAdapter.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
