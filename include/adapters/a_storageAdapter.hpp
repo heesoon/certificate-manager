@@ -32,11 +32,11 @@ public:
     ~StorageAdapter();
     static StorageAdapter* getInstance();
 private:
-    std::vector<std::string> deviceUris;
+    std::vector<std::string> m_deviceUris;
     std::string m_serviceName;
     static StorageAdapter *_instance;
     LSUtils::PersistentSubscription m_getStorageDevicePathSubscription;
-    USUtils::LunaClient m_lunaClient;
+    LSUtils::LunaClient m_lunaClient;
     LSMessageToken m_callToken;
 
     // subscribe callback

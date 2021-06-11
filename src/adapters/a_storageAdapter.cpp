@@ -34,41 +34,33 @@ void StorageAdapter::getStorageDevicePathSubscriptionCb(LSUtils::LunaResponse &r
         return;
     }
 
-    pbnjson::JValue res = response.getJson();
+    pbnjson::JValue json = response.getJson();
 
     if(!res.hasKey("returnValue") || res["returnValue"].asBool() == false)
     {
         return;
     }
 
-    pbnjson::JValue::ObjectIterator iter;
-    // device arrary
-    pbnjson::JValue deviceLists = res["devices"];
-
-    if(deviceLists.isArray())
+    // get devices array
+    pbnjson::JValue devices = json["devices"];
+    for(ssize_t i = 0; i < devices.arraySize(); i++)
     {
-        for (iter = deviceLists.begin(); iter != deviceLists.end(); iter++)
+        // get device object
+        pbnjson::JValue device = devices[i];
+        std::string deviceType = device["deviceType"].asString();
+
+        if(deviceType != "usb")
         {
-            pbnjson::JValue subDevices = (*iter)["subDevices"];
-            std::string deviceType = (*iter)["deviceType"].asString();
+            continue;
+        }
 
-            if(deviceType != "usb")
-            {
-                continue;
-            }
-
-            if(subDevices.isArray())
-            {
-                pbnjson::JValue::ObjectIterator jter;
-                for (jter = subDevices.begin(); jter != subDevices.end(); jter++)
-                {
-                    pbnjson::JValue deviceUri = (*jter);
-                    if(deviceUri.isString())
-                    {
-                        deviceUris.emplace_back(deviceUri.asString());
-                    }
-                }
-            }
+        // get subDevice array
+        pbnjson::JValue subDevices = device["subDevices"];
+        for(ssize_t j = 0; j < subDevices.arraySize(); j++)
+        {
+            pbnjson::JValue subDevice = subDevices[j];
+            std::string deviceUri = subDevice["deviceUri"].asString();
+            m_deviceUris.emplace_back(deviceUri);
         }
     }
 }
