@@ -3,6 +3,17 @@
 
 #define URI_STORAGE_GET_LISTDEVICES "luna://com.webos.service.attachedstoragemanager/listDevices"
 
+StorageAdapter *StorageAdapter::_instance = nullptr;
+StorageAdapter* StorageAdapter::getInstance()
+{
+    if(_instance == nullptr)
+    {
+        return nullptr;
+    }
+
+    return _instance;
+}
+
 StorageAdapter::StorageAdapter(LS::Handle *handle, std::string serviceName) :
     m_serviceName(serviceName), m_lunaClient(*handle),
     m_getStorageDevicePathSubscription(m_lunaClient),
@@ -20,16 +31,6 @@ StorageAdapter::StorageAdapter(LS::Handle *handle, std::string serviceName) :
         sendObj, this,
         &StorageAdapter::getStorageDevicePathSubscriptionCb
     );
-}
-
-StorageAdapter* StorageAdapter::getInstance()
-{
-    if(_instance == nullptr)
-    {
-        return nullptr;
-    }
-
-    return _instance;
 }
 
 void StorageAdapter::getStorageDevicePathSubscriptionCb(LSUtils::LunaResponse &response)
