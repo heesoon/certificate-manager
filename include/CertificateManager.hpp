@@ -21,8 +21,6 @@
  (File Inclusions)
  ------------------------------------------------------------------------------*/
 #include <memory>
-#include <pbnjson.hpp>
-
 #include "lunaservice_utils.h"
 
 class CertificateManager{

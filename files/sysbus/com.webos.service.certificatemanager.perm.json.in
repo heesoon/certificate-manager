@@ -1,6 +1,6 @@
 {
     "com.webos.service.certificatemanager":[
-        "time.query"
+        "media",
+		"time.query"
     ]
 }
-

@@ -2,4 +2,3 @@
 Name=com.webos.service.certificatemanager
 Exec=@WEBOS_INSTALL_SBINDIR@/com.webos.service.certificatemanager
 Type=static
-

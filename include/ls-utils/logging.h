@@ -21,7 +21,7 @@ Electronics Inc. and discontinue all use of the Software.
 
 extern PmLogContext getPmLogContext();
 
-#define LOG_CRITICAL(msgid, kvcount, ...) PmLogCritical(getPmgetPmLogContext()(), msgid, kvcount, ##__VA_ARGS__)
+#define LOG_CRITICAL(msgid, kvcount, ...) PmLogCritical(getPmLogContext()(), msgid, kvcount, ##__VA_ARGS__)
 
 #define LOG_ERROR(msgid, kvcount, ...) PmLogError(getPmLogContext(), msgid, kvcount, ##__VA_ARGS__)
 

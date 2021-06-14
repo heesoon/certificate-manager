@@ -2,8 +2,7 @@
 #include "OpensslRsaKeyWrapper.hpp"
 #include "OpensslCsrWrapper.hpp"
 #include "OpensslCaWrapper.hpp"
-#include "lunaservice_utils.h"
-#include <pbnjson.hpp>
+#include "logging.h"
 #include <string>
 
 CertificateManager::CertificateManager(LSUtils::LunaService &service)

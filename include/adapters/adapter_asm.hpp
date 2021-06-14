@@ -21,6 +21,7 @@
  (File Inclusions)
  ------------------------------------------------------------------------------*/
 #include <string>
+#include <mutex>
 #include <luna-service2++/handle.hpp>
 #include "lunaservice_client.h"
 #include "lunaservice_utils.h"
@@ -30,17 +31,22 @@ class AdapterAsm
 public:
     AdapterAsm(LS::Handle *handle, std::string serviceName);
     ~AdapterAsm();
+	bool listDevices();
+    // subscribe callback
+    void listDevicesCb(LSUtils::LunaResponse &response);
+
     static AdapterAsm* getInstance();
+
 private:
     static AdapterAsm *_instance;
+	bool mAsmStatusCheckStarted;
     std::vector<std::string> mDeviceUris;
     std::string mServiceName;
-    LSUtils::PersistentSubscription mAsmGetDeviceListSubscription;
+    LSUtils::PersistentSubscription mStatusSubscription;
     LSUtils::LunaClient mLunaClient;
-    LSMessageToken mCallToken;
-
-    // subscribe callback
-    void AsmGetDeviceListSubscriptionCb(LSUtils::LunaResponse &response);
+    //LSMessageToken mCallToken;
+	//LSMessageToken mServiceStatusCall;
+	std::mutex mMutex;
 };
 
 #endif /*ADAPTOR_ASM_HPP_*/

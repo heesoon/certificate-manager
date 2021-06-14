@@ -5,25 +5,30 @@
 #define CERTIFICATE_MANAGER_SERVICE_NAME "com.webos.service.certificatemanager"
 
 static GMainLoop *gmainloop = nullptr;
+//static GMainLoop *gmainLoopAsmAdapter = nullptr;
 
 int main(int argc, char **argv)
 {
 	LOG_INFO(MSGID_MAINAPP, 0, "Certificate Manager start");
 
-	gmainloop = g_main_loop_new(NULL, FALSE);
+	gmainloop 			= g_main_loop_new(NULL, FALSE);
+	//gmainLoopAsmAdapter	= g_main_loop_new(NULL, FALSE);
 
 	try
 	{
 		LOG_INFO(MSGID_MAINAPP, 0, "create certificateManager");
 
 		// Handler
-		LSUtils::LunaService _lunaHandler(CERTIFICATE_MANAGER_SERVICE_NAME, gmainloop);
-		CertificateManager certificateManager(_lunaHandler);
+		LSUtils::LunaService certificateManagerLunaHandler(CERTIFICATE_MANAGER_SERVICE_NAME, gmainloop);
+		CertificateManager certificateManager(certificateManagerLunaHandler);
 
 		// Adapter
-		AdapterAsm AdapterAsm(_lunaHandler.getHandle(), CERTIFICATE_MANAGER_SERVICE_NAME);
+		//LSUtils::LunaService asmAdapterLunaHandler("com.webos.service.certificatemanager.asmAdapter", gmainLoopAsmAdapter);
+		//AdapterAsm AdapterAsm(asmAdapterLunaHandler.getHandle(), "com.webos.service.certificatemanager.asmAdapter");
+		AdapterAsm AdapterAsm(certificateManagerLunaHandler.getHandle(), CERTIFICATE_MANAGER_SERVICE_NAME);
 
 		g_main_loop_run(gmainloop);
+		//g_main_loop_run(gmainLoopAsmAdapter);
 	}
 	catch(LS::Error &err)
 	{
@@ -33,6 +38,7 @@ int main(int argc, char **argv)
 	}
 
 	g_main_loop_unref(gmainloop);
+	//g_main_loop_unref(gmainLoopAsmAdapter);
 
 	return 0;
 }

@@ -2,12 +2,15 @@
     "exeName":"@WEBOS_INSTALL_SBINDIR@/com.webos.service.certificatemanager",
     "type": "regular",
     "allowedNames": [
-        "com.webos.service.certificatemanager"
+        "com.webos.service.certificatemanager",
     ],
     "permissions": [
         {
             "service":"com.webos.service.certificatemanager",
-            "outbound":[
+            "inbound": [
+                "*"
+            ],
+            "outbound": [
                 "*"
             ]
         }
