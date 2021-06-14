@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef A_ADAPTOR_STORAGE_HPP_
-#define A_ADAPTOR_STORAGE_HPP_
+#ifndef ADAPTOR_ASM_HPP_
+#define ADAPTOR_ASM_HPP_
 
 /*-----------------------------------------------------------------------------
  (File Inclusions)
@@ -25,22 +25,22 @@
 #include "lunaservice_client.h"
 #include "lunaservice_utils.h"
 
-class StorageAdapter
+class AdapterAsm
 {
 public:
-    StorageAdapter(LS::Handle *handle, std::string serviceName);
-    ~StorageAdapter();
-    static StorageAdapter* getInstance();
+    AdapterAsm(LS::Handle *handle, std::string serviceName);
+    ~AdapterAsm();
+    static AdapterAsm* getInstance();
 private:
-    std::vector<std::string> m_deviceUris;
-    std::string m_serviceName;
-    static StorageAdapter *_instance;
-    LSUtils::PersistentSubscription m_getStorageDevicePathSubscription;
-    LSUtils::LunaClient m_lunaClient;
-    LSMessageToken m_callToken;
+    static AdapterAsm *_instance;
+    std::vector<std::string> mDeviceUris;
+    std::string mServiceName;
+    LSUtils::PersistentSubscription mAsmGetDeviceListSubscription;
+    LSUtils::LunaClient mLunaClient;
+    LSMessageToken mCallToken;
 
     // subscribe callback
-    void getStorageDevicePathSubscriptionCb(LSUtils::LunaResponse &response);
+    void AsmGetDeviceListSubscriptionCb(LSUtils::LunaResponse &response);
 };
 
-#endif /*A_ADAPTOR_STORAGE_HPP_*/
+#endif /*ADAPTOR_ASM_HPP_*/

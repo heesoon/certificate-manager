@@ -54,7 +54,7 @@ webos_add_compiler_flags(ALL ${OPENSSL_CFLAGS_OTHER})
 include_directories(
 	${CMAKE_SOURCE_DIR}
 	${CMAKE_SOURCE_DIR}/include
-	${CMAKE_SOURCE_DIR}/include/Utils
+	${CMAKE_SOURCE_DIR}/include/ls-utils
 	${CMAKE_SOURCE_DIR}/include/adapters
 )
 
@@ -70,16 +70,13 @@ set(SOURCES
 	${CMAKE_SOURCE_DIR}/src/OpensslCaWrapper.cpp
 	${CMAKE_SOURCE_DIR}/src/CertificateManager.cpp
 	${CMAKE_SOURCE_DIR}/src/main.cpp
-	${CMAKE_SOURCE_DIR}/src/Singleton.cpp	
-	${CMAKE_SOURCE_DIR}/src/JUtil.cpp
-	${CMAKE_SOURCE_DIR}/src/Utils.cpp
-	${CMAKE_SOURCE_DIR}/src/Utils/errors.cpp
-	${CMAKE_SOURCE_DIR}/src/Utils/jsonutils.cpp
-	${CMAKE_SOURCE_DIR}/src/Utils/logging.cpp
-	${CMAKE_SOURCE_DIR}/src/Utils/lunaservice_client.cpp
-	${CMAKE_SOURCE_DIR}/src/Utils/lunaservice_utils.cpp
-	${CMAKE_SOURCE_DIR}/src/Utils/lunasubscription.cpp
-	${CMAKE_SOURCE_DIR}/src/adapters/a_storageAdapter.cpp
+	${CMAKE_SOURCE_DIR}/src/ls-utils/errors.cpp
+	${CMAKE_SOURCE_DIR}/src/ls-utils/jsonutils.cpp
+	${CMAKE_SOURCE_DIR}/src/ls-utils/logging.cpp
+	${CMAKE_SOURCE_DIR}/src/ls-utils/lunaservice_client.cpp
+	${CMAKE_SOURCE_DIR}/src/ls-utils/lunaservice_utils.cpp
+	${CMAKE_SOURCE_DIR}/src/ls-utils/lunasubscription.cpp
+	${CMAKE_SOURCE_DIR}/src/adapters/adapter_asm.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})

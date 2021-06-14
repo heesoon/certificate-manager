@@ -3,11 +3,9 @@
 #include "OpensslCsrWrapper.hpp"
 #include "OpensslCaWrapper.hpp"
 #include "lunaservice_utils.h"
-#include <JUtil.hpp>
 #include <pbnjson.hpp>
 #include <string>
 
-const std::string service = "com.webos.service.certificatemanager";
 CertificateManager::CertificateManager(LSUtils::LunaService &service)
 {
 	LOG_INFO(MSGID_MAINAPP, 0, "CertificateManager start");

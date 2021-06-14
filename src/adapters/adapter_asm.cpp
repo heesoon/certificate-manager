@@ -1,10 +1,11 @@
-#include "a_storageAdapter.hpp"
+#include "adapter_asm.hpp"
+#include "logging.h"
 #include <pbnjson.hpp>
 
-#define URI_STORAGE_GET_LISTDEVICES "luna://com.webos.service.attachedstoragemanager/listDevices"
+#define URI_ASM_GET_LISTDEVICES "luna://com.webos.service.attachedstoragemanager/listDevices"
+AdapterAsm *AdapterAsm::_instance = nullptr;
 
-StorageAdapter *StorageAdapter::_instance = nullptr;
-StorageAdapter* StorageAdapter::getInstance()
+AdapterAsm* AdapterAsm::getInstance()
 {
     if(_instance == nullptr)
     {
@@ -14,10 +15,10 @@ StorageAdapter* StorageAdapter::getInstance()
     return _instance;
 }
 
-StorageAdapter::StorageAdapter(LS::Handle *handle, std::string serviceName) :
-    m_serviceName(serviceName), m_lunaClient(*handle),
-    m_getStorageDevicePathSubscription(m_lunaClient),
-    m_callToken(0)
+AdapterAsm::AdapterAsm(LS::Handle *handle, std::string serviceName) :
+    mServiceName(serviceName), mLunaClient(*handle),
+    mAsmGetDeviceListSubscription(mLunaClient),
+    mCallToken(0)
 {
     if(_instance == nullptr)
     {
@@ -26,16 +27,18 @@ StorageAdapter::StorageAdapter(LS::Handle *handle, std::string serviceName) :
 
     pbnjson::JValue sendObj = pbnjson::JObject{{"subscribe", true}};
     //pbnjson::JValue sendObj = pbnjson::JObject{{"deviceType" : "usb", "subscribe" : true}};
-    m_getStorageDevicePathSubscription.subscribe(
-        URI_STORAGE_GET_LISTDEVICES, //
+    mAsmGetDeviceListSubscription.subscribe(
+        URI_ASM_GET_LISTDEVICES, //
         sendObj, this,
-        &StorageAdapter::getStorageDevicePathSubscriptionCb
+        &AdapterAsm::AsmGetDeviceListSubscriptionCb
     );
 }
 
-void StorageAdapter::getStorageDevicePathSubscriptionCb(LSUtils::LunaResponse &response)
+void AdapterAsm::AsmGetDeviceListSubscriptionCb(LSUtils::LunaResponse &response)
 {
-    if(!response.isSuccess())
+	LOG_DEBUG("AsmGetDeviceListSubscriptionCb star....");
+
+	if(!response.isSuccess())
     {
         return;
     }
@@ -55,6 +58,8 @@ void StorageAdapter::getStorageDevicePathSubscriptionCb(LSUtils::LunaResponse &r
         pbnjson::JValue device = devices[i];
         std::string deviceType = device["deviceType"].asString();
 
+		LOG_DEBUG("deviceType %s ", deviceType.c_str());
+
         if(deviceType != "usb")
         {
             continue;
@@ -66,14 +71,17 @@ void StorageAdapter::getStorageDevicePathSubscriptionCb(LSUtils::LunaResponse &r
         {
             pbnjson::JValue subDevice = subDevices[j];
             std::string deviceUri = subDevice["deviceUri"].asString();
-            m_deviceUris.emplace_back(deviceUri);
+			LOG_DEBUG("deviceUri %s ", deviceUri.c_str());
+            mDeviceUris.emplace_back(deviceUri);
         }
     }
+
+	LOG_DEBUG("AsmGetDeviceListSubscriptionCb finish....");
 }
 
-StorageAdapter::~StorageAdapter()
+AdapterAsm::~AdapterAsm()
 {
-    m_getStorageDevicePathSubscription.cancel();
+    mAsmGetDeviceListSubscription.cancel();
 }
 
 #if 0
@@ -98,5 +106,4 @@ static bool backup_getStoragePath(LSHandle *sh, const char *serviceName, bool co
 
     return true;
 }
-
 #endif
