@@ -35,6 +35,10 @@ pkg_check_modules(LS2 REQUIRED luna-service2)
 include_directories(${LS2_INCLUDE_DIRS})
 webos_add_compiler_flags(ALL ${LS2_CFLAGS_OTHER})
 
+pkg_check_modules(LS2++ REQUIRED luna-service2++)
+include_directories(${LS2++_INCLUDE_DIRS})
+webos_add_compiler_flags(ALL ${LS2++_CFLAGS})
+
 pkg_check_modules(PBNJSON_CPP REQUIRED pbnjson_cpp)
 include_directories(${PBNJSON_CPP_INCLUDE_DIRS})
 webos_add_compiler_flags(ALL ${PBNJSON_CPP_CFLAGS_OTHER})
@@ -72,11 +76,14 @@ set(SOURCES
 	${CMAKE_SOURCE_DIR}/src/main.cpp
 	${CMAKE_SOURCE_DIR}/src/ls-utils/errors.cpp
 	${CMAKE_SOURCE_DIR}/src/ls-utils/jsonutils.cpp
+	${CMAKE_SOURCE_DIR}/src/ls-utils/json_payload.cpp
 	${CMAKE_SOURCE_DIR}/src/ls-utils/logging.cpp
 	${CMAKE_SOURCE_DIR}/src/ls-utils/lunaservice_client.cpp
 	${CMAKE_SOURCE_DIR}/src/ls-utils/lunaservice_utils.cpp
 	${CMAKE_SOURCE_DIR}/src/ls-utils/lunasubscription.cpp
+	${CMAKE_SOURCE_DIR}/src/ls-utils/Utils.cpp
 	${CMAKE_SOURCE_DIR}/src/adapters/adapter_asm.cpp
+	${CMAKE_SOURCE_DIR}/src/adapters/adapter_db.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -84,6 +91,7 @@ target_link_libraries (${PROJECT_NAME}
 	${GLIB2_LDFLAGS}
 	${GTHREAD2_LDFLAGS}
 	${LS2_LDFLAGS}
+	${LS2++_LDFLAGS}
 	${PMLOG_LDFLAGS}
 	${PBNJSON_CPP_LDFLAGS}
 	${DB8_LDFLAGS}

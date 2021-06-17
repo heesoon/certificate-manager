@@ -1,0 +1,9 @@
+{
+    "id":"com.webos.service.certificatemanager:1",
+    "owner":"com.webos.service.certificatemanager",
+    "indexes":[
+        {"name":"keyid_index", "props":[{"name":"keyid"}]},
+        {"name":"id_perm", "props":[{"name":"keyid"},{"name":"permanent"}]},
+        {"name":"perm_id", "props":[{"name":"permanent"},{"name":"keyid"}]}
+    ]
+}

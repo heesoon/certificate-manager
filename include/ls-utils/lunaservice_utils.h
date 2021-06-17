@@ -217,12 +217,40 @@ public:
      */
     ResponseFunc defer();
 
-    /**
-     * Returns sender id.
-     */
-    inline std::string getSender() { return mMessage.getSender(); }
-
-	inline LS::Message& getMessage() { return mMessage; }
+	/*!
+	 * \return sender id.
+	 */
+	inline std::string getSender()
+	{
+		if(mMessage.getSender())
+			return mMessage.getSender();
+		else
+			return "UNKNOWN";
+	}
+	
+	inline std::string getSenderServiceName()
+	{
+		if(mMessage.getSenderServiceName())
+			return mMessage.getSenderServiceName();
+		else
+			return "UNKNOWN";
+	}
+	
+	inline std::string getApplicationID()
+	{
+		if(mMessage.getApplicationID())
+			return mMessage.getApplicationID();
+		else
+			return "UNKNOWN";
+	}
+	
+	/*!
+	 * \return message.
+	 */
+	inline LS::Message& getMessage()
+	{
+		return mMessage;
+	}
 
 private:
     void respond(const pbnjson::JValue &response);

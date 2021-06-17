@@ -24,12 +24,20 @@ S = "${WORKDIR}/git"
 SERVICEDIR = "${D}${webos_servicesdir}/${BPN}"
 
 do_install_append() {
+	# install scripts files
     install -d ${SERVICEDIR}
 	install -d ${SERVICEDIR}/scripts
-	
-	#install scripts files
+
 	#cp -R --no-dereference --preserve=mode,links -v ${S}/files/scripts/* ${SERVICEDIR}/scripts/
 	install -m 0644 ${S}/files/scripts/* ${SERVICEDIR}/scripts/
+	
+    # install 
+    install -d ${D}${webos_sysconfdir}/db/kinds
+    install -d ${D}${webos_sysconfdir}/db/permissions
+    #cp -vrf ${S}/db/kinds/* ${D}${webos_sysconfdir}/db/kinds/ 2> /dev/null || true
+    #cp -vrf ${S}/db/permissions/* ${D}${webos_sysconfdir}/db/permissions/ 2> /dev/null || true
+	install -m 0644 ${S}/files/db8/kinds/* ${D}${webos_sysconfdir}/db/kinds/
+	install -m 0644 ${S}/files/db8/permissions/* ${D}${webos_sysconfdir}/db/permissions/
 }
 
 FILES_${PN} += "${webos_servicesdir}"

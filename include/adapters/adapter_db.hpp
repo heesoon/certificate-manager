@@ -14,30 +14,38 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef CERTIFICATE_MANAGER_SERVICE_HPP_
-#define CERTIFICATE_MANAGER_SERVICE_HPP_
+#ifndef ADAPTOR_DB_HPP_
+#define ADAPTOR_DB_HPP_
 
 /*-----------------------------------------------------------------------------
  (File Inclusions)
  ------------------------------------------------------------------------------*/
-#include <memory>
+#include <string>
+#include <luna-service2++/handle.hpp>
+#include "lunaservice_client.h"
 #include "lunaservice_utils.h"
 
-class CertificateManager{
+class AdapterDb
+{
+public:
+    AdapterDb(LS::Handle *handle, std::string serviceName);
+    ~AdapterDb();
 
-public :
-	CertificateManager(LSUtils::LunaService &service);
-	CertificateManager(CertificateManager const&) = delete;
-	CertificateManager(CertificateManager &&) = delete;
-	CertificateManager& operator =(CertificateManager const&) = delete;
-	CertificateManager& operator =(CertificateManager && ) = delete;
+	void registerServiceStatus();
+	void registerServiceStatusCb(LSUtils::LunaResponse &response);
+	bool putKind();
+	bool findKey(const std::string &keyId);
+	bool put(const std::string &keyId);
 
-	pbnjson::JValue generateKey(LSUtils::LunaRequest &request);
-	pbnjson::JValue csr(LSUtils::LunaRequest &request);
-	pbnjson::JValue sign(LSUtils::LunaRequest &request);
-	pbnjson::JValue verify(LSUtils::LunaRequest &request);
+    static AdapterDb* getInstance();
 
-	bool getKeyId(LSUtils::LunaRequest &request, const std::string &keyname, std::string &keyId);
+private:
+    std::string mServiceName;
+    static AdapterDb *_instance;
+    LSUtils::PersistentSubscription mStatusSubscription;
+    LSUtils::LunaClient mLunaClient;
+
+	LS::Handle& handle_;
 };
 
-#endif /*CERTIFICATE_MANAGER_SERVICE_HPP_*/
+#endif /*ADAPTOR_DB_HPP_*/

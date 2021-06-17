@@ -1,6 +1,7 @@
 #include "CertificateManager.hpp"
 #include "logging.h"
 #include "adapter_asm.hpp"
+#include "adapter_db.hpp"
 
 #define CERTIFICATE_MANAGER_SERVICE_NAME "com.webos.service.certificatemanager"
 
@@ -25,6 +26,7 @@ int main(int argc, char **argv)
 		// Adapter
 		//LSUtils::LunaService asmAdapterLunaHandler("com.webos.service.certificatemanager.asmAdapter", gmainLoopAsmAdapter);
 		//AdapterAsm AdapterAsm(asmAdapterLunaHandler.getHandle(), "com.webos.service.certificatemanager.asmAdapter");
+		AdapterDb AdapterDb(certificateManagerLunaHandler.getHandle(), CERTIFICATE_MANAGER_SERVICE_NAME);
 		AdapterAsm AdapterAsm(certificateManagerLunaHandler.getHandle(), CERTIFICATE_MANAGER_SERVICE_NAME);
 
 		g_main_loop_run(gmainloop);

@@ -1,9 +1,13 @@
+#include <string>
 #include "CertificateManager.hpp"
 #include "OpensslRsaKeyWrapper.hpp"
 #include "OpensslCsrWrapper.hpp"
 #include "OpensslCaWrapper.hpp"
 #include "logging.h"
-#include <string>
+
+#include "adapter_db.hpp"
+
+const std::string temporalLocalStorage = "/usr/palm/services/com.webos.service.certificatemanager";
 
 CertificateManager::CertificateManager(LSUtils::LunaService &service)
 {
@@ -15,40 +19,97 @@ CertificateManager::CertificateManager(LSUtils::LunaService &service)
 	service.registerMethod("/", "verify", 		this, &CertificateManager::verify);
 }
 
-pbnjson::JValue CertificateManager::generateKey(LSUtils::LunaRequest &message)
+bool CertificateManager::getKeyId(LSUtils::LunaRequest &request, const std::string &keyname, std::string &keyId)
 {
+	std::string appId = "";
+	std::string applicationId 	= request.getApplicationID();
+	std::string senderId 		= request.getSender();
+
+	if(applicationId != "UNKNOWN")
+	{
+		appId = applicationId;
+	}
+	else if(senderId != "UNKNOWN")
+	{
+		appId = senderId;
+	}
+	else
+	{
+		appId = "UNKNOWN";
+		return false;
+	}
+
+	//keyId = appId + "::" + keyname;
+	keyId = "com.webos.service.certificateTest::" + keyname;
+
+#if 1
+	LOG_INFO("AdapterDb", 0, "applicationId = %s ..", applicationId.c_str());
+	LOG_INFO("AdapterDb", 0, "senderId = %s ..", senderId.c_str());
+	LOG_INFO("AdapterDb", 0, "serviceName = %s ..", request.getSenderServiceName().c_str());
+	LOG_INFO("AdapterDb", 0, "getKeyId = %s ..", keyId.c_str());
+#endif
+
+	return true;
+}
+
+pbnjson::JValue CertificateManager::generateKey(LSUtils::LunaRequest &request)
+{
+	LOG_INFO(MSGID_MAINAPP, 0, "[%s][%d]", __func__, __LINE__);
+
 	bool success = true;
-	int nBits = 0;
-	EVP_PKEY *pkey = NULL;
+	int keySize = 0;
+	std::string keyId = "";
 	std::string errorText = "";
-	std::string result = "";
+	std::string keyname = "";
 	std::string outputKeyFilename = "";
 
-	pbnjson::JValue reply;
-	pbnjson::JValue request = pbnjson::Object();
-	request = message.getJson();
-
-	LOG_INFO(MSGID_MAINAPP, 0, "[%s][%d]message (%s)", __func__, __LINE__,request.stringify().c_str());
-
+	EVP_PKEY *pkey = NULL;
 	OpensslRsaKeyWrapper opensslRsaKeyWrapper;
 
-	outputKeyFilename = request["KeyFilename"].asString();
-	if(outputKeyFilename.empty())
+	if(AdapterDb::getInstance() == nullptr)
 	{
 		success = false;
-		errorText = "wrong keyfile name or path";
+		errorText = "db8 is not initialized";
 		goto end;
 	}
 
-	nBits = request["keySize"].asNumber<int>();
-	if(nBits <= 1024 || nBits >= 16384)
+	if( request.hasKey("keyname") == false ||
+		request.hasKey("KeyFilename") == false || 
+		request.hasKey("keySize") == false )
 	{
 		success = false;
-		errorText = "keysize out of range(1024 ~ 16384";
+		errorText = "empty of keyname or KeyFilename or keySize in luna";
 		goto end;
 	}
 
-	if(opensslRsaKeyWrapper.open(outputKeyFilename, 'w', FORMAT_PEM, nBits) == false)
+	request.param("keyname", keyname);
+	request.param("KeyFilename", outputKeyFilename);
+	request.param("keySize", keySize);
+
+	if(getKeyId(request, keyname, keyId) == false)
+	{
+		success = false;
+		errorText = "wrong request (No Keyname)";
+		goto end;
+	}
+
+	// check key data whether key is already generated or not
+	if(AdapterDb::getInstance()->findKey(keyId) == true)
+	{
+		success = false;
+		errorText = "key already exist";
+		goto end;
+	}
+
+/*
+	if(keySize <= 1024 || keySize >= 16384)
+	{
+		success = false;
+		errorText = "keySize out of range(1024 ~ 16384";
+		goto end;
+	}
+*/
+	if(opensslRsaKeyWrapper.open(outputKeyFilename, 'w', FORMAT_PEM, keySize) == false)
 	{
 		success = false;
 		errorText = "file open error";
@@ -70,8 +131,17 @@ pbnjson::JValue CertificateManager::generateKey(LSUtils::LunaRequest &message)
 		goto end;
 	}
 
+	// update Db
+	if(AdapterDb::getInstance()->put(keyId) == false)
+	{
+		success = false;
+		errorText = "failed to update db";
+		goto end;
+	}
+
 end:
-	reply = pbnjson::Object();
+
+	pbnjson::JValue reply = pbnjson::Object();
 
 	if(success == false)
 	{
@@ -81,54 +151,37 @@ end:
 	else
 	{
 		reply.put("KeyFilename", outputKeyFilename.c_str());
-		reply.put("keySize", nBits);
+		reply.put("keySize", keySize);
         reply.put("returnValue", true);
 	}
 
 	return reply;
 }
 
-pbnjson::JValue CertificateManager::csr(LSUtils::LunaRequest &message)
+pbnjson::JValue CertificateManager::csr(LSUtils::LunaRequest &request)
 {
+	LOG_INFO(MSGID_MAINAPP, 0, "[%s][%d]", __func__, __LINE__);
+
 	bool success = true;
 	X509_REQ *x509Req = NULL;
 	std::string errorText = "";
 	std::string outputCsrFile = "";
 	std::string inputPrivateKey = "";
 	subject_t subject = {"", "KR", "Seoul", "Seoul", "IDSW R&D Division", "certificatemanger@idsw.lge.com"};
-	const std::string inputConf = "/usr/palm/services/com.webos.service.certificatemanager/scripts/customer_openssl.cnf";
-
-	pbnjson::JValue reply;
-	pbnjson::JValue request = pbnjson::Object();
-	request = message.getJson();
-
-	LOG_INFO(MSGID_MAINAPP, 0, "[%s][%d]message (%s)", __func__, __LINE__,request.stringify().c_str());
+	const std::string inputConf = temporalLocalStorage + "/scripts/customer_openssl.cnf";
 
 	OpensslCsrWrapper opensslCsrWrapper;
 
-	outputCsrFile = request["csrFilename"].asString();
-	if(outputCsrFile.empty())
+	if( request.hasKey("csrFilename") == false || request.hasKey("privateKey") == false || request.hasKey("commonName") == false )
 	{
 		success = false;
-		errorText = "empty csr file or path";
-		goto end;
+		errorText = "empty of csrFilename, privateKey or commonName in luna";
+		goto end;		
 	}
 
-	inputPrivateKey = request["privateKey"].asString();
-	if(inputPrivateKey.empty())
-	{
-		success = false;
-		errorText = "empty private key file or path";
-		goto end;
-	}
-
-	subject.commonName = request["commonName"].asString();
-	if(subject.commonName.empty())
-	{
-		success = false;
-		errorText = "empty common name";
-		goto end;
-	}
+	request.param("csrFilename", outputCsrFile);
+	request.param("privateKey", inputPrivateKey);
+	request.param("commonName", subject.commonName);
 
 	if(opensslCsrWrapper.open(outputCsrFile, 'w', FORMAT_PEM) == false)
 	{
@@ -160,7 +213,8 @@ pbnjson::JValue CertificateManager::csr(LSUtils::LunaRequest &message)
 	}
 
 end:
-	reply = pbnjson::Object();
+
+	pbnjson::JValue reply = pbnjson::Object();
 
 	if(success == false)
 	{
@@ -176,15 +230,16 @@ end:
 	return reply;
 }
 
-pbnjson::JValue CertificateManager::sign(LSUtils::LunaRequest &message)
+pbnjson::JValue CertificateManager::sign(LSUtils::LunaRequest &request)
 {
+#if 0
 	bool success = true;
 	X509 *x509 = NULL;
 
 	std::string errorText = "";
 	std::string outputCertFilename = "";
 	std::string inputCsrFilename = "";
-	const std::string inputConfigFile = "/usr/palm/services/com.webos.service.certificatemanager/scripts/customer_openssl.cnf";
+	const std::string inputConfigFile = temporalLocalStorage + "/scripts/customer_openssl.cnf";
 
 	pbnjson::JValue reply;
 	pbnjson::JValue request = pbnjson::Object();
@@ -254,14 +309,19 @@ end:
 	}
 
 	return reply;
+#else
+		pbnjson::JValue reply = pbnjson::Object();
+		return reply;
+#endif
 }
 
-pbnjson::JValue CertificateManager::verify(LSUtils::LunaRequest &message)
+pbnjson::JValue CertificateManager::verify(LSUtils::LunaRequest &request)
 {
+#if 0
 	bool success = true;
 	std::string errorText = "";
 	std::string inputCertFile = "";
-	const std::string inputCaChainFile = "/usr/palm/services/com.webos.service.certificatemanager/scripts/ca-chain.cert.pem";
+	const std::string inputCaChainFile = temporalLocalStorage + "/scripts/ca-chain.cert.pem";
 
 	pbnjson::JValue reply;
 	pbnjson::JValue request = pbnjson::Object();
@@ -299,4 +359,9 @@ end:
 	}
 
 	return reply;
+#else
+		pbnjson::JValue reply = pbnjson::Object();
+		return reply;
+#endif
+
 }
