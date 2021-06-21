@@ -29,10 +29,10 @@ openssl genrsa -out private/ca.key.pem 4096
 
 # generate root ca certficate
 openssl req -config openssl.cnf \
-			-subj "/C=KR/ST=Seoul/O=Kims Ltd/OU=R&D/CN=Kims Ltd Root CA" \
+			-subj "/C=KR/ST=Seoul/O=R&D/OU=SW/CN=RootCA" \
 			-key private/ca.key.pem \
 			-nodes \
-			-new -x509 -days 7300 -sha256 -extensions v3_ca \
+			-new -x509 -days 7300 -sha512 -extensions v3_ca \
 			-out certs/ca.cert.pem
 
 # verify the root certificate

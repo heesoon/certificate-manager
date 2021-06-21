@@ -33,7 +33,7 @@ default_md        = sha512
 
 name_opt          = ca_default
 cert_opt          = ca_default
-default_days      = 3750
+default_days      = 7300
 preserve          = no
 policy            = policy_strict
 
@@ -81,12 +81,12 @@ commonName                      = Common Name
 emailAddress                    = Email Address
 
 # Optionally, specify some defaults.
-countryName_default             = GB
-stateOrProvinceName_default     = England
-localityName_default            =
-0.organizationName_default      = Alice Ltd
-#organizationalUnitName_default =
-#emailAddress_default           =
+countryName_default             = KR
+stateOrProvinceName_default     = Seoul
+localityName_default            = Seoul
+0.organizationName_default      = R&D
+organizationalUnitName_default  = SW
+emailAddress_default            = rnd@support.com
 
 [ v3_ca ]
 # Extensions for a typical CA (`man x509v3_config`).
