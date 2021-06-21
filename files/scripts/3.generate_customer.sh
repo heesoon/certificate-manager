@@ -22,7 +22,6 @@ cd $CUSTOMER_HOME
 mkdir certs crl csr newcerts private
 chmod 700 private
 touch index.txt
-touch index.txt.attr
 echo 1000 > serial
 touch crlnumber
 echo 1000 > crlnumber
@@ -37,7 +36,7 @@ chmod 666 private/customer.key.pem
 # generate customer ca csr
 openssl req -config openssl.cnf \
 			-new -sha256 \
-			-subj "/C=KR/ST=Seoul/O=Kims Ltd/OU=R&D/CN=Kims Ltd CUSTOMER" \
+			-subj "/C=KR/ST=Seoul/O=R&D/OU=SW/CN=CUSTOMER" \
 			-key private/customer.key.pem \
 			-out csr/customer.csr.pem
 
@@ -47,7 +46,6 @@ openssl ca -config openssl.cnf \
 			-days 365 -notext -md sha256 \
 			-in csr/customer.csr.pem \
 			-out certs/customer.cert.pem
-
 
 # identify intermdiate certificate
 openssl x509 -noout -text -in certs/customer.cert.pem

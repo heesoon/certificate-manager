@@ -167,7 +167,15 @@ pbnjson::JValue CertificateManager::csr(LSUtils::LunaRequest &request)
 	std::string errorText = "";
 	std::string outputCsrFile = "";
 	std::string inputPrivateKey = "";
-	subject_t subject = {"", "KR", "Seoul", "Seoul", "IDSW R&D Division", "certificatemanger@idsw.lge.com"};
+	//subject_t subject = {"", "KR", "Seoul", "Seoul", "IDSW R&D Division", "certificatemanger@idsw.lge.com"};
+
+	subject_t subject;
+	subject.countryName 		= "KR";
+	subject.stateOrProvinceName	= "Seoul";
+	subject.localityName		= "Seoul";
+	subject.organizationName	= "IDSW R&D Division";
+	subject.emailAddress		= "rnd@support.com";
+
 	const std::string inputConf = temporalLocalStorage + "/scripts/customer_openssl.cnf";
 
 	OpensslCsrWrapper opensslCsrWrapper;
@@ -176,7 +184,7 @@ pbnjson::JValue CertificateManager::csr(LSUtils::LunaRequest &request)
 	{
 		success = false;
 		errorText = "empty of csrFilename, privateKey or commonName in luna";
-		goto end;		
+		goto end;
 	}
 
 	request.param("csrFilename", outputCsrFile);

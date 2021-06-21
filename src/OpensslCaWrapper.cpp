@@ -996,7 +996,7 @@ bool OpensslCaWrapper::check(X509_STORE *ctx, const std::string &inputCertFile, 
 
 	i = X509_verify_cert(csc);
 
-	//LOG_INFO("opensslca", 0, "[%s][%d] i = %d ", __func__, __LINE__, i);
+	LOG_INFO("opensslca", 0, "[%s][%d] i = %d ", __func__, __LINE__, i);
 
 	if(i > 0 && X509_STORE_CTX_get_error(csc) == X509_V_OK)
 	{

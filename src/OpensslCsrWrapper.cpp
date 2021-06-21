@@ -256,7 +256,7 @@ bool OpensslCsrWrapper::makeCsr(const std::string &inputCnfFilename, const std::
         return false;
     }
 
-	ret = X509_NAME_add_entry_by_txt(x509_name, "commonName", chtype, reinterpret_cast<const unsigned char*>(subject.countryName.c_str()), -1, -1, 0);
+	ret = X509_NAME_add_entry_by_txt(x509_name, "commonName", chtype, reinterpret_cast<const unsigned char*>(subject.commonName.c_str()), -1, -1, 0);
 	if(ret == 0)
 	{
 		return false;

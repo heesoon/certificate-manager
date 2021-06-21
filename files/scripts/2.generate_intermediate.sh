@@ -21,7 +21,6 @@ cd $INTERMEDIATE_HOME
 mkdir certs crl csr newcerts private
 chmod 700 private
 touch index.txt
-touch index.txt.attr
 echo 1000 > serial
 touch crlnumber
 echo 1000 > crlnumber
@@ -35,15 +34,15 @@ chmod 666 private/intermediate.key.pem
 
 # generate intermediate ca csr
 openssl req -config openssl.cnf \
-			-new -sha256 \
-			-subj "/C=KR/ST=Seoul/O=Kims Ltd/OU=R&D/CN=Kims Ltd Intermediate CA" \
+			-new -sha512 \
+			-subj "/C=KR/ST=Seoul/O=R&D/OU=SW/CN=IntermediateCA" \
 			-key private/intermediate.key.pem \
 			-out csr/intermediate.csr.pem
 
 # generate intermediate ca certificate
 openssl ca -config openssl.cnf \
 			-extensions v3_intermediate_ca \
-			-days 3650 -notext -md sha256 \
+			-days 7300 -notext -md sha512 \
 			-in csr/intermediate.csr.pem \
 			-out certs/intermediate.cert.pem
 
@@ -58,4 +57,3 @@ openssl verify -CAfile $ROOTCA_HOME/certs/ca.cert.pem \
 # generate certificate chain
 cat $INTERMEDIATE_HOME/certs/intermediate.cert.pem \
 	$ROOTCA_HOME/certs/ca.cert.pem > $INTERMEDIATE_HOME/certs/ca-chain.cert.pem
-
