@@ -232,7 +232,8 @@ end:
 
 pbnjson::JValue CertificateManager::sign(LSUtils::LunaRequest &request)
 {
-#if 0
+	LOG_INFO(MSGID_MAINAPP, 0, "[%s][%d]", __func__, __LINE__);
+
 	bool success = true;
 	X509 *x509 = NULL;
 
@@ -241,29 +242,17 @@ pbnjson::JValue CertificateManager::sign(LSUtils::LunaRequest &request)
 	std::string inputCsrFilename = "";
 	const std::string inputConfigFile = temporalLocalStorage + "/scripts/customer_openssl.cnf";
 
-	pbnjson::JValue reply;
-	pbnjson::JValue request = pbnjson::Object();
-	request = message.getJson();
-
-	LOG_INFO(MSGID_MAINAPP, 0, "[%s][%d]message (%s)", __func__, __LINE__,request.stringify().c_str());
-
 	OpensslCaWrapper opensslCaWrapper;
 
-	outputCertFilename = request["certFilename"].asString();
-	if(outputCertFilename.empty())
+	if( request.hasKey("certFilename") == false || request.hasKey("csrFilename") == false )
 	{
 		success = false;
-		errorText = "empty certification file or path";
+		errorText = "empty of certFilename or csrFilename in luna";
 		goto end;
 	}
 
-	inputCsrFilename = request["csrFilename"].asString();
-	if(inputCsrFilename.empty())
-	{
-		success = false;
-		errorText = "empty csr file or path";
-		goto end;
-	}
+	request.param("certFilename", outputCertFilename);
+	request.param("csrFilename", inputCsrFilename);
 
 	if(opensslCaWrapper.open(outputCertFilename, 'w', FORMAT_PEM) == false)
 	{
@@ -295,8 +284,8 @@ pbnjson::JValue CertificateManager::sign(LSUtils::LunaRequest &request)
 	}
 
 end:
-	reply = pbnjson::Object();
 
+	pbnjson::JValue reply = pbnjson::Object();
 	if(success == false)
 	{
 		reply.put("returnValue", false);
@@ -309,33 +298,27 @@ end:
 	}
 
 	return reply;
-#else
-		pbnjson::JValue reply = pbnjson::Object();
-		return reply;
-#endif
 }
 
 pbnjson::JValue CertificateManager::verify(LSUtils::LunaRequest &request)
 {
-#if 0
+	LOG_INFO(MSGID_MAINAPP, 0, "[%s][%d]", __func__, __LINE__);
+
 	bool success = true;
 	std::string errorText = "";
 	std::string inputCertFile = "";
 	const std::string inputCaChainFile = temporalLocalStorage + "/scripts/ca-chain.cert.pem";
 
-	pbnjson::JValue reply;
-	pbnjson::JValue request = pbnjson::Object();
-	request = message.getJson();
-
 	OpensslCaWrapper opensslCaWrapper;
 
-	inputCertFile = request["certFilename"].asString();
-	if(inputCertFile.empty())
+	if( request.hasKey("certFilename") == false)
 	{
 		success = false;
-		errorText = "empty certification file or path";
+		errorText = "empty of certFilename in luna";
 		goto end;
 	}
+
+	request.param("certFilename", inputCertFile);
 
 	if(opensslCaWrapper.verifyByCa(inputCaChainFile, inputCertFile) == false)
 	{
@@ -345,8 +328,8 @@ pbnjson::JValue CertificateManager::verify(LSUtils::LunaRequest &request)
 	}
 
 end:
-	reply = pbnjson::Object();
 
+	pbnjson::JValue reply = pbnjson::Object();
 	if(success == false)
 	{
 		reply.put("returnValue", false);
@@ -359,9 +342,4 @@ end:
 	}
 
 	return reply;
-#else
-		pbnjson::JValue reply = pbnjson::Object();
-		return reply;
-#endif
-
 }
