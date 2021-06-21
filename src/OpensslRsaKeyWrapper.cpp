@@ -175,7 +175,6 @@ bool OpensslRsaKeyWrapper::read(PKEY_TYPE_T pkeyType, const std::string &passwd)
     }
     else
     {
-        //PmLogError("[%s, %d] Not Supported", __FUNCTION__, __LINE__);
     }
 
     if(pkey == NULL)
@@ -218,6 +217,22 @@ bool OpensslRsaKeyWrapper::write(EVP_PKEY *pkey, PKEY_TYPE_T pkeyType, const std
 
     if( (passwd.empty() == false) && (cipherName.empty() == false) )
     {
+#if 0        
+        // keygeneration with encryption and password.
+        if(passwd.size() < 4 || passwd.size() > 8)
+        {
+            // too much short password so return.
+            return false;
+        }
+#endif
+#if 0
+        if(std::regex_match(passwd, std::regex("(\\+|-)?[0-9]*(\\.?([0-9]+))$")))
+        {
+            // all character is number;
+            return false;
+        }
+#endif
+
         password = const_cast<char *>(passwd.c_str());
         //password = passwd.c_str();
         cipherp = EVP_get_cipherbyname(cipherName.c_str());
@@ -283,7 +298,6 @@ bool OpensslRsaKeyWrapper::write(EVP_PKEY *pkey, PKEY_TYPE_T pkeyType, const std
     }
     else
     {
-        //PmLogError("[%s, %d] Not Supported", __FUNCTION__, __LINE__);
     }
 
     return true;

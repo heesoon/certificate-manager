@@ -2,6 +2,7 @@
 #include <string>
 //#include "Log.hpp"
 #include "logging.h"
+#include "logging.h"
 #include "OpensslBioWrapper.hpp"
 #include "OpensslConfWrapper.hpp"
 #include "OpensslRsaKeyWrapper.hpp"
@@ -9,9 +10,8 @@
 #include "OpensslCertWrapper.hpp"
 #include "OpensslCsrWrapper.hpp"
 #include <openssl/x509v3.h>
-#include <openssl/x509v3.h>
-#include <openssl/x509_vfy.h>
 #include <openssl/pem.h>
+#include <openssl/x509_vfy.h>
 
 #define BASE_SECTION            "ca"
 
@@ -328,7 +328,9 @@ int OpensslCaWrapper::pkey_ctrl_string(EVP_PKEY_CTX *ctx, const char *value)
         return -1;
     vtmp = strchr(stmp, ':');
     if (vtmp == NULL)
+	{
         goto err;
+	}
 
     *vtmp = 0;
     vtmp++;
@@ -455,7 +457,8 @@ bool OpensslCaWrapper::generateX509(X509 *x509, X509_REQ *x509Req, X509 *x509Ca,
 	X509_NAME *x509ReqSubject = NULL;
     X509_NAME *x509CaSubject = NULL; 
 	X509_NAME *subject = NULL;
-	X509_NAME_ENTRY *ne, *tne;
+	//X509_NAME_ENTRY *ne, *tne;
+	X509_NAME_ENTRY *tne = NULL;
 	ASN1_STRING *str, *str2;
     EVP_PKEY *pkeyPublic;
 	CONF_VALUE *cv;
@@ -703,12 +706,12 @@ bool OpensslCaWrapper::generateCertSignedByCa(const std::string &inputConfigFile
     long days = 0;
     int emailDn = 1;
     unsigned long chtype = MBSTRING_ASC;
-    EVP_PKEY *pkey = NULL;
+    //EVP_PKEY *pkey = NULL;
     X509_REQ *x509Req = NULL;
     X509 *x509Ca = NULL;
     EVP_PKEY *caPkey;
     char *extensions = NULL;
-    CONF *conf = NULL;
+    //CONF *conf = NULL;
     const EVP_MD *evpMd = NULL;
     STACK_OF(CONF_VALUE) *policy = NULL;
     char *entry = NULL, *cnfData = NULL, *caPrivateKeyFile = NULL, *caCertificateFile = NULL;
@@ -942,8 +945,8 @@ X509_STORE* OpensslCaWrapper::setup_verify(const std::string &inputCaFile)
 		goto end;
 	}
 
-	//if(!X509_LOOKUP_load_file_ex(lookup, inputCaFile.c_str(), X509_FILETYPE_PEM, NULL, NULL))
-	if(!X509_LOOKUP_load_file(lookup, inputCaFile.c_str(), X509_FILETYPE_PEM))
+	//if (!X509_LOOKUP_load_file_ex(lookup, inputCaFile.c_str(), X509_FILETYPE_PEM, NULL, NULL))
+	if (!X509_LOOKUP_load_file(lookup, inputCaFile.c_str(), X509_FILETYPE_PEM))
 	{
 		goto end;		
 	}
@@ -992,6 +995,8 @@ bool OpensslCaWrapper::check(X509_STORE *ctx, const std::string &inputCertFile, 
 	}
 
 	i = X509_verify_cert(csc);
+
+	//LOG_INFO("opensslca", 0, "[%s][%d] i = %d ", __func__, __LINE__, i);
 
 	if(i > 0 && X509_STORE_CTX_get_error(csc) == X509_V_OK)
 	{
