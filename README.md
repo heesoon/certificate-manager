@@ -3,18 +3,16 @@ certificate-manager
 
 Summary
 -------
-certificate-manager is to update system certificates and keep their intergrity
+The certificate manager provides cryptographic and management functionalities for certificate
 
 Description
 -----------
-The service downloads certificates package from remote SDP server. 
-Server provides trusted CA list as bunch of files digitally signed which is 
-to be downloaded, unpacked, verified and put into device CA directory. 
+The service provide keys and certificates to other services or apps that require certificate operations.
 
 Notes
 -----
-Use 'create_ca.sh' script to create a certificates bundle and sign it
-Use 'create_url_override.sh' script to create an url override setting file
+The way of building codes in webOS OE enviroment can be refered to build-config/README file
+Use scrips in files/scrips to build PKI chain
 
 Dependencies
 ------------
@@ -24,8 +22,9 @@ Below are the tools and libraries required to build filecache:
 * luna-service2++-3
 * glib-2.0
 * PmLogLib
-* libarchive
-* zlib
+* openssl (over 1.1.1g)
+* libpbnjson
+* db8
 
 Copyright and License Information
 ---------------------------------
@@ -48,4 +47,3 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
