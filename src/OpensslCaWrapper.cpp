@@ -2,7 +2,6 @@
 #include <string>
 //#include "Log.hpp"
 #include "logging.h"
-#include "logging.h"
 #include "OpensslBioWrapper.hpp"
 #include "OpensslConfWrapper.hpp"
 #include "OpensslRsaKeyWrapper.hpp"
