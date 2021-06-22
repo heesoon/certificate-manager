@@ -996,7 +996,6 @@ bool OpensslCaWrapper::check(X509_STORE *ctx, const std::string &inputCertFile, 
 
 	i = X509_verify_cert(csc);
 
-	LOG_INFO("opensslca", 0, "[%s][%d] i = %d ", __func__, __LINE__, i);
 
 	if(i > 0 && X509_STORE_CTX_get_error(csc) == X509_V_OK)
 	{
@@ -1034,6 +1033,44 @@ end:
 	return (ret == true) ? true : false;
 }
 
+static int cb(int ok, X509_STORE_CTX *ctx)
+{
+    int cert_error = X509_STORE_CTX_get_error(ctx);
+    //X509 *current_cert = X509_STORE_CTX_get_current_cert(ctx);
+
+	if (!ok) 
+	{
+		/*
+		* Pretend that some errors are ok, so they don't stop further
+		* processing of the certificate chain.  Setting ok = 1 does this.
+		* After X509_verify_cert() is done, we verify that there were
+		* no actual errors, even if the returned value was positive.
+		*/
+
+		LOG_ERROR("OpensslCaWrapper", 0, "[%s, %d] cert_error = %d", __FUNCTION__, __LINE__, cert_error);
+		switch (cert_error)
+		{
+			case X509_V_ERR_NO_EXPLICIT_POLICY:
+			//policies_print(ctx);
+			/* fall thru */
+			case X509_V_ERR_CERT_HAS_EXPIRED:
+			/* Continue even if the leaf is a self signed cert */
+			case X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT:
+			/* Continue after extension errors too */
+			case X509_V_ERR_INVALID_CA:
+			case X509_V_ERR_INVALID_NON_CA:
+			case X509_V_ERR_PATH_LENGTH_EXCEEDED:
+			case X509_V_ERR_INVALID_PURPOSE:
+			case X509_V_ERR_CRL_HAS_EXPIRED:
+			case X509_V_ERR_CRL_NOT_YET_VALID:
+			case X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION:
+				ok = 1;
+		}
+        return ok;
+    }
+    return ok;
+}
+
 bool OpensslCaWrapper::verifyByCa(const std::string &inputCaChainFile, const std::string &inputCertFile)
 {
 	bool ret = false;
@@ -1050,7 +1087,7 @@ bool OpensslCaWrapper::verifyByCa(const std::string &inputCaChainFile, const std
 		goto end;		
 	}
 
-	X509_STORE_set_verify_cb(store, NULL);
+	X509_STORE_set_verify_cb(store, cb);
 
 	if(check(store, inputCertFile, true) == false)
 	{
