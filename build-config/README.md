@@ -3,10 +3,31 @@ Usage
 
 Source Tree
 ----------------------------------------
-<div align="center">
-<img src="./img/tree.png" align="center">
-</div>
-<br>
+<pre>
+<code>
+    .
+    ├── build-config
+    │   └── img
+    ├── files
+    │   ├── conf
+    │   │   └── pmlog
+    │   ├── db8
+    │   │   ├── kinds
+    │   │   └── permissions
+    │   ├── launch
+    │   ├── schema
+    │   ├── scripts
+    │   └── sysbus
+    ├── include
+    │   ├── adapters
+    │   └── ls-utils
+    ├── src
+    │   ├── adapters
+    │   └── ls-utils
+    └── tests
+
+</code>
+</pre>
 
 Description of Source Tree
 ----------------------------------------
