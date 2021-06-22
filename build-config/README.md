@@ -70,8 +70,38 @@ Build Way
 
 Test Way
 ----------------------------------------
-* preconditions (tests/* move to target below folder)
-    - in /usr/palm/services/com.webos.service.certificatemanager/scripts folder, bellow files should be installed (only for testing purpose)
+* preconditions 1(ubunt server 18.04 nfs configuration)     
+    - nfs service install     
+        - sudo apt-get install nfs-kernel-server    
+    - nfs folder      
+        - mkdir /home/hskim/nfsroot    
+    - nfs folder permission change      
+        - sudo chmod -R /home/hskim/nfsroot         
+    - sudo vim /etc/exports      
+        - /home/hskim/nfsroot/ *(rw,sync,nohide,no_root_squash,insecure,subtree_check)      
+    - sudo vim /etc/default/nfs-kernel-server (optional)     
+        - RPCNFSDOPTS="--nfs-version 2,3,4 --debug --syslog"  
+    - nfs service restart      
+        - sudo /etc/init.d/nfs-kernel-server restart
+        - sudo /etc/init.d/rpcbind restart (optional)      
+
+* preconditions 2(target)     
+    - #nset (network setting)     
+        - will you use DHCP? <y/N> N    
+    - #nfsroot      
+        - will you use nfsroot? <y/N> Y    
+            - nfsserver : ubuntu server IP address      
+            - nfsroot : /home/hskim/nfsroot/
+            - nfs_usbeth: enter         
+    - #set bootmode webos
+    - #print on
+    - #saveenv
+    - #reset
+    - dpm off
+        - luna-send -n 1 luna://com.lge.settingsservice/setSystemSettings '{"category":"commercial","settings":{"dpmMode":"off"}}'
+
+* preconditions 3     
+    - bellow files in tests/ca/ should be copied to nfsroot/usr/palm/services/com.webos.service.certificatemanager/scripts folder of target (only for testing purpose)
     - customer_openssl.cnf (configuration file to generate customer certificate)  
     - intermediate.cert.pem (Intermediate CA certificate)
     - intermediate.key.pem (Intermediate CA private key)
