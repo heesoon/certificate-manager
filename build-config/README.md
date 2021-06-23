@@ -107,6 +107,15 @@ Test Way
     - intermediate.key.pem (Intermediate CA private key)
     - ca-chain.cert.pem (Root CA + Intermediate CA certificate)
 
+* preconditions 4 (Before Luna Test)     
+    - ls-control scan-services          
+    - systemctl start com.webos.service.certificatemanager
+    - systemctl status com.webos.service.certificatemanager (check whether service live or not)
+    - PmLogCtl def (generate PmLog Context forcely)         
+    - PmLogCtl show         
+    - PmLogCtl set certificateManager debug
+    - (tail -f /var/log/messages | grep certificatemanager &)             
+
 * generate luna test (customer keypair generation)
     - luna-send -n 1 -f luna://com.webos.service.certificatemanager/generateKey '{"keyname" : "test", "KeyFilename" : "/usr/palm/services/com.webos.service.certificatemanager/key.pem", "keySize" : 2048}'      
 
