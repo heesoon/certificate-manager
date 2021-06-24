@@ -1,0 +1,4 @@
+#ifndef OPENSSL_ENGINE_LOADKEY_HPP_
+#define OPENSSL_ENGINE_LOADKEY_HPP_
+
+#endif

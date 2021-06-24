@@ -1,19 +1,27 @@
 cmake_minimum_required(VERSION 3.10)
-project(CertificateManager)
+project(certificateManager)
+
+set(ENSRCS
+	${CMAKE_SOURCE_DIR}/src/opensslengine/opensslEngineLoadKey.cpp
+)
 
 set(SRCS
-	"Log.cpp"
-	"OpensslBioWrapper.cpp"
-	"OpensslConfWrapper.cpp"
-	"OpensslRsaKeyWrapper.cpp"
-	"OpensslCertWrapper.cpp"
-	"OpensslCsrWrapper.cpp"
-	"OpensslCaWrapper.cpp"
-	"CertificateManager.cpp"
+	${CMAKE_SOURCE_DIR}/src/opensslwrapper/OpensslBioWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/opensslwrapper/OpensslConfWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/opensslwrapper/OpensslRsaKeyWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/opensslwrapper/OpensslCertWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/opensslwrapper/OpensslCsrWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/opensslwrapper/OpensslCaWrapper.cpp
+	${CMAKE_SOURCE_DIR}/src/Log.cpp
+	${CMAKE_SOURCE_DIR}/src/CertificateManager.cpp
 )
 
 add_executable(${PROJECT_NAME}
 	${SRCS}
+)
+
+add_library(opensslEngine SHARED
+	${ENSRCS}
 )
 
 add_library(crypto
@@ -32,7 +40,7 @@ include_directories(
 	${CMAKE_SOURCE_DIR}/include
 )
 
-target_link_libraries(
-	${PROJECT_NAME} PRIVATE
+target_link_libraries(${PROJECT_NAME} PRIVATE
 	crypto
+	opensslEngine
 )
