@@ -2,6 +2,7 @@
 #include <openssl/rsa.h>
 # include <openssl/pem.h>
 # include <openssl/x509v3.h>
+#include <iostream>
 
 #define SUCCESS 1
 #define FAILE   0
@@ -47,6 +48,7 @@ int rsa_sign(int dtype, const unsigned char *m, unsigned int m_len, unsigned cha
 
 static int engine_init(ENGINE *e)
 {
+#if 0
     const RSA_METHOD *ossl_rsa_meth;
 
     if(engine_idx < 0)
@@ -75,6 +77,7 @@ static int engine_init(ENGINE *e)
         }
     }
 
+#endif
     return SUCCESS;
 }
 
@@ -122,6 +125,10 @@ static int engine_ctrl(ENGINE *e, int cmd, long i, void *p, void (*f) (void))
 
 static int engine_bind(ENGINE *e, const char *id)
 {
+    rsa_method = RSA_meth_new("CryptoAPI RSA method", 0);
+    if (rsa_method == NULL)
+        return 0;
+    
     if( !ENGINE_set_id(e, engine_id) 
         || !ENGINE_set_name(e, engine_name)
         || !ENGINE_set_init_function(e, engine_init)
@@ -132,10 +139,16 @@ static int engine_bind(ENGINE *e, const char *id)
         || !ENGINE_set_load_ssl_client_cert_function(e, engine_load_ssl_client_cert)
         || !ENGINE_set_cmd_defns(e, cmd_defns)
         || !ENGINE_set_ctrl_function(e, engine_ctrl)
+        //|| !ENGINE_set_RSA(e, rsa_method)
+        || !ENGINE_set_RSA(e, RSA_get_default_method())
+        || !ENGINE_set_RAND(e, RAND_OpenSSL())
     )
     {
+        std::cout << "hskim error ..........." << std::endl;
         return FAILE;
     }
+
+    std::cout << "hskim success ..........." << std::endl;
 
     return SUCCESS;
 }

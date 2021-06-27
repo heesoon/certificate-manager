@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(certificateManager)
 
 set(ENSRCS
-	${CMAKE_SOURCE_DIR}/src/opensslengine/opensslEngineLoadKey.cpp
+	${CMAKE_SOURCE_DIR}/src/opensslengine/opensslEngine.cpp
 )
 
 set(SRCS
