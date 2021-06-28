@@ -3,6 +3,7 @@ project(certificateManager)
 
 set(ENSRCS
 	${CMAKE_SOURCE_DIR}/src/opensslengine/opensslEngine.cpp
+	${CMAKE_SOURCE_DIR}/src/opensslengine/opensslEngineWrapper.cpp
 )
 
 set(SRCS
